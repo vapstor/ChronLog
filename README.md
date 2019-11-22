@@ -37,21 +37,21 @@
 - [x] Desenvolver Tela Serial (check User Active)
 
 * Desenvolver Tela de Serial ["Login"]
-  - [] Lógica Própria para Device
+  - [ ] Lógica Própria para Device
   
 * Desenvolver Tela de Conexão Bluetooth
-  - [] Interface Bluetooth serial (modo SSP)
-  - [] Dialogo para conexão ao Termopar
+  - [ ] Interface Bluetooth serial (modo SSP)
+  - [ ] Dialogo para conexão ao Termopar
   
 * Desenvolver Tela Configurações
-  - [] Botão "Parear Hora"
-  - [] Botão "Parear Data"
-  - [] Dropbox "Setar Termopar"
-  - [] Input + Botão "Configurar Tempo de Aquisição"
+  - [ ] Botão "Parear Hora"
+  - [ ] Botão "Parear Data"
+  - [ ] Dropbox "Setar Termopar"
+  - [ ] Input + Botão "Configurar Tempo de Aquisição"
   
 * Desenvolver Tela Chart 
   - [x] Chart com valores estáticos
-  - [] Chart com valores dinâmicos
+  - [ ] Chart com valores dinâmicos
   
 - [x] Desenvolver Tela Cartão Virtual
 
