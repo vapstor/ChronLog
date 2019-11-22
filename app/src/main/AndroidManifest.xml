@@ -15,19 +15,16 @@
             >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
-            android:theme="@style/AppTheme"
             android:name=".LoginActivity"
             android:fitsSystemWindows="true"
-            android:windowSoftInputMode="stateVisible|adjustResize" />
-
+            android:windowSoftInputMode="stateVisible|adjustResize"
+        />
         <activity android:name=".BluetoothConnection" />
-        <activity android:name=".ChartViewActivity">
-        </activity>
+        <activity android:name=".ChartViewActivity"/>
 
         <meta-data
             android:name="preloaded_fonts"

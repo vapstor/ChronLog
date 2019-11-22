@@ -1,6 +1,7 @@
 package app.br.chronlog;
 
 
+import android.animation.LayoutTransition;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -8,6 +9,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
@@ -24,6 +26,7 @@ import static app.br.chronlog.utils.Utils.startActivityWithExplosion;
 public class LoginActivity extends AppCompatActivity {
     AlertDialog alert;
     SharedPreferences sharedPreferences;
+    private View dialogLoginLogista;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -38,8 +41,9 @@ public class LoginActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "Aparelho não verificado!", Toast.LENGTH_SHORT).show();
             setContentView(R.layout.activity_login);
-            getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE|WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
+            dialogLoginLogista = findViewById(R.id.scroll_view_dialog);
+            ((ViewGroup) dialogLoginLogista).getLayoutTransition().enableTransitionType(LayoutTransition.CHANGING);
 
             TextView serialTV = findViewById(R.id.serial_input);
             Button btnLogin = findViewById(R.id.login);

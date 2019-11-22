@@ -15,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.view.ContextThemeWrapper;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -43,14 +44,15 @@ public class Utils {
             .setTitle(title)
             .setMessage(body)
             .setPositiveButton(positive, positiveListener);
+
         if(cancelableBtn) {
             builder.setNegativeButton(negative, negativeListener);
         }
         if(cancelableDismiss) {
             builder.setOnDismissListener(dismissListener);
+        } else {
+            builder.setCancelable(false);
         }
-        builder.setBackground(context.getDrawable(R.drawable.shape_gradient));
-
         return builder.create();
     }
 

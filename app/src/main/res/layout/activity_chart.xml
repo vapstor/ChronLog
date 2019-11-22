@@ -84,33 +84,35 @@
 
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/blockY"
+        android:id="@+id/blockX"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_marginStart="15dp"
         android:layout_marginTop="20dp"
+        android:backgroundTint="@color/colorPrimary"
         android:onClick="blockX"
-        android:text="@string/block_y"
+        android:text="@string/block_x"
         app:layout_constraintEnd_toStartOf="@+id/resetZoom"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/blockX"
+        android:id="@+id/blockY"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_marginStart="15dp"
         android:layout_marginTop="8dp"
         android:layout_toStartOf="@+id/resetZoom"
-        android:layout_toEndOf="@+id/blockY"
+        android:layout_toEndOf="@+id/blockX"
+        android:backgroundTint="@color/colorPrimary"
         android:onClick="blockY"
-        android:text="@string/block_x"
-        app:layout_constraintEnd_toEndOf="@+id/blockY"
+        android:text="@string/block_y"
+        app:layout_constraintEnd_toEndOf="@+id/blockX"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/blockY" />
+        app:layout_constraintTop_toBottomOf="@+id/blockX" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/resetZoom"
@@ -120,11 +122,12 @@
         android:layout_alignParentEnd="true"
         android:layout_marginStart="15dp"
         android:layout_marginEnd="15dp"
+        android:backgroundTint="@color/colorPrimary"
         android:onClick="resetZoom"
         android:text="@string/reset"
-        app:layout_constraintBottom_toBottomOf="@+id/blockX"
+        app:layout_constraintBottom_toBottomOf="@+id/blockY"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/blockY"
-        app:layout_constraintTop_toTopOf="@+id/blockY" />
+        app:layout_constraintStart_toEndOf="@+id/blockX"
+        app:layout_constraintTop_toTopOf="@+id/blockX" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

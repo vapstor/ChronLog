@@ -2,21 +2,31 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/shape_gradient"
-    android:id="@+id/login_background"
+    android:id="@+id/root_dialog"
+    android:layout_width="match_parent"
+    android:layout_gravity="center|center_horizontal|center_vertical"
     app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintTop_toTopOf="parent"
     >
 
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/container"
+    <ScrollView
+        android:id="@+id/scroll_view_dialog"
         android:layout_width="wrap_content"
-        android:layout_height="300dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:animateLayoutChanges="true"
         android:fillViewport="true"
+        android:fitsSystemWindows="true"
+        android:isScrollContainer="false"
+        android:keepScreenOn="false"
+        android:nestedScrollingEnabled="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -24,8 +34,8 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/dialog"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:layout_gravity="center"
             android:layout_marginStart="50dp"
             android:layout_marginTop="200dp"
@@ -44,7 +54,7 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:context=".LoginActivity">
 
-            <EditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/serial_input"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -64,7 +74,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/imageView2" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/login"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -74,6 +84,7 @@
                 android:layout_marginEnd="48dp"
                 android:enabled="false"
                 android:text="@string/desbloquear"
+                android:theme="@style/TextButton"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/progressBar" />
@@ -114,5 +125,5 @@
                 app:layout_constraintTop_toTopOf="@+id/serial_input" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </androidx.core.widget.NestedScrollView>
+    </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>
