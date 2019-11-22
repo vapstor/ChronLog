@@ -15,4 +15,9 @@
     <string name="serial">serial</string>
     <string name="serial_configurado">Serial Configurado!</string>
     <string name="reset_zoom">Reset Zoom</string>
+    <string name="block_x">block x</string>
+    <string name="block_y">block y</string>
+    <string name="unblock_x">unblock X</string>
+    <string name="unblock_y">unblock Y</string>
+    <string name="reset">reset</string>
 </resources>

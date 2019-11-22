@@ -10,6 +10,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -34,7 +35,6 @@ import app.br.chronlog.utils.MyMarkerView;
 
 import static app.br.chronlog.utils.Utils.CONFIG_FILE;
 import static app.br.chronlog.utils.Utils.createDialog;
-import static app.br.chronlog.utils.Utils.startActivityWithExplosion;
 
 public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSeekBarChangeListener,
         OnChartValueSelectedListener {
@@ -76,8 +76,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             // disable description text
             chart.getDescription().setEnabled(false);
 
-            chart.setBorderColor(Color.WHITE);
-
+            chart.setBorderColor(Color.BLACK);
             chart.setGridBackgroundColor(getResources().getColor(R.color.cinzaClaro));
 
             // enable touch gestures
@@ -107,7 +106,6 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
         XAxis xAxis;
         {   // // X-Axis Style // //
             xAxis = chart.getXAxis();
-
             // vertical grid lines
             xAxis.enableGridDashedLine(10f, 10f, 0f);
         }
@@ -128,37 +126,37 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
         }
 
 
-        {   // // Create Limit Lines // //
-            LimitLine llXAxis = new LimitLine(9f, "Index 10");
-            llXAxis.setLineWidth(4f);
-            llXAxis.enableDashedLine(10f, 10f, 0f);
-            llXAxis.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_BOTTOM);
-            llXAxis.setTextSize(10f);
-            //llXAxis.setTypeface(tfRegular);
-
-            LimitLine ll1 = new LimitLine(150f, "Upper Limit");
-            ll1.setLineWidth(4f);
-            ll1.enableDashedLine(10f, 10f, 0f);
-            ll1.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
-            ll1.setTextSize(10f);
-            //ll1.setTypeface(tfRegular);
-
-            LimitLine ll2 = new LimitLine(-30f, "Lower Limit");
-            ll2.setLineWidth(4f);
-            ll2.enableDashedLine(10f, 10f, 0f);
-            ll2.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_BOTTOM);
-            ll2.setTextSize(10f);
-            //ll2.setTypeface(tfRegular);
-
-            // draw limit lines behind data instead of on top
-            yAxis.setDrawLimitLinesBehindData(true);
-            xAxis.setDrawLimitLinesBehindData(true);
-
-            // add limit lines
-            yAxis.addLimitLine(ll1);
-            yAxis.addLimitLine(ll2);
-            //xAxis.addLimitLine(llXAxis);
-        }
+//        {   // // Create Limit Lines // //
+//            LimitLine llXAxis = new LimitLine(9f, "Index 10");
+//            llXAxis.setLineWidth(4f);
+//            llXAxis.enableDashedLine(10f, 10f, 0f);
+//            llXAxis.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_BOTTOM);
+//            llXAxis.setTextSize(10f);
+//            //llXAxis.setTypeface(tfRegular);
+//
+//            LimitLine ll1 = new LimitLine(150f, "Upper Limit");
+//            ll1.setLineWidth(4f);
+//            ll1.enableDashedLine(10f, 10f, 0f);
+//            ll1.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
+//            ll1.setTextSize(10f);
+//            //ll1.setTypeface(tfRegular);
+//
+//            LimitLine ll2 = new LimitLine(-30f, "Lower Limit");
+//            ll2.setLineWidth(4f);
+//            ll2.enableDashedLine(10f, 10f, 0f);
+//            ll2.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_BOTTOM);
+//            ll2.setTextSize(10f);
+//            //ll2.setTypeface(tfRegular);
+//
+//            // draw limit lines behind data instead of on top
+//            yAxis.setDrawLimitLinesBehindData(true);
+//            xAxis.setDrawLimitLinesBehindData(true);
+//
+//            // add limit lines
+//            yAxis.addLimitLine(ll1);
+//            yAxis.addLimitLine(ll2);
+//            //xAxis.addLimitLine(llXAxis);
+//        }
 
         // add data
         seekBarX.setProgress(45);
@@ -202,11 +200,11 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             set1.setDrawIcons(false);
 
             // draw dashed line
-            set1.enableDashedLine(10f, 5f, 0f);
+            set1.enableDashedLine(15f, 0f, 1f);
 
             // black lines and points
             set1.setColor(getResources().getColor(R.color.azulClaro));
-            set1.setCircleColor(Color.WHITE);
+            set1.setCircleColor(Color.RED);
 
             // line thickness and point size
             set1.setLineWidth(1f);
@@ -311,6 +309,26 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             chart.animateXY(500, 500);
             chart.resetZoom();
             chart.fitScreen();
+        }
+    }
+
+    public void blockX(View v) {
+        if(chart.isScaleXEnabled()) {
+            ((Button) v).setText(R.string.unblock_x);
+            chart.setScaleXEnabled(false);
+        } else {
+            ((Button) v).setText(R.string.block_x);
+            chart.setScaleXEnabled(true);
+        }
+    }
+
+    public void blockY(View v) {
+        if(chart.isScaleYEnabled()) {
+            ((Button) v).setText(R.string.unblock_y);
+            chart.setScaleYEnabled(false);
+        } else {
+            ((Button) v).setText(R.string.block_y);
+            chart.setScaleYEnabled(true);
         }
     }
 }
