@@ -53,7 +53,11 @@
   - [x] Chart com valores estáticos
   - [ ] Chart com valores dinâmicos
   
-- [x] Desenvolver Tela Cartão Virtual
+* Desenvolver tela Termostato
+  - [ ] Salvar arquivo
+  - [ ] Listar Arquivos
+  - [ ] Conexão com Termostato
+  - [ ] Resgatar dados do Termostato
 
 ## How to version
 
