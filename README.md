@@ -58,6 +58,7 @@
   - [ ] Listar Arquivos
   - [ ] Conexão com Termostato
   - [ ] Resgatar dados do Termostato
+  - [ ] Implementar Compartilhamento de Dados Resgatados
 
 ## How to version
 
