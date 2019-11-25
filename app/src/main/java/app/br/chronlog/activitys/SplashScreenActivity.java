@@ -1,4 +1,4 @@
-package app.br.chronlog;
+package app.br.chronlog.activitys;
 
 import android.content.Context;
 import android.content.DialogInterface;
@@ -8,6 +8,8 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+
+import app.br.chronlog.R;
 
 import static app.br.chronlog.utils.Utils.CONFIG_FILE;
 import static app.br.chronlog.utils.Utils.createDialog;
@@ -27,11 +29,11 @@ public class SplashScreenActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         SharedPreferences sharedPreferences = getSharedPreferences(CONFIG_FILE, Context.MODE_PRIVATE);
-        boolean unlocked = sharedPreferences.getBoolean("aparelho_verificado", false);
+//        boolean unlocked = sharedPreferences.getBoolean("aparelho_verificado", false);
         new Thread(() -> {
             try {
                 sleep(1500);
-                if(!unlocked) {
+                if(!false) {
                     //cria intent para prosseguir mas não executa ate que clique no botao
                     Intent intent = new Intent(this, LoginActivity.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

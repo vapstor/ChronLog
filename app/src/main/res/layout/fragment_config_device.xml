@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activitys.ConfigDeviceFragment">
+
+   <com.google.android.material.textfield.TextInputEditText
+       android:id="@+id/dataInput"
+       android:layout_width="0dp"
+       android:layout_height="wrap_content"
+       android:layout_marginStart="50dp"
+       android:layout_marginTop="50dp"
+       android:layout_marginEnd="50dp"
+       android:hint="@string/digite_a_data_ex_10_10_2019"
+       android:textAlignment="center"
+       android:textStyle="italic"
+       app:layout_constraintEnd_toEndOf="parent"
+       app:layout_constraintStart_toStartOf="parent"
+       app:layout_constraintTop_toTopOf="parent" />
+
+   <com.google.android.material.textfield.TextInputEditText
+       android:id="@+id/horaInput"
+       android:layout_width="0dp"
+       android:layout_height="wrap_content"
+       android:layout_marginStart="50dp"
+       android:layout_marginEnd="50dp"
+       android:hint="@string/digite_a_hora_ex_10_23_35"
+       android:textAlignment="center"
+       android:textStyle="italic"
+       app:layout_constraintEnd_toEndOf="parent"
+       app:layout_constraintStart_toStartOf="parent"
+       app:layout_constraintTop_toBottomOf="@+id/dataInput" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

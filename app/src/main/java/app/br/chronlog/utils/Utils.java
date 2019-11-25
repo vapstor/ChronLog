@@ -10,12 +10,10 @@ import android.content.pm.PackageManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.view.ContextThemeWrapper;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -27,6 +25,7 @@ import app.br.chronlog.R;
 
 public class Utils {
     public final static String CONFIG_FILE = "0";
+    public final static String TAG_LOG = "CHRONLOG";
 
     public static AlertDialog createDialog(
             Context context,

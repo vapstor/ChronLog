@@ -1,7 +1,5 @@
-package app.br.chronlog;
+package app.br.chronlog.activitys;
 
-import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.os.Bundle;
@@ -9,17 +7,14 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Legend;
-import com.github.mikephil.charting.components.LimitLine;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
@@ -31,10 +26,8 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 
 import java.util.ArrayList;
 
+import app.br.chronlog.R;
 import app.br.chronlog.utils.MyMarkerView;
-
-import static app.br.chronlog.utils.Utils.CONFIG_FILE;
-import static app.br.chronlog.utils.Utils.createDialog;
 
 public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSeekBarChangeListener,
         OnChartValueSelectedListener {
@@ -42,26 +35,12 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
     private LineChart chart;
     private SeekBar seekBarX, seekBarY;
     private TextView tvX, tvY;
-    private AlertDialog alert;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
         setContentView(R.layout.activity_chart);
-
-        setTitle("LineChartActivity1");
-
-        tvX = findViewById(R.id.tvXMax);
-        tvY = findViewById(R.id.tvYMax);
-
-        seekBarX = findViewById(R.id.seekBar1);
-        seekBarX.setOnSeekBarChangeListener(this);
-
-        seekBarY = findViewById(R.id.seekBar2);
-        seekBarY.setMax(180);
-        seekBarY.setOnSeekBarChangeListener(this);
 
         if(chart != null) {
             chart.invalidate();
@@ -159,8 +138,6 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
 //        }
 
         // add data
-        seekBarX.setProgress(45);
-        seekBarY.setProgress(180);
         setData(45, 180);
 
         // draw points over time
@@ -291,16 +268,18 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
 
     @Override
     public void onBackPressed() {
-        //seta botao positivo
-        DialogInterface.OnClickListener positiveListener = (dialog, which) -> finishAffinity();
-        DialogInterface.OnClickListener negativeListener = (dialog, which) -> {
-            getSharedPreferences(CONFIG_FILE, Context.MODE_PRIVATE).edit().putBoolean("aparelho_verificado", false).apply();
-            finishAffinity();
-        };
-
-        //cria dialogo
-        alert = createDialog(this, "Alerta!", "Deseja salvar device para acesso mais rapidamente?", "SALVAR", "NÃO AGORA", true, true, negativeListener, positiveListener, dialog -> {});
-        alert.show();
+        super.onBackPressed();
+//        //seta botao positivo
+//        DialogInterface.OnClickListener positiveListener = (dialog, which) -> finishAffinity();
+//        DialogInterface.OnClickListener negativeListener = (dialog, which) -> {
+//            getSharedPreferences(CONFIG_FILE, Context.MODE_PRIVATE).edit().putBoolean("aparelho_verificado", false).apply();
+//            finishAffinity();
+//        };
+//
+//        //cria dialogo
+//        AlertDialog alert = createDialog(this, "Alerta!", "Deseja salvar device para acesso mais rapidamente?", "SALVAR", "NÃO AGORA", true, true, negativeListener, positiveListener, dialog -> {
+//        });
+//        alert.show();
 
     }
 

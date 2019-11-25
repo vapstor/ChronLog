@@ -41,7 +41,7 @@
             android:layout_marginTop="200dp"
             android:layout_marginEnd="50dp"
             android:layout_marginBottom="200dp"
-            android:background="@drawable/shape_border"
+            android:background="@drawable/shape_border_gray"
             android:backgroundTint="@color/white"
             android:isScrollContainer="true"
             android:paddingLeft="@dimen/activity_horizontal_margin"
@@ -52,7 +52,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:context=".LoginActivity">
+            tools:context=".activitys.LoginActivity">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/serial_input"
@@ -63,6 +63,7 @@
 
                 android:layout_marginEnd="25dp"
 
+                android:fontFamily="sans-serif-condensed"
                 android:hint="@string/serial"
                 android:imeOptions="actionDone"
                 android:inputType="textPassword"
@@ -83,8 +84,9 @@
                 android:layout_marginTop="5dp"
                 android:layout_marginEnd="48dp"
                 android:enabled="false"
+                android:fontFamily="sans-serif-condensed-medium"
                 android:text="@string/desbloquear"
-                android:theme="@style/TextButton"
+                android:theme="@style/TextButtonOutlinedPrimary"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/progressBar" />

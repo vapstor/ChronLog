@@ -20,4 +20,27 @@
     <string name="unblock_x">unblock X</string>
     <string name="unblock_y">unblock Y</string>
     <string name="reset">reset</string>
+    <string name="compartilhar">compartilhar</string>
+    <string name="salvar">salvar</string>
+    <string name="zoom">Zoom</string>
+    <string name="t1">T1</string>
+    <string name="t2">t2</string>
+    <string name="t3">t3</string>
+    <string name="t4">t4</string>
+    <string name="grafico">gráfico</string>
+    <string name="dispositivos">dispositivos</string>
+    <string name="title">title</string>
+    <string name="configurar_data">Configurar Data</string>
+    <string name="configurar_horario">Configurar Horario</string>
+    <string name="resgatar_dados">Resgatar Dados</string>
+    <string name="configurar">Configurar</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="digite_a_data_ex_10_10_2019">Digite a data: (ex.: 10/10/2019)</string>
+    <string name="digite_a_hora_ex_10_23_35">digite a hora (ex.:10:23:35)</string>
+    <string name="chronlog">ChronLog</string>
+    <string name="devices">devices</string>
+    <string name="configurando">configurando</string>
+    <string name="aparelhos">aparelhos</string>
 </resources>
