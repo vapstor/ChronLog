@@ -40,8 +40,8 @@
   - [ ] Lógica Própria para Device
   
 * Desenvolver Tela de Conexão Bluetooth
-  - [ ] Interface Bluetooth serial (modo SSP)
-  - [ ] Dialogo para conexão ao Termopar
+  - [x] Interface Bluetooth serial (modo SSP)
+  - [x] Conexão ao Termopar
   
 * Desenvolver Tela Configurações
   - [ ] Botão "Parear Hora"
@@ -76,4 +76,4 @@ Versionamento será dividido entre
 
 - [ ] Implementar ScreensShots no README.MD
 - [x] Adicionar Dependências
-- [ ] Incrementar Todo(Dev)
+- [x] Incrementar Todo(Dev)
