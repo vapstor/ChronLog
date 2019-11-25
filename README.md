@@ -6,7 +6,7 @@
   <strong>Repositório para centralizar o Ambiente de Desenvolvimento</strong>
   <p align="center">
     <img src="https://ci.appveyor.com/api/projects/status/g8d58ipi3auqdtrk/branch/master?svg=true" alt="Current Appveyor build status." />
-    <img src="https://img.shields.io/badge/version-1.0.0-blue.svg" alt="Current APP version." />  
+    <img src="https://img.shields.io/badge/version-1.2.5-blue.svg" alt="Current APP version." />  
   </p>
 </p>
 
