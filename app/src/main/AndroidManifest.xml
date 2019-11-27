@@ -3,9 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="app.br.chronlog">
 
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.BLUETOOTH" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="replace"/>
+    <uses-permission android:name="android.permission.BLUETOOTH" tools:node="replace"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" tools:node="replace"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" tools:node="replace"/>
 
     <application
         android:allowBackup="true"
@@ -16,7 +18,8 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning"
         >
-        <activity android:name=".activitys.MainActivity"/>
+        <activity android:name=".activitys.MainActivity"
+            />
         <activity
             android:name=".activitys.SplashScreenActivity"
             android:fitsSystemWindows="true"
@@ -40,7 +43,7 @@
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
 
-        <service android:name=".activitys.SerialService" />
+        <service android:name=".utils.bluetooth.SerialService" />
     </application>
 
 </manifest>

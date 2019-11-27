@@ -26,6 +26,7 @@ import app.br.chronlog.R;
 public class Utils {
     public final static String CONFIG_FILE = "0";
     public final static String TAG_LOG = "CHRONLOG";
+    public static long passedTime = 0;
 
     public static AlertDialog createDialog(
             Context context,

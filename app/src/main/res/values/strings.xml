@@ -43,4 +43,11 @@
     <string name="devices">devices</string>
     <string name="configurando">configurando</string>
     <string name="aparelhos">aparelhos</string>
+    <string name="iconeappbar">Ícone App Bar</string>
+    <string name="nao_conectado">Não Conectado</string>
+    <string name="conectando">conectando</string>
+    <string name="analise_de_dados">Análise de Dados</string>
+    <string name="eeprom">EEPROM</string>
+    <string name="gerenciar_dados">Gerenciar Dados</string>
+    <string name="sincronizar_data">Sincronizar Data</string>
 </resources>

@@ -10,10 +10,8 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
-import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
-import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,6 +19,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import app.br.chronlog.R;
+import app.br.chronlog.utils.bluetooth.SerialListener;
+import app.br.chronlog.utils.bluetooth.SerialService;
+import app.br.chronlog.utils.bluetooth.SerialSocket;
 
 import static app.br.chronlog.utils.Utils.TAG_LOG;
 
@@ -52,14 +53,6 @@ public class TermostatoActivity extends AppCompatActivity implements ServiceConn
             Log.d(TAG_LOG, "erro ao resgatar device");
             finish();
         }
-        setContentView(R.layout.fragment_terminal);
-        receiveText = findViewById(R.id.receive_text);                          // TextView performance decreases with number of spans
-        receiveText.setTextColor(getResources().getColor(R.color.colorPrimary)); // set as default color to reduce number of spans
-        receiveText.setMovementMethod(ScrollingMovementMethod.getInstance());
-        TextView sendText = findViewById(R.id.send_text);
-        View sendBtn = findViewById(R.id.send_btn);
-        sendBtn.setOnClickListener(v -> send(sendText.getText().toString()));
-
     }
 
     @Override

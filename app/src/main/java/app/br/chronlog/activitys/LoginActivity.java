@@ -37,7 +37,7 @@ public class LoginActivity extends AppCompatActivity {
         Toast.makeText(this, "Aparelho não verificado!", Toast.LENGTH_SHORT).show();
         setContentView(R.layout.activity_login);
 
-        dialogLoginLogista = findViewById(R.id.scroll_view_dialog);
+        dialogLoginLogista = findViewById(R.id.dialog);
         ((ViewGroup) dialogLoginLogista).getLayoutTransition().enableTransitionType(LayoutTransition.CHANGING);
 
         TextView serialTV = findViewById(R.id.serial_input);
@@ -73,19 +73,23 @@ public class LoginActivity extends AppCompatActivity {
             findViewById(R.id.serial_input).setVisibility(View.INVISIBLE);
             findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
             new Thread(() -> {
+                final TextView[] status = new TextView[1];
                 try {
                     Thread.sleep(1200);
                     runOnUiThread(() -> {
                         findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
-                        TextView status = findViewById(R.id.status);
-                        status.setVisibility(View.VISIBLE);
-                        status.setText(R.string.serial_configurado);
+                        status[0] = findViewById(R.id.status);
+                        status[0].setVisibility(View.VISIBLE);
+                        status[0].setText(R.string.serial_configurado);
                     });
                     Thread.sleep(500);
+
                     Intent intent = new Intent(this, MainActivity.class);
 
+                    runOnUiThread(() -> status[0].setVisibility(View.INVISIBLE));
+                    Thread.sleep(500);
                     runOnUiThread(() -> {
-//                            overridePendingTransition(0, 0);
+                        findViewById(R.id.serial_input).setVisibility(View.VISIBLE);
                         startActivityWithExplosion(this, intent);
 //                            destroyDialog(alert);
                     });
@@ -95,6 +99,12 @@ public class LoginActivity extends AppCompatActivity {
             }).start();
 
         });
+    }
+
+    @Override
+    protected void onResume() {
+
+        super.onResume();
     }
 
     @Override

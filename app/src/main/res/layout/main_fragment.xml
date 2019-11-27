@@ -3,36 +3,78 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/container_main_fragment"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:layout_gravity="center">
 
 
-    <com.google.android.material.button.MaterialButton
+    <Button
         android:id="@+id/configDeviceBtn"
         android:layout_width="250dp"
-        android:layout_height="0dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:drawableLeft="@drawable/baseline_build_white_18dp"
         android:text="@string/configurar"
         android:textAlignment="center"
-        app:icon="@drawable/baseline_build_24"
-        app:iconGravity="start"
-        app:iconSize="28dp"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@+id/gerenciarDadosBtn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/resgatarDados"
+    <Button
+        android:id="@+id/gerenciarDadosBtn"
         android:layout_width="250dp"
-        android:layout_height="45dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:text="@string/resgatar_dados"
+        android:layout_marginBottom="8dp"
+        android:drawableLeft="@drawable/baseline_folder_white_18dp"
+        android:gravity="left|center_vertical"
+        android:text="@string/gerenciar_dados"
         android:textAlignment="center"
-        app:icon="@drawable/baseline_home_24"
-        app:iconGravity="start"
-        app:iconSize="32dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@+id/analiseDeDadosBtn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/configDeviceBtn" />
+
+
+    <Button
+        android:id="@+id/analiseDeDadosBtn"
+        android:layout_width="250dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:drawableLeft="@drawable/baseline_multiline_chart_white_18dp"
+        android:gravity="left|center_vertical"
+        android:text="@string/analise_de_dados"
+        android:textAlignment="center"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@+id/eeppromBtn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/gerenciarDadosBtn" />
+
+    <Button
+        android:id="@+id/eeppromBtn"
+        android:layout_width="250dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="16dp"
+        android:drawableLeft="@drawable/baseline_build_white_18dp"
+        android:gravity="left|center_vertical"
+        android:text="@string/eeprom"
+        android:textAlignment="center"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/analiseDeDadosBtn"
+        app:layout_constraintVertical_bias="1.0" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
