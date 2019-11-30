@@ -7,8 +7,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -16,6 +18,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+
+import java.util.Calendar;
+import java.util.Objects;
 
 import app.br.chronlog.R;
 
@@ -28,8 +33,12 @@ import app.br.chronlog.R;
  * create an instance of this fragment.
  */
 public class ConfigDeviceFragment extends Fragment implements View.OnClickListener, AdapterView.OnItemSelectedListener {
+    private int mYear, mMonth, mDay, mHora, mMinute, mSecond;
     private ProgressBar progressBar;
-
+    private Switch switchData, switchHorario;
+    private final Calendar c = Calendar.getInstance();
+    private boolean sync;
+    private EditText horarioInput, dataInput;
 
     public ConfigDeviceFragment() {
         // Required empty public constructor
@@ -52,8 +61,30 @@ public class ConfigDeviceFragment extends Fragment implements View.OnClickListen
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         if (getArguments() != null) {
-            ((TextView) getActivity().findViewById(R.id.appBar).findViewById(R.id.titleBar)).setText(getArguments().getString("device"));
+            ((TextView) Objects.requireNonNull(getActivity()).findViewById(R.id.appBar).findViewById(R.id.titleBar)).setText(getArguments().getString("device"));
         }
+
+        horarioInput = Objects.requireNonNull(getActivity()).findViewById(R.id.horaInput);
+        dataInput = getActivity().findViewById(R.id.dataInput);
+
+        switchData = Objects.requireNonNull(getActivity()).findViewById(R.id.syncData);
+        switchHorario = getActivity().findViewById(R.id.syncHora);
+        switchData.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if(isChecked) {
+                syncData();
+            } else {
+                dataInput.setText("");
+            }
+        });
+        switchHorario.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if(isChecked) {
+                syncHorario();
+            } else {
+                horarioInput.setText("");
+            }
+        });
+
+
         Spinner spinner = getActivity().findViewById(R.id.spinnerModoAquisicao);
         // Create an ArrayAdapter using the string array and a default spinner layout
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(),
@@ -65,6 +96,25 @@ public class ConfigDeviceFragment extends Fragment implements View.OnClickListen
         spinner.setOnItemSelectedListener(this);
         super.onViewCreated(view, savedInstanceState);
     }
+
+    private void syncData() {
+        mYear = c.get(Calendar.YEAR);
+        mMonth = c.get(Calendar.MONTH);
+        mDay = c.get(Calendar.DAY_OF_MONTH);
+        EditText dataInput = getActivity().findViewById(R.id.dataInput);
+        dataInput.setText(mDay+":"+mMonth+"/"+mYear);
+        sync = true;
+    }
+
+    private void syncHorario() {
+        mHora = c.get(Calendar.HOUR);
+        mMinute = c.get(Calendar.MINUTE);
+        mSecond = c.get(Calendar.SECOND);
+        EditText horaInput = getActivity().findViewById(R.id.horaInput);
+        horaInput.setText(mHora+":"+mMinute+":"+mSecond);
+        sync = true;
+    }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

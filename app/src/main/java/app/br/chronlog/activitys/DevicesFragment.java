@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
@@ -63,6 +62,9 @@ public class DevicesFragment extends ListFragment implements ServiceConnection, 
     private ProgressBar progressBar;
     private BluetoothDevice deviceSelected;
     private TextView statusView;
+    private CountDownTimer countDownTimer;
+    private View appBarView;
+    private IntentFilter filter;
 
     private enum Connected {False, Pending, True}
 
@@ -89,8 +91,18 @@ public class DevicesFragment extends ListFragment implements ServiceConnection, 
                     device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     //String deviceName = device.getName();
                     //String deviceHardwareAddress = device.getAddress(); // MAC address
-                    listAdapter.add(device);
-                    listAdapter.notifyDataSetChanged();
+                    if (listItems != null) {
+                        if (listItems.size() == 0) {
+                            listAdapter.add(device);
+                        } else {
+                            for (int i = 0; i < listItems.size(); i++) {
+                                if (!listItems.get(i).getAddress().equals(device.getAddress())) {
+                                    listAdapter.add(device);
+                                    listAdapter.notifyDataSetChanged();
+                                }
+                            }
+                        }
+                    }
                     break;
                 case BluetoothDevice.ACTION_PAIRING_REQUEST:
                     try {
@@ -171,7 +183,6 @@ public class DevicesFragment extends ListFragment implements ServiceConnection, 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (Objects.requireNonNull(getActivity()).getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH))
-
             if ((ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) || (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.BLUETOOTH_ADMIN) != PackageManager.PERMISSION_GRANTED)) {
                 ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.BLUETOOTH_ADMIN}, REQUEST_USE_BLUETOOTH);
             } else if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -199,36 +210,32 @@ public class DevicesFragment extends ListFragment implements ServiceConnection, 
 
         if (bluetoothAdapter != null) {
             //busca dispositivos de primeira apenas na criação do fragmento
-            try {
-                createFilters();
-                searchDevices = new Thread(() -> {
-                    if (Looper.myLooper() == null) {
-                        Looper.prepare();
+            if (android.os.Build.VERSION.SDK_INT >= 23) {
+                // ANDROID 6.0 AND UP!
+                boolean accessCoarseLocationAllowed = false;
+                try {
+                    // Invoke checkSelfPermission method from Android 6 (API 23 and UP)
+                    java.lang.reflect.Method methodCheckPermission = Activity.class.getMethod("checkSelfPermission", java.lang.String.class);
+                    Object resultObj = methodCheckPermission.invoke(this, Manifest.permission.ACCESS_COARSE_LOCATION);
+                    int result = Integer.parseInt(resultObj.toString());
+                    if (result == PackageManager.PERMISSION_GRANTED) {
+                        accessCoarseLocationAllowed = true;
                     }
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        if (getActivity().checkSelfPermission("android.permission.ACCESS_COARSE_LOCATION") == PackageManager.PERMISSION_GRANTED) {
-
-                            bluetoothAdapter.startDiscovery();
-                            CountDownTimer countDownTimer = new CountDownTimer(5000, 1000) {
-                                @Override
-                                public void onTick(long millisUntilFinished) {
-
-                                }
-
-                                @Override
-                                public void onFinish() {
-                                    bluetoothAdapter.cancelDiscovery();
-                                }
-                            };
-                            countDownTimer.start();
-                        }
-                    } else {
-                        getActivity().runOnUiThread(() -> ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.BLUETOOTH_ADMIN}, REQUEST_USE_BLUETOOTH));
-                    }
-                });
-                searchDevices.start();
-            } catch (Exception e) {
-                e.printStackTrace();
+                } catch (Exception ignored) {
+                }
+                if (accessCoarseLocationAllowed) {
+                    searchDevices();
+                }
+                try {
+                    // We have to invoke the method "void requestPermissions (Activity activity, String[] permissions, int requestCode) "
+                    // from android 6
+                    java.lang.reflect.Method methodRequestPermission = Activity.class.getMethod("requestPermissions", java.lang.String[].class, int.class);
+                    methodRequestPermission.invoke(this, new String[]
+                            {
+                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                            }, 0x12345);
+                } catch (Exception ignored) {
+                }
             }
             if (service != null)
                 service.attach(this);
@@ -241,7 +248,7 @@ public class DevicesFragment extends ListFragment implements ServiceConnection, 
         if (progressBar.getVisibility() == INVISIBLE) {
             progressBar.setVisibility(View.VISIBLE);
         } else {
-            progressBar.setVisibility(View.INVISIBLE);
+            progressBar.setVisibility(INVISIBLE);
         }
     }
 
@@ -265,8 +272,9 @@ public class DevicesFragment extends ListFragment implements ServiceConnection, 
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        View appBarView = Objects.requireNonNull(getActivity()).findViewById(R.id.appBar);
-        //titulo
+        appBarView = Objects.requireNonNull(getActivity()).findViewById(R.id.appBar);
+
+                //titulo
         ((TextView) appBarView.findViewById(R.id.titleBar)).setText(R.string.dispositivos);
         progressBar = appBarView.findViewById(R.id.progressBarAppBar);
         statusView = appBarView.findViewById(R.id.status);
@@ -296,17 +304,21 @@ public class DevicesFragment extends ListFragment implements ServiceConnection, 
     }
 
     private void btOn() {
-        if(connected != Connected.True) {
+        refreshButton.setImageDrawable(Objects.requireNonNull(getActivity()).getDrawable(R.drawable.baseline_bluetooth_searching_white_18dp));
+        getActivity().findViewById(R.id.iconBar).setEnabled(true);
+        if (connected != Connected.True) {
             setStatus("Bluetooth" + "\n" + "Habilitado");
         }
         if (listItems.size() < 1) {
-            setEmptyText("Nenhum Dispositivo Encontrado. " + "\n" + ":( " + "\n" + "Tente Novamente.");
+            setEmptyText("Nenhum Dispositivo Encontrado. :( " + "\n" + "Tente Novamente.");
         }
     }
 
     private void btOff() {
         setStatus("Bluetooth" + "\n" + "Desabilitado");
         setEmptyText("Habilite o Bluetooth, Por Favor.");
+        refreshButton.setImageDrawable(Objects.requireNonNull(getActivity()).getDrawable(R.drawable.baseline_bluetooth_disabled_black_18dp));
+        getActivity().findViewById(R.id.iconBar).setEnabled(false);
     }
 
 
@@ -316,7 +328,7 @@ public class DevicesFragment extends ListFragment implements ServiceConnection, 
 
     private void setIconToRefreshBluetooth(View appView) {
         refreshButton = appView.findViewById(R.id.iconBar);
-        refreshButton.setImageDrawable(Objects.requireNonNull(getActivity()).getDrawable(R.drawable.baseline_sync_24));
+        refreshButton.setImageDrawable(Objects.requireNonNull(getActivity()).getDrawable(R.drawable.baseline_sync_white_18dp));
         refreshButton.setOnClickListener(v -> refresh());
     }
 
@@ -328,7 +340,7 @@ public class DevicesFragment extends ListFragment implements ServiceConnection, 
     }
 
     @SuppressWarnings("deprecation")
-    // onAttach(context) was added with API 23. onAttach(activity) works for all API versions
+// onAttach(context) was added with API 23. onAttach(activity) works for all API versions
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -349,19 +361,60 @@ public class DevicesFragment extends ListFragment implements ServiceConnection, 
 //        if(params == null) {
 
 //        } else {
-            Bundle args = new Bundle();
+        Bundle args = new Bundle();
 //            args.putString("device", params);
-            transaction.replace(R.id.fragment_container, new MainFragment());
-            transaction.addToBackStack(null);
-            // Commit the transaction
-            transaction.commit();
+        transaction.replace(R.id.fragment_container, new MainFragment());
+        transaction.addToBackStack(null);
+        // Commit the transaction
+        transaction.commit();
 //        }
 
 
     }
 
     private void searchDevices() {
-        searchDevices.start();
+        try {
+            createFilters();
+            if (searchDevices != null) {
+                if (searchDevices.isAlive()) {
+                    if (countDownTimer != null) {
+                        countDownTimer.cancel();
+                    }
+                    if (bluetoothAdapter.isDiscovering()) {
+                        bluetoothAdapter.cancelDiscovery();
+                    }
+                    searchDevices.interrupt();
+                }
+            }
+            searchDevices = new Thread(() -> {
+                if (Looper.myLooper() == null) {
+                    Looper.prepare();
+                }
+                bluetoothAdapter.startDiscovery();
+                if (countDownTimer != null) {
+                    countDownTimer.cancel();
+                }
+                countDownTimer = new CountDownTimer(5000, 1000) {
+                    @Override
+                    public void onTick(long millisUntilFinished) {
+
+                    }
+
+                    @Override
+                    public void onFinish() {
+                        bluetoothAdapter.cancelDiscovery();
+                    }
+                };
+                countDownTimer.start();
+//            } else{
+//                getActivity().runOnUiThread(() -> ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.BLUETOOTH_ADMIN}, REQUEST_USE_BLUETOOTH));
+//            }
+            });
+            searchDevices.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void refresh() {
@@ -438,15 +491,17 @@ public class DevicesFragment extends ListFragment implements ServiceConnection, 
     }
 
     private void createFilters() {
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(BluetoothDevice.ACTION_FOUND);
-        filter.addAction(BluetoothDevice.ACTION_PAIRING_REQUEST);
-        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-        filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
-        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
-        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-        filter.addAction(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED);
-        Objects.requireNonNull(getActivity()).registerReceiver(receiver, filter);
+        if (filter == null) {
+            filter = new IntentFilter();
+            filter.addAction(BluetoothDevice.ACTION_FOUND);
+            filter.addAction(BluetoothDevice.ACTION_PAIRING_REQUEST);
+            filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+            filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+            filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
+            filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+            filter.addAction(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED);
+            Objects.requireNonNull(getActivity()).registerReceiver(receiver, filter);
+        }
     }
 
     /*
@@ -462,13 +517,13 @@ public class DevicesFragment extends ListFragment implements ServiceConnection, 
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        if(deviceName.length() > 10) {
-            setStatus(deviceName.substring(0, 7)+"...");
+        if (deviceName.length() > 10) {
+            setStatus(deviceName.substring(0, 7) + "...");
         } else {
             setStatus(deviceName);
         }
         Toast.makeText(getContext(), "Aparelho conectado com sucesso!", Toast.LENGTH_SHORT).show();
-        String[] params = new String[] {deviceName};
+        String[] params = new String[]{deviceName};
         gotToHome(params);
     }
 
@@ -493,7 +548,7 @@ public class DevicesFragment extends ListFragment implements ServiceConnection, 
         } catch (InterruptedException ex) {
             ex.printStackTrace();
         }
-        if(progressBar.getVisibility() == View.VISIBLE) {
+        if (progressBar.getVisibility() == View.VISIBLE) {
             toggleProgressBarVisibility();
         }
         Toast.makeText(getContext(), "O Aparelho Foi Desconectado!", Toast.LENGTH_LONG).show();
