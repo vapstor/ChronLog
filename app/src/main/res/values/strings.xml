@@ -49,5 +49,20 @@
     <string name="analise_de_dados">Análise de Dados</string>
     <string name="eeprom">EEPROM</string>
     <string name="gerenciar_dados">Gerenciar Dados</string>
-    <string name="sincronizar_data">Sincronizar Data</string>
+    <string name="sincronizar_data">Sincronizar\nData</string>
+    <string name="_10_10_2019">10/10/2019</string>
+    <string name="sincronizar_hor_rio">Sincronizar\\nHorário</string>
+    <string name="_10_23_35">10:23:35</string>
+    <string name="enviar">ENVIAR</string>
+    <string name="segundos">segundos</string>
+    <string name="use_sincronizar_data_hor_rio_para_configurar_utilizando_a_data_e_hor_rio_do_celular">Use sincronizar data/horário para configurar utilizando a data e horário do celular.</string>
+
+    <string-array name="planets_array">
+        <item>Selecione um Modo</item>
+        <item>A</item>
+        <item>B</item>
+        <item>C</item>
+        <item>D</item>
+        <item>E</item>
+    </string-array>
 </resources>

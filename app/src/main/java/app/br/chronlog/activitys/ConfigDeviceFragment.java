@@ -5,7 +5,10 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -24,7 +27,7 @@ import app.br.chronlog.R;
  * Use the {@link ConfigDeviceFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class ConfigDeviceFragment extends Fragment implements View.OnClickListener {
+public class ConfigDeviceFragment extends Fragment implements View.OnClickListener, AdapterView.OnItemSelectedListener {
     private ProgressBar progressBar;
 
 
@@ -51,7 +54,15 @@ public class ConfigDeviceFragment extends Fragment implements View.OnClickListen
         if (getArguments() != null) {
             ((TextView) getActivity().findViewById(R.id.appBar).findViewById(R.id.titleBar)).setText(getArguments().getString("device"));
         }
-
+        Spinner spinner = getActivity().findViewById(R.id.spinnerModoAquisicao);
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(),
+                R.array.planets_array, android.R.layout.simple_spinner_item);
+        // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner
+        spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(this);
         super.onViewCreated(view, savedInstanceState);
     }
 
@@ -74,8 +85,17 @@ public class ConfigDeviceFragment extends Fragment implements View.OnClickListen
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.iconBar:
-                ((AppCompatActivity)getContext()).getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                ((AppCompatActivity) getContext()).getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
                 break;
         }
+    }
+
+    public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+        // An item was selected. You can retrieve the selected item using
+        // parent.getItemAtPosition(pos)
+    }
+
+    public void onNothingSelected(AdapterView<?> parent) {
+
     }
 }
