@@ -66,6 +66,7 @@ public class LoginActivity extends AppCompatActivity {
         serialTV.addTextChangedListener(tw);
 
         btnLogin.setOnClickListener((v) -> {
+            v.setEnabled(false);
             sharedPreferences.edit().putBoolean("aparelho_verificado", true).apply();
             Toast.makeText(this, "Configurando aparelho...", Toast.LENGTH_SHORT).show();
 //                alert = createLoadingDialog(this, "Efetuando Login", "Por Favor aguarde enquanto efetuamos a autenticação!");
@@ -77,7 +78,7 @@ public class LoginActivity extends AppCompatActivity {
                 try {
                     Thread.sleep(1200);
                     runOnUiThread(() -> {
-                        findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
+                        findViewById(R.id.progressBar).setVisibility(View.GONE);
                         status[0] = findViewById(R.id.status);
                         status[0].setVisibility(View.VISIBLE);
                         status[0].setText(R.string.serial_configurado);
@@ -92,6 +93,7 @@ public class LoginActivity extends AppCompatActivity {
                         findViewById(R.id.serial_input).setVisibility(View.VISIBLE);
                         startActivityWithExplosion(this, intent);
 //                            destroyDialog(alert);
+                        v.setEnabled(true);
                     });
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -99,12 +101,6 @@ public class LoginActivity extends AppCompatActivity {
             }).start();
 
         });
-    }
-
-    @Override
-    protected void onResume() {
-
-        super.onResume();
     }
 
     @Override

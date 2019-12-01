@@ -28,6 +28,7 @@ public class Utils {
     public final static String TAG_LOG = "CHRONLOG";
     public static long passedTime = 0;
 
+
     public static AlertDialog createDialog(
             Context context,
             String title,

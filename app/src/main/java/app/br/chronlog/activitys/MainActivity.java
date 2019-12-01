@@ -9,10 +9,13 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import app.br.chronlog.R;
+import app.br.chronlog.utils.bluetooth.BluetoothController;
 
 import static com.github.mikephil.charting.charts.Chart.LOG_TAG;
 
 public class MainActivity extends AppCompatActivity implements FragmentManager.OnBackStackChangedListener {
+
+    public static BluetoothController universalBtController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,9 +26,10 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
             getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, new MainFragment(), "main").commit();
         else
             onBackStackChanged();
-
+        universalBtController = new BluetoothController(this);
         getSupportFragmentManager().addOnBackStackChangedListener(this);
     }
+
 
     @Override
     public void onBackStackChanged() {

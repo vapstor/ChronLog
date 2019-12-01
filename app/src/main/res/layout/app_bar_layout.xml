@@ -31,11 +31,10 @@
 
         <ImageButton
             android:id="@+id/iconBar"
-            android:layout_width="40dp"
-            android:layout_height="0dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginBottom="8dp"
+            android:layout_width="50dp"
+            android:layout_height="75dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
             android:background="@null"
             android:contentDescription="@string/iconeappbar"
             android:elevation="0dp"
@@ -53,15 +52,15 @@
             style="?android:attr/progressBarStyle"
             android:layout_width="25dp"
             android:layout_height="25dp"
+            android:layout_marginTop="5dp"
             android:layout_marginEnd="8dp"
             android:layout_marginBottom="5dp"
             android:indeterminate="true"
             android:theme="@style/AppTheme.ProgressBarInverted"
-            android:visibility="invisible"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@+id/status"
             app:layout_constraintEnd_toStartOf="@+id/iconBar"
-            app:layout_constraintTop_toTopOf="@+id/status"
-            app:layout_constraintVertical_bias="0.666" />
+            app:layout_constraintTop_toTopOf="@+id/status" />
 
         <TextView
             android:id="@+id/status"
@@ -74,6 +73,7 @@
             android:text="@string/nao_conectado"
             android:textAlignment="center"
             android:textColor="@color/colorPrimaryDark"
+            android:textSize="12sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/progressBarAppBar"
             app:layout_constraintTop_toTopOf="parent" />

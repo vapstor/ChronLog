@@ -19,6 +19,7 @@
         tools:ignore="GoogleAppIndexingWarning"
         >
         <activity android:name=".activitys.MainActivity"
+            android:windowSoftInputMode="adjustResize"
             />
         <activity
             android:name=".activitys.SplashScreenActivity"

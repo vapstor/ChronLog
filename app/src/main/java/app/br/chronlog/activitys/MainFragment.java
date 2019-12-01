@@ -19,7 +19,9 @@ import androidx.fragment.app.FragmentTransaction;
 import java.util.Objects;
 
 import app.br.chronlog.R;
+import app.br.chronlog.utils.bluetooth.BluetoothController;
 
+import static app.br.chronlog.activitys.MainActivity.universalBtController;
 import static app.br.chronlog.utils.Utils.startActivityWithExplosion;
 
 
@@ -27,7 +29,7 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     private ProgressBar progressBar;
     private View btnGerenciarDados;
     private ImageButton syncButton;
-    private Button configuraDeviceBtn, analisaDadosBtn, eepromBtn;
+    private Button configuraDeviceBtn, analisaDadosBtn, eepromBtn, gerenciarDadosBtn;
     private View appBarView;
 
     @Override
@@ -50,21 +52,38 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        appBarView = getActivity().findViewById(R.id.appBar);
+        appBarView = Objects.requireNonNull(getActivity()).findViewById(R.id.appBar);
         ((TextView) appBarView.findViewById(R.id.titleBar)).setText(R.string.chronlog);
         syncButton = appBarView.findViewById(R.id.iconBar);
-        syncButton.setImageDrawable(getActivity().getDrawable(R.drawable.baseline_sync_alt_white_24dp));
+        syncButton.setImageDrawable(getActivity().getDrawable(R.drawable.baseline_bluetooth_searching_white_18dp));
 
         progressBar = appBarView.findViewById(R.id.progressBarAppBar);
 
         configuraDeviceBtn = view.findViewById(R.id.configDeviceBtn);
+        gerenciarDadosBtn = view.findViewById(R.id.gerenciarDadosBtn);
         analisaDadosBtn = view.findViewById(R.id.analiseDeDadosBtn);
         eepromBtn = view.findViewById(R.id.eeppromBtn);
 
+        setButtonsEnabledDisabled();
+
         syncButton.setOnClickListener(this);
         configuraDeviceBtn.setOnClickListener(this);
+        gerenciarDadosBtn.setOnClickListener(this);
         analisaDadosBtn.setOnClickListener(this);
         eepromBtn.setOnClickListener(this);
+    }
+
+    private void setButtonsEnabledDisabled() {
+        syncButton.setEnabled(true);
+        if (universalBtController.getConnected() == BluetoothController.Connected.False) {
+            configuraDeviceBtn.setEnabled(false);
+            gerenciarDadosBtn.setEnabled(false);
+            eepromBtn.setEnabled(false);
+        } else {
+            configuraDeviceBtn.setEnabled(true);
+            gerenciarDadosBtn.setEnabled(true);
+            eepromBtn.setEnabled(true);
+        }
     }
 
     @Override
@@ -76,6 +95,7 @@ public class MainFragment extends Fragment implements View.OnClickListener {
                 // and add the transaction to the back stack
                 assert getFragmentManager() != null;
                 transaction = getFragmentManager().beginTransaction();
+                transaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
                 transaction.replace(R.id.fragment_container, new ConfigDeviceFragment());
                 transaction.addToBackStack(null);
                 // Commit the transaction
@@ -84,6 +104,7 @@ public class MainFragment extends Fragment implements View.OnClickListener {
             case R.id.iconBar:
                 assert getFragmentManager() != null;
                 transaction = getFragmentManager().beginTransaction();
+                transaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
                 transaction.replace(R.id.fragment_container, new DevicesFragment());
                 transaction.addToBackStack(null);
                 // Commit the transaction
