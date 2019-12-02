@@ -38,6 +38,7 @@ public class ConfigDeviceFragment extends Fragment implements View.OnClickListen
     private TextWatcher dataInputListener, horaInputListener;
     private View btnSend;
     private String[] todosModosTermopar;
+    public static Thread mySendThread;
 
     public ConfigDeviceFragment() {
         // Required empty public constructor
@@ -109,7 +110,7 @@ public class ConfigDeviceFragment extends Fragment implements View.OnClickListen
     private void syncData() {
         final Calendar c = Calendar.getInstance();
         mYear = String.valueOf(c.get(Calendar.YEAR));
-        mMonth = String.valueOf(c.get(Calendar.MONTH)+1); //calendario começa do 0
+        mMonth = String.valueOf(c.get(Calendar.MONTH) + 1); //calendario começa do 0
         if (mMonth.length() == 1) {
             mMonth = "0" + mMonth;
         }
@@ -263,7 +264,7 @@ public class ConfigDeviceFragment extends Fragment implements View.OnClickListen
                     //Fix for pressing delete next to a forward slash
                     if (clean.equals(cleanC)) sel--;
 
-                    if (clean.length() < 8) {
+                    if (clean.length() < 6) {
                         clean = clean + hhmmss.substring(clean.length());
                     } else {
                         //This part makes sure that when we finish entering numbers
@@ -302,39 +303,48 @@ public class ConfigDeviceFragment extends Fragment implements View.OnClickListen
         };
     }
 
-    private void sendInfos() {
+    public void sendInfos() {
         String infoHorario = horarioInput.getText().toString();
         String infoData = dataInput.getText().toString();
         String infoTempoAquisicao = aquisitionInput.getText().toString();
 
-        String protocolSetData, protocolSetHorario, protocolConfiguration;
-
-        if (!infoData.equals("") && !infoData.equals("dd/mm/yyyy")) {
-            /**
-             * @01YYYYMMDDCRLF YYYY year, MM month, DD day CR carriage return, LF line feed
-             * */
-            configDateToSend();
-            protocolSetData = "@01" + mYear + mMonth + mDay + "0000";
-            new Thread(() -> universalBtController.send(protocolSetData)).start();
-        }
-        if (!infoHorario.equals("") && !infoHorario.equals("hh:mm:ss")) {
-            /**
-             * @02HHMMSSRRCRLF HH hour, MM minute, SS second, RR reserved for future
-             * */
-            configHoursToSend();
-            protocolSetHorario = "@02" + mHora + mMinute + mSecond + "00" + "0000";
-            new Thread(() -> universalBtController.send(protocolSetHorario)).start();
-
-        }
-        if (!infoTempoAquisicao.equals("") && infoTempoAquisicao.length() != 3 && !modoTermopar.equals("Modo")) {
-            /**
-            *@03TTNNNRRRCRLF TT termocouple type, NNN acquisition time in seconds, RRR reserved for future*
-            * */
-//            configTempoAquisicaoToSend();
-            protocolConfiguration = "@03" + modoTermopar + infoTempoAquisicao + "000"+"0000";
-            new Thread(() -> universalBtController.send(protocolConfiguration)).start();
-
-        }
+        mySendThread = new Thread(() -> {
+            String protocolSetData, protocolSetHorario, protocolConfiguration;
+            synchronized (this) {
+                try {
+                    if (!infoData.equals("") && !infoData.equals("dd/mm/yyyy")) {
+                        /**
+                         * @01YYYYMMDDCRLF YYYY year, MM month, DD day CR carriage return, LF line feed
+                         * */
+                        configDateToSend();
+                        protocolSetData = "@01" + mYear + mMonth + mDay + "0000";
+                        universalBtController.send(protocolSetData);
+                        wait();
+                    }
+                    if (!infoHorario.equals("") && !infoHorario.equals("hh:mm:ss")) {
+                        /**
+                         * @02HHMMSSRRCRLF HH hour, MM minute, SS second, RR reserved for future
+                         * */
+                        configHoursToSend();
+                        protocolSetHorario = "@02" + mHora + mMinute + mSecond + "00" + "0000";
+                        universalBtController.send(protocolSetHorario);
+                        wait();
+                    }
+                    if (!infoTempoAquisicao.equals("") && infoTempoAquisicao.length() != 3 && !modoTermopar.equals("Modo")) {
+                        /**
+                         *@03TTNNNRRRCRLF TT termocouple type, NNN acquisition time in seconds, RRR reserved for future*
+                         * */
+                        //configTempoAquisicaoToSend();
+                        protocolConfiguration = "@03" + modoTermopar + infoTempoAquisicao + "000" + "0000";
+                        universalBtController.send(protocolConfiguration);
+                        wait();
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        mySendThread.start();
     }
 
 //    private void configTempoAquisicaoToSend(String s) {

@@ -27,6 +27,7 @@ import java.util.Objects;
 import app.br.chronlog.R;
 
 import static android.view.View.GONE;
+import static app.br.chronlog.activitys.ConfigDeviceFragment.mySendThread;
 import static app.br.chronlog.activitys.DevicesFragment.devicesList;
 import static app.br.chronlog.activitys.DevicesFragment.listAdapter;
 import static com.github.mikephil.charting.charts.Chart.LOG_TAG;
@@ -47,13 +48,14 @@ public class BluetoothController implements ServiceConnection, SerialListener {
     private Thread searchDevices;
     private TextView statusView;
     private String deviceName, deviceAddress;
+    public static int mySendFlag = 0;
 
     public BluetoothAdapter getBluetoothAdapter() {
         return bluetoothAdapter;
     }
 
     public void searchDevices() {
-        if(bluetoothAdapter != null) {
+        if (bluetoothAdapter != null) {
             try {
                 if (searchDevices != null) {
                     if (searchDevices.isAlive()) {
@@ -294,7 +296,7 @@ public class BluetoothController implements ServiceConnection, SerialListener {
 
 
     public void send(String str) {
-        Log.d(LOG_TAG, "String a enviar para termopar: "+str);
+        Log.d(LOG_TAG, "String a enviar para termopar: " + str);
         if (connected != Connected.True) {
             Toast.makeText(activity, "Não Conectado", Toast.LENGTH_SHORT).show();
             return;
@@ -308,16 +310,16 @@ public class BluetoothController implements ServiceConnection, SerialListener {
     }
 
     private void receive(byte[] data) {
-        String messageReceived = new String(data);
-        if (messageReceived.contains("01")) {
-            Toast.makeText(activity, "Data configurada!", Toast.LENGTH_SHORT).show();
-        } else if (messageReceived.contains("02")) {
-            Toast.makeText(activity, "Horário configurado!", Toast.LENGTH_SHORT).show();
-        } else if (messageReceived.contains("03")) {
-            Toast.makeText(activity, "Modo de aquisição e tipo de termopar configurados!", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(activity, "Ajustes no termopar efetuados com sucesso!", Toast.LENGTH_SHORT).show();
+        synchronized (mySendThread) {
+            if(mySendFlag == 1) { //o aparelho retorna 2 vezes 1: @ 2: 01 [0-1]
+                mySendFlag = 0;
+                mySendThread.notify(); //notifica para outro envio após os dois recebimentos
+            }
+            mySendFlag = 1;
+            String messageReceived = new String(data);
+            Log.d(LOG_TAG, "receive: "+messageReceived);
         }
+        Toast.makeText(activity, "Ajustes no termopar efetuados com sucesso!", Toast.LENGTH_SHORT).show();
     }
 
 
