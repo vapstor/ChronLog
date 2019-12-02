@@ -319,7 +319,6 @@ public class BluetoothController implements ServiceConnection, SerialListener {
             String messageReceived = new String(data);
             Log.d(LOG_TAG, "receive: "+messageReceived);
         }
-        Toast.makeText(activity, "Ajustes no termopar efetuados com sucesso!", Toast.LENGTH_SHORT).show();
     }
 
 

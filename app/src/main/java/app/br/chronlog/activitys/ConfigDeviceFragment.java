@@ -15,6 +15,7 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -273,9 +274,9 @@ public class ConfigDeviceFragment extends Fragment implements View.OnClickListen
                         int minutes = Integer.parseInt(clean.substring(2, 4));
                         int seconds = Integer.parseInt(clean.substring(4, 6));
 
-                        minutes = (minutes < 1) ? 1 : minutes > 59 ? 00 : minutes;
+                        minutes = (minutes < 1) ? 0 : minutes > 59 ? 00 : minutes;
                         cal.set(Calendar.MINUTE, minutes);
-                        seconds = seconds < 1 ? 1 : seconds > 59 ? 00 : minutes;
+                        seconds = seconds < 1 ? 0 : seconds > 59 ? 00 : minutes;
                         cal.set(Calendar.SECOND, seconds);
                         // ^ first set year for the line below to work correctly
                         //with leap years - otherwise, date e.g. 29/02/2012
@@ -339,6 +340,7 @@ public class ConfigDeviceFragment extends Fragment implements View.OnClickListen
                         universalBtController.send(protocolConfiguration);
                         wait();
                     }
+                    Toast.makeText(getContext(), "Ajustes no termopar efetuados com sucesso!", Toast.LENGTH_SHORT).show();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
