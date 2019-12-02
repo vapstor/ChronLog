@@ -6,7 +6,7 @@
   <strong>Repositório para centralizar o Ambiente de Desenvolvimento</strong>
   <p align="center">
     <img src="https://ci.appveyor.com/api/projects/status/g8d58ipi3auqdtrk/branch/master?svg=true" alt="Current Appveyor build status." />
-    <img src="https://img.shields.io/badge/version-1.2.5-blue.svg" alt="Current APP version." />  
+    <img src="https://img.shields.io/badge/version-1.3.9-blue.svg" alt="Current APP version." />  
   </p>
 </p>
 
@@ -41,13 +41,15 @@
   
 * Desenvolver Tela de Conexão Bluetooth
   - [x] Interface Bluetooth serial (modo SSP)
-  - [x] Conexão ao Termopar
+  - [x] Refresh Lista de Dispositivos
+  - [x] Auto-Conexão [com pin '1234']
+  - [x] Conexão ao Dispositivo
   
 * Desenvolver Tela Configurações
-  - [ ] Botão "Parear Hora"
-  - [ ] Botão "Parear Data"
-  - [ ] Dropbox "Setar Termopar"
-  - [ ] Input + Botão "Configurar Tempo de Aquisição"
+  - [x] Botão "Parear Hora"
+  - [x] Botão "Parear Data"
+  - [x] Dropbox "Setar Termopar"
+  - [x] Input + Botão "Configurar Tempo de Aquisição"
   
 * Desenvolver Tela Chart 
   - [x] Chart com valores estáticos
