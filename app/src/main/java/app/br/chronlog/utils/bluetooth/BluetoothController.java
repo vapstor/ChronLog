@@ -53,45 +53,47 @@ public class BluetoothController implements ServiceConnection, SerialListener {
     }
 
     public void searchDevices() {
-        try {
-            if (searchDevices != null) {
-                if (searchDevices.isAlive()) {
+        if(bluetoothAdapter != null) {
+            try {
+                if (searchDevices != null) {
+                    if (searchDevices.isAlive()) {
+                        if (countDownTimer != null) {
+                            countDownTimer.cancel();
+                        }
+                        if (bluetoothAdapter.isDiscovering()) {
+                            bluetoothAdapter.cancelDiscovery();
+                        }
+                        searchDevices.interrupt();
+                    }
+                }
+                searchDevices = new Thread(() -> {
+                    if (Looper.myLooper() == null) {
+                        Looper.prepare();
+                    }
+                    bluetoothAdapter.startDiscovery();
                     if (countDownTimer != null) {
                         countDownTimer.cancel();
                     }
-                    if (bluetoothAdapter.isDiscovering()) {
-                        bluetoothAdapter.cancelDiscovery();
-                    }
-                    searchDevices.interrupt();
-                }
-            }
-            searchDevices = new Thread(() -> {
-                if (Looper.myLooper() == null) {
-                    Looper.prepare();
-                }
-                bluetoothAdapter.startDiscovery();
-                if (countDownTimer != null) {
-                    countDownTimer.cancel();
-                }
-                countDownTimer = new CountDownTimer(5000, 1000) {
-                    @Override
-                    public void onTick(long millisUntilFinished) {
+                    countDownTimer = new CountDownTimer(5000, 1000) {
+                        @Override
+                        public void onTick(long millisUntilFinished) {
 
-                    }
+                        }
 
-                    @Override
-                    public void onFinish() {
-                        bluetoothAdapter.cancelDiscovery();
-                    }
-                };
-                countDownTimer.start();
+                        @Override
+                        public void onFinish() {
+                            bluetoothAdapter.cancelDiscovery();
+                        }
+                    };
+                    countDownTimer.start();
 //            } else{
 //                getActivity().runOnUiThread(() -> ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.BLUETOOTH_ADMIN}, REQUEST_USE_BLUETOOTH));
 //            }
-            });
-            searchDevices.start();
-        } catch (Exception e) {
-            e.printStackTrace();
+                });
+                searchDevices.start();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 

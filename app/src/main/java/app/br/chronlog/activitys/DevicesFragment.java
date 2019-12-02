@@ -205,12 +205,14 @@ public class DevicesFragment extends ListFragment {
     }
 
     private void checkDevicesBonded() {
-        devicesList.clear();
-        for (BluetoothDevice device : universalBtController.getBluetoothAdapter().getBondedDevices())
-            if (device.getType() != BluetoothDevice.DEVICE_TYPE_LE)
-                devicesList.add(device);
-        Collections.sort(devicesList, DevicesFragment::compareTo);
-        listAdapter.notifyDataSetChanged();
+        if(universalBtController.getBluetoothAdapter() != null) {
+            devicesList.clear();
+            for (BluetoothDevice device : universalBtController.getBluetoothAdapter().getBondedDevices())
+                if (device.getType() != BluetoothDevice.DEVICE_TYPE_LE)
+                    devicesList.add(device);
+            Collections.sort(devicesList, DevicesFragment::compareTo);
+            listAdapter.notifyDataSetChanged();
+        }
     }
 
     @Override
