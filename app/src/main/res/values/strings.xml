@@ -56,7 +56,10 @@
     <string name="enviar">ENVIAR</string>
     <string name="segundos">segundos</string>
     <string name="use_sincronizar_data_hor_rio_para_configurar_utilizando_a_data_e_hor_rio_do_celular">Use sincronizar data/horário para configurar utilizando a data e horário do celular.</string>
-
+    <string name="hh_mm_ss">hh:mm:ss</string>
+    <string name="configurando___">configurando…</string>
+    <string name="aguarde">aguarde</string>
+    <string name="ajustes">ajustes</string>
     <string-array name="modosTermopar">
         <item>A</item>
         <item>B</item>

@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <include xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/include"
+        layout="@layout/app_bar_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="75dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="70dp"
+        android:animateLayoutChanges="true"
+        android:animationCache="true"
+        android:fillViewport="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="15dp"
+            tools:context=".activitys.ConfigDeviceFragment">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/constraintLayout2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="25dp"
+                android:orientation="horizontal"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <Switch
+                    android:id="@+id/syncData"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    app:layout_constraintBottom_toBottomOf="@+id/dataInput"
+                    app:layout_constraintEnd_toStartOf="@+id/labelSyncData"
+                    app:layout_constraintStart_toEndOf="@+id/dataInput"
+                    app:layout_constraintTop_toTopOf="@+id/dataInput" />
+
+                <TextView
+                    android:id="@+id/labelSyncData"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="2dp"
+                    android:layout_marginEnd="25dp"
+                    android:text="@string/sincronizar_data"
+                    android:textAlignment="center"
+                    android:textSize="12sp"
+                    app:layout_constraintBottom_toBottomOf="@+id/syncData"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/syncData"
+                    app:layout_constraintTop_toTopOf="@+id/syncData" />
+
+                <EditText
+                    android:id="@+id/dataInput"
+                    android:layout_width="200dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="25dp"
+                    android:hint="dd/mm/aaaa"
+                    android:inputType="number"
+                    android:singleLine="true"
+                    android:textAlignment="center"
+                    android:textStyle="italic"
+                    app:layout_constraintEnd_toStartOf="@+id/syncData"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <Button
+                    android:id="@+id/configDataBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/configurar"
+                    app:layout_constraintEnd_toEndOf="@+id/labelSyncData"
+                    app:layout_constraintStart_toStartOf="@+id/dataInput"
+                    app:layout_constraintTop_toBottomOf="@+id/dataInput" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <Switch
+                android:id="@+id/syncHora"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                app:layout_constraintBottom_toBottomOf="@+id/horaInput"
+                app:layout_constraintEnd_toStartOf="@+id/textView2"
+                app:layout_constraintStart_toEndOf="@+id/horaInput"
+                app:layout_constraintTop_toTopOf="@+id/horaInput" />
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="2dp"
+                android:layout_marginEnd="25dp"
+                android:text="Sinzronizar\nHorário"
+                android:textAlignment="center"
+                android:textSize="12sp"
+                app:layout_constraintBottom_toBottomOf="@+id/syncHora"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/syncHora"
+                app:layout_constraintTop_toTopOf="@+id/syncHora" />
+
+            <EditText
+                android:id="@+id/horaInput"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="25dp"
+                android:hint="@string/hh_mm_ss"
+                android:inputType="number"
+                android:singleLine="true"
+                android:textAlignment="center"
+                android:textStyle="italic"
+                app:layout_constraintEnd_toStartOf="@+id/syncHora"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/constraintLayout2" />
+
+            <Button
+                android:id="@+id/configHorarioBtn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/configurar"
+                app:layout_constraintEnd_toEndOf="@+id/textView2"
+                app:layout_constraintStart_toStartOf="@+id/horaInput"
+                app:layout_constraintTop_toBottomOf="@+id/horaInput" />
+
+            <Button
+                android:id="@+id/configTermoparBtn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/configurar"
+                app:layout_constraintEnd_toEndOf="@+id/spinnerModoAquisicao"
+                app:layout_constraintStart_toStartOf="@+id/aquisitionInput"
+                app:layout_constraintTop_toBottomOf="@+id/aquisitionInput" />
+
+            <EditText
+                android:id="@+id/aquisitionInput"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:ems="10"
+                android:hint="@string/segundos"
+                android:inputType="number"
+                android:textAlignment="center"
+                android:textSize="16sp"
+                android:textStyle="italic"
+                app:layout_constraintEnd_toStartOf="@+id/spinnerModoAquisicao"
+                app:layout_constraintStart_toStartOf="@+id/configHorarioBtn"
+                app:layout_constraintTop_toBottomOf="@+id/configHorarioBtn" />
+
+            <Spinner
+                android:id="@+id/spinnerModoAquisicao"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                app:layout_constraintBottom_toBottomOf="@+id/aquisitionInput"
+                app:layout_constraintEnd_toEndOf="@+id/configHorarioBtn"
+                app:layout_constraintStart_toEndOf="@+id/aquisitionInput"
+                app:layout_constraintTop_toTopOf="@+id/aquisitionInput" />
+
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="50dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="50dp"
+                android:paddingLeft="75dp"
+                android:paddingRight="75dp"
+                android:text="@string/use_sincronizar_data_hor_rio_para_configurar_utilizando_a_data_e_hor_rio_do_celular"
+                android:textAlignment="center"
+                android:textColor="@color/colorPrimaryDark"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/configTermoparBtn" />
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

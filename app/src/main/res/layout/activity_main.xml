@@ -8,26 +8,98 @@
 
 
     <include
+        android:id="@+id/include"
         layout="@layout/app_bar_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="75dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toStartOf="parent" />
 
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/fragment_container"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="75dp"
-        android:foregroundGravity="center"
-        android:orientation="vertical"
+        android:id="@+id/container_main_fragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="70dp"
+        android:layout_marginBottom="70dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+
+        <Button
+            android:id="@+id/configDeviceBtn"
+            android:layout_width="250dp"
+            android:layout_height="60dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:drawableLeft="@drawable/baseline_build_white_18dp"
+            android:text="@string/configurar"
+            android:textAlignment="center"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toTopOf="@+id/gerenciarDadosBtn"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/gerenciarDadosBtn"
+            android:layout_width="250dp"
+            android:layout_height="60dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:drawableLeft="@drawable/baseline_folder_white_18dp"
+            android:gravity="left|center_vertical"
+            android:text="@string/gerenciar_dados"
+            android:textAlignment="center"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toTopOf="@+id/analiseDeDadosBtn"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/configDeviceBtn" />
+
+
+        <Button
+            android:id="@+id/analiseDeDadosBtn"
+            android:layout_width="250dp"
+            android:layout_height="60dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:drawableLeft="@drawable/baseline_multiline_chart_white_18dp"
+            android:gravity="left|center_vertical"
+            android:text="@string/analise_de_dados"
+            android:textAlignment="center"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toTopOf="@+id/eeppromBtn"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/gerenciarDadosBtn" />
+
+        <Button
+            android:id="@+id/eeppromBtn"
+            android:layout_width="250dp"
+            android:layout_height="60dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="16dp"
+            android:drawableLeft="@drawable/baseline_build_white_18dp"
+            android:gravity="left|center_vertical"
+            android:text="@string/eeprom"
+            android:textAlignment="center"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/analiseDeDadosBtn"
+            app:layout_constraintVertical_bias="1.0" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

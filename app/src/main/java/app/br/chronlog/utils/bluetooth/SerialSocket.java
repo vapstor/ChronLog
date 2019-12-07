@@ -28,7 +28,7 @@ public class SerialSocket implements Runnable {
         disconnectBroadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if(listener != null)
+                if (listener != null)
                     listener.onSerialIoError(new IOException("background disconnect"));
                 disconnect(); // disconnect now, else would be queued until UI re-attached
             }
@@ -39,19 +39,20 @@ public class SerialSocket implements Runnable {
      * connect-success and most connect-errors are returned asynchronously to listener
      */
     public void connect(Context context, SerialListener listener, BluetoothDevice device) throws IOException {
-        if(connected || socket != null)
-            throw new IOException("already connected");
+        if (connected || socket != null)
+            throw new IOException("ja conectado");
         this.context = context;
         this.listener = listener;
         this.device = device;
         context.registerReceiver(disconnectBroadcastReceiver, new IntentFilter(Constants.INTENT_ACTION_DISCONNECT));
-        Executors.newSingleThreadExecutor().submit(this);
+        Executors.newFixedThreadPool(1).submit(this);
     }
+
 
     public void disconnect() {
         listener = null; // ignore remaining data and errors
-        // connected = false; // run loop will reset connected
-        if(socket != null) {
+        // deviceIsConnected = false; // run loop will reset deviceIsConnected
+        if (socket != null) {
             try {
                 socket.close();
             } catch (Exception ignored) {
@@ -66,7 +67,7 @@ public class SerialSocket implements Runnable {
 
     public void write(byte[] data) throws IOException {
         if (!connected)
-            throw new IOException("not connected");
+            throw new IOException("nao conectado");
         socket.getOutputStream().write(data);
     }
 
@@ -75,10 +76,10 @@ public class SerialSocket implements Runnable {
         try {
             socket = device.createRfcommSocketToServiceRecord(BLUETOOTH_SPP);
             socket.connect();
-            if(listener != null)
+            if (listener != null)
                 listener.onSerialConnect();
         } catch (Exception e) {
-            if(listener != null)
+            if (listener != null)
                 listener.onSerialConnectError(e);
             try {
                 socket.close();
@@ -95,7 +96,7 @@ public class SerialSocket implements Runnable {
             while (true) {
                 len = socket.getInputStream().read(buffer);
                 byte[] data = Arrays.copyOf(buffer, len);
-                if(listener != null)
+                if (listener != null)
                     listener.onSerialRead(data);
             }
         } catch (Exception e) {
@@ -109,5 +110,4 @@ public class SerialSocket implements Runnable {
             socket = null;
         }
     }
-
 }
