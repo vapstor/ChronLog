@@ -23,18 +23,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
+import androidx.core.widget.NestedScrollView;
 
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 
 import app.br.chronlog.R;
 import app.br.chronlog.utils.Utils;
@@ -43,14 +36,13 @@ import app.br.chronlog.utils.bluetooth.SerialListener;
 import app.br.chronlog.utils.bluetooth.SerialService;
 
 import static app.br.chronlog.activitys.DevicesActivity.deviceName;
+import static app.br.chronlog.utils.Utils.Connected.False;
 import static app.br.chronlog.utils.Utils.TAG_LOG;
 import static app.br.chronlog.utils.Utils.isDeviceConnected;
 import static app.br.chronlog.utils.Utils.myBluetoothController;
 import static app.br.chronlog.utils.Utils.send;
 import static app.br.chronlog.utils.Utils.serialSocket;
 import static app.br.chronlog.utils.Utils.setStatus;
-import static app.br.chronlog.utils.bluetooth.BluetoothController.recebido;
-import static java.lang.Thread.sleep;
 
 public class ConfigDeviceActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemSelectedListener, SerialListener, ServiceConnection {
     private String mYear, mMonth, mDay, mHora, mMinute, mSecond, modoTermopar;
@@ -58,7 +50,7 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
     private Switch switchData, switchHorario;
     private EditText horarioInput, dataInput, aquisitionInput;
     private TextWatcher dataInputListener, horaInputListener;
-    private View btnCOnfigurarTermopar;
+    private View btnConfigurarTempoEModoTermopar;
     private String[] todosModosTermopar;
     final public static Object lockObject = new Object();
     private Thread mySendThread;
@@ -67,12 +59,18 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
     private TextView statusView;
 
     private SerialService service;
+    private Thread sendCommandThread;
+    private String protocolSetData;
+    private static String receivedData = "";
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_config_device);
+
+        NestedScrollView nestedScrollView= findViewById(R.id.myNestScrollView);
+        nestedScrollView.setNestedScrollingEnabled(true);
 
         if (myBluetoothController != null) {
             myBluetoothController.setActivity(this);
@@ -97,14 +95,11 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
         setHorarioListener();
         horarioInput.addTextChangedListener(horaInputListener);
 
-        btnCOnfigurarTermopar = this.findViewById(R.id.configTermoparBtn);
-        btnCOnfigurarTermopar.setOnClickListener((v) -> sendInfoTermopar());
+        btnConfigurarTempoEModoTermopar = this.findViewById(R.id.configTermoparTypeAndModeBtn);
 
         btnConfigurarData = this.findViewById(R.id.configDataBtn);
-        btnConfigurarData.setOnClickListener((v) -> sendInfoTermopar());
 
         btnConfigurarHorario = this.findViewById(R.id.configHorarioBtn);
-        btnConfigurarHorario.setOnClickListener((v) -> sendInfoTermopar());
 
         switchData = Objects.requireNonNull(this).findViewById(R.id.syncData);
         switchHorario = this.findViewById(R.id.syncHora);
@@ -142,6 +137,10 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
         spinner.setOnItemSelectedListener(this);
+
+        btnConfigurarData.setOnClickListener((v) -> setDataTermopar());
+        btnConfigurarHorario.setOnClickListener((v) -> setHorarioTermopar());
+        btnConfigurarTempoEModoTermopar.setOnClickListener((v) -> setTimeAndTypeTermopar());
     }
 
     @Override
@@ -150,8 +149,8 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
             case R.id.iconBar:
                 startActivity(new Intent(this, MainActivity.class));
                 break;
-            case R.id.configTermoparBtn:
-                sendInfoTermopar();
+            case R.id.configTermoparTypeAndModeBtn:
+                setDataTermopar();
                 break;
         }
     }
@@ -325,134 +324,167 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
     }
 
 
-    @SuppressWarnings("UnstableApiUsage")
-    public void sendInfoTermopar() {
-        new Thread(() -> {
-            recebido = false;
-            String infoData = dataInput.getText().toString();
+    public void setDataTermopar() {
+        if (sendCommandThread != null) {
+            if (sendCommandThread.isAlive()) {
+                sendCommandThread.interrupt();
+            }
+        }
+        String infoData = dataInput.getText().toString();
+        if (!infoData.equals("") && !infoData.contains("d") && !infoData.contains("m") && !infoData.contains("a")) {
+            receivedData = "";
 
-            if (!infoData.equals("") && !infoData.contains("d") && !infoData.contains("m") && !infoData.contains("a")) {
+            /**
+             * @01YYYYMMDDCRLF YYYY year, MM month, DD day CR carriage return, LF line feed
+             * */
+            Log.d(TAG_LOG, "infos data:" + infoData);
+            configDateToSend();
+            protocolSetData = "@01" + mYear + mMonth + mDay + "0000";
 
-                String infoHorario = horarioInput.getText().toString();
-                String infoTempoAquisicao = aquisitionInput.getText().toString();
-                final String[] protocolSetData = new String[1];
-                final String[] protocolSetHorario = new String[1];
-                final String[] protocolConfiguration = new String[1];
+            sendCommandThread = new Thread(() -> send(protocolSetData, this, this));
+            sendCommandThread.start();
 
+            runOnUiThread(() -> {
+                btnConfigurarData.setEnabled(false);
+                btnConfigurarData.setText(R.string.configurando___);
+            });
 
-                ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(10));
-                ListenableFuture<Boolean> asyncTask = executor.submit(() -> {
-                    runOnUiThread(() -> {
-                        btnConfigurarData.setEnabled(false);
-                        btnConfigurarData.setText(R.string.configurando___);
-                    });
-
-                    /**
-                     * @01YYYYMMDDCRLF YYYY year, MM month, DD day CR carriage return, LF line feed
-                     * */
-                    Log.d(TAG_LOG, "infos data:" + infoData);
-                    configDateToSend();
-                    protocolSetData[0] = "@01" + mYear + mMonth + mDay + "0000";
-                    Log.d(TAG_LOG, "mySendFlag == 0 [Config Class]");
-                    send(protocolSetData[0], this, this);
-
-                    sleep(2000);
-
-                    return recebido;
-                });
-
-
-                Futures.addCallback(asyncTask, new FutureCallback<Boolean>() {
-                    public void onSuccess(Boolean result) {
-                        if (result) {
-                            runOnUiThread(() -> {
-                                Toast.makeText(getApplicationContext(), "Configurado com Sucesso!", Toast.LENGTH_SHORT).show();
-                                btnConfigurarData.setEnabled(true);
-                                btnConfigurarData.setText(R.string.configurar);
-                            });
-                        } else {
+            new Thread(() -> {
+                synchronized (sendCommandThread) {
+                    try {
+                        sendCommandThread.wait(750);
+                        if (receivedData.equals("")) {
                             runOnUiThread(() -> {
                                 Toast.makeText(getApplicationContext(), "Falhou ao Configurar!", Toast.LENGTH_SHORT).show();
                                 btnConfigurarData.setEnabled(true);
                                 btnConfigurarData.setText(R.string.configurar);
                             });
+                        } else {
+                            runOnUiThread(() -> {
+                                Toast.makeText(getApplicationContext(), "Configurado com Sucesso!", Toast.LENGTH_SHORT).show();
+                                btnConfigurarData.setEnabled(true);
+                                btnConfigurarData.setText(R.string.configurar);
+                            });
                         }
-                        System.out.println(result);
-                        executor.shutdown();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
-
-                    public void onFailure(Throwable thrown) {
-                        recebido = true;
-                        //erro
-                        thrown.printStackTrace();
-                        executor.shutdown();
-                    }
-                }, executor);
-
-                try {
-                    Boolean result = asyncTask.get();
-                    System.out.println(result);
-                } catch (ExecutionException | InterruptedException e) {
-                    e.printStackTrace();
                 }
-                //
-//        synchronized (lockObject) {
-//            try {
-//
-//                Log.d(TAG_LOG, "wait data");
-//                lockObject.wait();
-//                Log.d(TAG_LOG, "libera data");
-//
-//                new Thread(() -> {
-//                    if (!infoHorario.equals("") && !infoHorario.equals("hh:mm:ss")) {
-//                        Log.d(TAG_LOG, "infos horario:" + infoHorario);
-//                        /**
-//                         * @02HHMMSSRRCRLF HH hour, MM minute, SS second, RR reserved for future
-//                         * */
-//                        configHoursToSend();
-//                        protocolSetHorario[0] = "@02" + mHora + mMinute + mSecond + "00" + "0000";
-//                        Log.d(TAG_LOG, "mySendFlag == 0 [Config Class]");
-//                        mySendFlag = 0;
-//                        universalBtController.send(protocolSetHorario[0]);
-//                    }
-//                }).start();
-//
-//                Log.d(TAG_LOG, "wait horario");
-//                lockObject.wait();
-//                Log.d(TAG_LOG, "libera horario");
-//
-//                new Thread(() -> {
-//                    if (!infoTempoAquisicao.equals("") && infoTempoAquisicao.length() != 3 && !modoTermopar.equals("Modo")) {
-//                        Log.d(TAG_LOG, "infos termopar:" + infoTempoAquisicao);
-//                        /**
-//                         *@03TTNNNRRRCRLF TT termocouple type, NNN acquisition time in seconds, RRR reserved for future*
-//                         * */
-//                        //configTempoAquisicaoToSend();
-//                        protocolConfiguration[0] = "@03" + modoTermopar + infoTempoAquisicao + "000" + "0000";
-//                        Log.d(TAG_LOG, "mySendFlag == 0 [Config Class]");
-//                        mySendFlag = 0;
-//                        universalBtController.send(protocolConfiguration[0]);
-//                    }
-//                }).start();
-//
-//                Log.d(TAG_LOG, "wait termopar");
-//                lockObject.wait();
-//                Log.d(TAG_LOG, "libera termopar");
-//                Log.d(TAG_LOG, "finalizou envios");
-//
-//                Objects.requireNonNull(this).runOnUiThread(() -> Toast.makeText(getContext(), "Ajustes no termopar efetuados com sucesso!", Toast.LENGTH_SHORT).show());
-//            } catch (InterruptedException ex) {
-//                ex.printStackTrace();
-//            }
-//        }
-            } else {
-                runOnUiThread(() -> Toast.makeText(this, "Data Inválida!", Toast.LENGTH_SHORT).show());
-            }
-        }).start();
+            }).start();
+        } else {
+            runOnUiThread(() -> Toast.makeText(this, "Data Inválida!", Toast.LENGTH_SHORT).show());
+        }
     }
-//    private void configTempoAquisicaoToSend(String s) {
-//        if
-//    }
+
+    private void setHorarioTermopar() {
+        if (sendCommandThread != null) {
+            if (sendCommandThread.isAlive()) {
+                sendCommandThread.interrupt();
+            }
+        }
+
+        String infoHorario = horarioInput.getText().toString();
+        if (infoHorario.contains("h") || infoHorario.contains("m") || infoHorario.contains("s")) {
+            runOnUiThread(() -> Toast.makeText(this, "Horário Inválido!", Toast.LENGTH_SHORT).show());
+        } else {
+            receivedData = "";
+
+            Log.d(TAG_LOG, "infos horario:" + infoHorario);
+            /**
+             * @02HHMMSSRRCRLF HH hour, MM minute, SS second, RR reserved for future
+             * */
+            configHoursToSend();
+            String protocolSetHorario = "@02" + mHora + mMinute + mSecond + "00" + "0000";
+
+            sendCommandThread = new Thread(() -> send(protocolSetHorario, this, this));
+            sendCommandThread.start();
+
+            runOnUiThread(() -> {
+                btnConfigurarData.setEnabled(false);
+                btnConfigurarData.setText(R.string.configurando___);
+            });
+
+            new Thread(() -> {
+                synchronized (sendCommandThread) {
+                    try {
+                        sendCommandThread.wait(750);
+                        if (receivedData.equals("")) {
+                            runOnUiThread(() -> {
+                                Toast.makeText(getApplicationContext(), "Falhou ao Configurar!", Toast.LENGTH_SHORT).show();
+                                btnConfigurarData.setEnabled(true);
+                                btnConfigurarData.setText(R.string.configurar);
+                            });
+                        } else {
+                            runOnUiThread(() -> {
+                                Toast.makeText(getApplicationContext(), "Configurado com Sucesso!", Toast.LENGTH_SHORT).show();
+                                btnConfigurarData.setEnabled(true);
+                                btnConfigurarData.setText(R.string.configurar);
+                            });
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
+        }
+    }
+
+    private void setTimeAndTypeTermopar() {
+        if (sendCommandThread != null) {
+            if (sendCommandThread.isAlive()) {
+                sendCommandThread.interrupt();
+            }
+        }
+
+        String infoTempoAquisicao = aquisitionInput.getText().toString();
+        if (!infoTempoAquisicao.equals("")) {
+            if (modoTermopar.equals("Modo")) {
+                runOnUiThread(() -> Toast.makeText(this, "Selecione um modo de aquisição!", Toast.LENGTH_SHORT).show());
+            } else {
+                receivedData = "";
+                Log.d(TAG_LOG, "infos tempo aquisicao:" + infoTempoAquisicao);
+                Log.d(TAG_LOG, "infos modo aquisicao:" + modoTermopar);
+                /**
+                 *@03TTNNNRRRCRLF TT termocouple type, NNN acquisition time in seconds, RRR reserved for future*
+                 * */
+                configHoursToSend();
+                String protocolSetTimeAndMode = "@03" + modoTermopar + infoTempoAquisicao + "000" + "0000";
+
+                sendCommandThread = new Thread(() -> send(protocolSetTimeAndMode, this, this));
+                sendCommandThread.start();
+
+                runOnUiThread(() -> {
+                    btnConfigurarData.setEnabled(false);
+                    btnConfigurarData.setText(R.string.configurando___);
+                });
+
+                new Thread(() -> {
+                    synchronized (sendCommandThread) {
+                        try {
+                            sendCommandThread.wait(750);
+                            if (receivedData.equals("")) {
+                                runOnUiThread(() -> {
+                                    Toast.makeText(getApplicationContext(), "Falhou ao Configurar!", Toast.LENGTH_SHORT).show();
+                                    btnConfigurarData.setEnabled(true);
+                                    btnConfigurarData.setText(R.string.configurar);
+                                });
+                            } else {
+                                runOnUiThread(() -> {
+                                    Toast.makeText(getApplicationContext(), "Configurado com Sucesso!", Toast.LENGTH_SHORT).show();
+                                    btnConfigurarData.setEnabled(true);
+                                    btnConfigurarData.setText(R.string.configurar);
+                                });
+                            }
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
+            }
+        } else {
+            runOnUiThread(() -> Toast.makeText(this, "Tempo de aquisição inválido!", Toast.LENGTH_SHORT).show());
+        }
+    }
 
     private void configDateToSend() {
         String inputValue = dataInput.getText().toString().replace("/", "");
@@ -486,10 +518,10 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
 
     @Override
     public void onStop() {
-//        try {
-//            this.unbindService(this);
-//        } catch (Exception ignored) {
-//        }
+        try {
+            this.unbindService(this);
+        } catch (Exception ignored) {
+        }
 //        if (!this.isChangingConfigurations())
 //            service.detach();
         super.onStop();
@@ -504,7 +536,7 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void disconnect() {
-        isDeviceConnected = Utils.Connected.False;
+        isDeviceConnected = False;
         service.disconnect();
         serialSocket.disconnect();
         serialSocket = null;
@@ -514,6 +546,7 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
     @Override
     public void onServiceConnected(ComponentName name, IBinder binder) {
         service = ((SerialService.SerialBinder) binder).getService();
+        service.attach(this);
     }
 
     @Override
@@ -532,7 +565,7 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
 
     @Override
     public void onSerialConnectError(Exception e) {
-        if (!e.getMessage().contains("ja conectado")) {
+        if (!Objects.requireNonNull(e.getMessage()).contains("ja conectado")) {
             setStatus("Conexão Falhou", this);
             disconnect();
         }
@@ -540,15 +573,19 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
 
     @Override
     public void onSerialRead(byte[] data) {
-        if (!recebido) {
-            Toast.makeText(this, "READ", Toast.LENGTH_SHORT).show();
-            Log.d(TAG_LOG, "recebeu: " + new String(data));
-            recebido = true;
+        synchronized (sendCommandThread) {
+            String receveidStr = new String(data);
+            Log.d(TAG_LOG, "recebeu: " + receveidStr);
+            receivedData = receivedData.concat(receveidStr);
+            if (receveidStr.contains("@")) {
+                sendCommandThread.notify();
+            }
         }
     }
 
     @Override
     public void onSerialIoError(Exception e) {
+        isDeviceConnected = False;
         setStatus("Conexão Perdida", this);
         disconnect();
     }

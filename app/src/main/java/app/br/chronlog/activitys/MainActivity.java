@@ -102,6 +102,12 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        setButtonsEnabledDisabled();
+    }
+
+    @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.configDeviceBtn:
@@ -111,8 +117,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                 startActivity(new Intent(this, DevicesActivity.class));
                 break;
             case R.id.gerenciarDadosBtn:
-//                startActivity(new Intent(this, DevicesActivity.class));
-//                gerenciarDados();
+                startActivity(new Intent(this, ReadDataActivity.class));
                 break;
             case R.id.analiseDeDadosBtn:
                 startActivityWithExplosion(this, new Intent(this, ChartViewActivity.class));
@@ -128,6 +133,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
     @Override
     protected void onStart() {
+        super.onStart();
         myBluetoothController.setActivity(this);
         if (service != null) {
             service.attach(this);
@@ -137,7 +143,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
         instaceItensView();
         setButtonsEnabledDisabled();
-        super.onStart();
     }
 
     private void instaceItensView() {
@@ -159,6 +164,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         analisaDadosBtn.setOnClickListener(this);
         eepromBtn.setOnClickListener(this);
     }
+
 
     @Override
     public void onStop() {
@@ -185,7 +191,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     @Override
     public void onSerialConnect() {
         isDeviceConnected = Connected.True;
-            runOnUiThread(() -> Toast.makeText(this, "Conectado com sucesso!", Toast.LENGTH_SHORT).show());
+        runOnUiThread(() -> Toast.makeText(this, "Conectado com sucesso!", Toast.LENGTH_SHORT).show());
         if (deviceName != null) {
             runOnUiThread(() -> setStatus(deviceName, this));
         } else {

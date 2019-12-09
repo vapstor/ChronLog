@@ -72,6 +72,10 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
             myBluetoothController.setActivity(this);
         }
 
+        if (isDeviceConnected == Connected.True) {
+            ((TextView) findViewById(R.id.status)).setText(deviceName);
+        }
+
         listDevicesView = findViewById(R.id.listDevicesView);
         listEmptyView = findViewById(R.id.listEmpty);
 
@@ -130,7 +134,7 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
         if (service != null) {
             service.attach(this);
         } else {
-           bindService(new Intent(this, SerialService.class), this, 0);
+            bindService(new Intent(this, SerialService.class), this, 0);
         }
         listDevicesView.setAdapter(null);
         listDevicesView.setAdapter(listAdapter);
@@ -236,7 +240,7 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
                     if (serialSocket == null) {
                         serialSocket = new SerialSocket();
                     }
-                    if(isDeviceConnected == Connected.False) {
+                    if (isDeviceConnected == Connected.False) {
                         showProgressBar(this);
                         setStatus(CONECTANDO_, this);
                         isDeviceConnected = Connected.Pending;
@@ -328,7 +332,7 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
             Toast.makeText(this, "Tente Novamente!", Toast.LENGTH_SHORT).show();
             disconnect();
         } else {
-            if(deviceName != null) {
+            if (deviceName != null) {
                 setStatus(deviceName, this);
             }
             Toast.makeText(this, "Já Conectado!", Toast.LENGTH_SHORT).show();

@@ -44,7 +44,7 @@
     <string name="configurando">configurando</string>
     <string name="aparelhos">aparelhos</string>
     <string name="iconeappbar">Ícone App Bar</string>
-    <string name="nao_conectado">Não Conectado</string>
+    <string name="nao_conectado">Não Conectado!</string>
     <string name="conectando">conectando</string>
     <string name="analise_de_dados">Análise de Dados</string>
     <string name="eeprom">EEPROM</string>
@@ -59,12 +59,21 @@
     <string name="hh_mm_ss">hh:mm:ss</string>
     <string name="configurando___">configurando…</string>
     <string name="aguarde">aguarde</string>
+    <string name="atencao_">Atenção!</string>
     <string name="ajustes">ajustes</string>
+    <string name="log_title">log title</string>
+    <string name="arquivos_do_sd">Arquivos do SD</string>
+    <string name="refreshicon">refreshIcon</string>
+    <string name="peso">peso</string>
     <string-array name="modosTermopar">
-        <item>A</item>
-        <item>B</item>
-        <item>C</item>
-        <item>D</item>
+        <item>Modo</item>
+        <item>K</item>
+        <item>J</item>
+        <item>N</item>
+        <item>R</item>
+        <item>S</item>
+        <item>T</item>
         <item>E</item>
+        <item>B</item>
     </string-array>
 </resources>

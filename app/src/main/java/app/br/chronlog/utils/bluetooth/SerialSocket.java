@@ -6,11 +6,14 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.util.Log;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.Executors;
+
+import static app.br.chronlog.utils.Utils.TAG_LOG;
 
 public class SerialSocket implements Runnable {
 
@@ -23,6 +26,7 @@ public class SerialSocket implements Runnable {
     private BluetoothDevice device;
     private BluetoothSocket socket;
     private boolean connected;
+    private int somatorioTotalLength;
 
     public SerialSocket() {
         disconnectBroadcastReceiver = new BroadcastReceiver() {
@@ -66,6 +70,7 @@ public class SerialSocket implements Runnable {
     }
 
     public void write(byte[] data) throws IOException {
+        somatorioTotalLength = 0;
         if (!connected)
             throw new IOException("nao conectado");
         socket.getOutputStream().write(data);
@@ -95,7 +100,11 @@ public class SerialSocket implements Runnable {
             //noinspection InfiniteLoopStatement
             while (true) {
                 len = socket.getInputStream().read(buffer);
+                Log.d(TAG_LOG, "LEN - Dado Vindo Direto do SOCKET: " + len);
                 byte[] data = Arrays.copyOf(buffer, len);
+                somatorioTotalLength = somatorioTotalLength + data.length;
+                Log.d(TAG_LOG, "Dado Vindo Direto do SOCKET: " + data.length);
+                Log.d(TAG_LOG, "Dado Vindo Direto do SOCKET [SOMATORIO TOTAL]: " + somatorioTotalLength);
                 if (listener != null)
                     listener.onSerialRead(data);
             }
