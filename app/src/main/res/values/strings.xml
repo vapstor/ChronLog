@@ -65,8 +65,10 @@
     <string name="arquivos_do_sd">Arquivos do SD</string>
     <string name="refreshicon">refreshIcon</string>
     <string name="peso">peso</string>
+    <string name="calendar_icon">calendar icon</string>
+    <string name="dd_mm_aaaa">dd/mm/aaaa</string>
+    <string name="modo">modo</string>
     <string-array name="modosTermopar">
-        <item>Modo</item>
         <item>K</item>
         <item>J</item>
         <item>N</item>

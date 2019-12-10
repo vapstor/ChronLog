@@ -8,9 +8,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -37,7 +40,8 @@ public class Utils {
 
     public static SerialSocket serialSocket;
     public static Connected isDeviceConnected;
-    public enum Connected { False, Pending, True }
+
+    public enum Connected {False, Pending, True}
 
     public static BluetoothController myBluetoothController;
     public static BluetoothDevice bluetoothDeviceSelected;
@@ -68,6 +72,56 @@ public class Utils {
             builder.setCancelable(false);
         }
         return builder.create();
+    }
+
+
+    public static TextWatcher insertMask(final String mask, final EditText et) {
+        return new TextWatcher() {
+            boolean isUpdating;
+            String oldTxt = "";
+            int myCounter = 0;
+
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (count < myCounter) {
+                    String str = unmask(s.toString());
+                    String maskCurrent = "";
+                    if (isUpdating) {
+                        oldTxt = str;
+                        isUpdating = false;
+                        return;
+                    }
+                    int i = 0;
+                    for (char m : mask.toCharArray()) {
+                        if (m != '#' && str.length() > oldTxt.length()) {
+                            maskCurrent += m;
+                            continue;
+                        }
+                        try {
+                            maskCurrent += str.charAt(i);
+                        } catch (Exception e) {
+                            break;
+                        }
+                        i++;
+                    }
+                    isUpdating = true;
+                    et.setText(maskCurrent);
+                    et.setSelection(maskCurrent.length());
+                }
+            }
+
+            public void beforeTextChanged(
+                    CharSequence s, int start, int count, int after) {
+            }
+
+            public void afterTextChanged(Editable s) {
+            }
+        };
+    }
+
+    private static String unmask(String s) {
+        return s.replaceAll("[.]", "").replaceAll("[-]", "")
+                .replaceAll("[/]", "").replaceAll("[(]", "")
+                .replaceAll("[)]", "");
     }
 
     public static AlertDialog createLoadingDialog(Context context, String title, String body) {
@@ -135,7 +189,7 @@ public class Utils {
         }
         try {
             byte[] data = (str).getBytes();
-            if(serialSocket != null) {
+            if (serialSocket != null) {
                 serialSocket.write(data);
             }
         } catch (Exception e) {
@@ -159,15 +213,19 @@ public class Utils {
 
     public static void showProgressBar(Context context) {
         ProgressBar progressBar = ((Activity) context).findViewById(R.id.progressBarAppBar);
-        if (progressBar.getVisibility() == GONE) {
-            progressBar.setVisibility(View.VISIBLE);
+        if (progressBar != null) {
+            if (progressBar.getVisibility() == GONE) {
+                progressBar.setVisibility(View.VISIBLE);
+            }
         }
     }
 
     public static void hideProgressBar(Context context) {
         ProgressBar progressBar = ((Activity) context).findViewById(R.id.progressBarAppBar);
-        if (progressBar.getVisibility() != GONE) {
-            progressBar.setVisibility(GONE);
+        if (progressBar != null) {
+            if (progressBar.getVisibility() != GONE) {
+                progressBar.setVisibility(GONE);
+            }
         }
     }
 

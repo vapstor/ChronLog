@@ -1,5 +1,6 @@
 package app.br.chronlog.activitys;
 
+import android.app.DatePickerDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -23,7 +24,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.widget.NestedScrollView;
+
+import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.Calendar;
 import java.util.Locale;
@@ -62,15 +64,17 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
     private Thread sendCommandThread;
     private String protocolSetData;
     private static String receivedData = "";
+    private TextInputLayout dataInputLayout;
+    private ImageButton btnDataPicker;
+    private Calendar calendar;
+    private int year, month, day, dayOfMonth;
+    private DatePickerDialog datePickerDialog;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_config_device);
-
-        NestedScrollView nestedScrollView= findViewById(R.id.myNestScrollView);
-        nestedScrollView.setNestedScrollingEnabled(true);
 
         if (myBluetoothController != null) {
             myBluetoothController.setActivity(this);
@@ -87,18 +91,27 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
         todosModosTermopar = getResources().getStringArray(R.array.modosTermopar);
 
         horarioInput = Objects.requireNonNull(this).findViewById(R.id.horaInput);
+
+        dataInputLayout = Objects.requireNonNull(this).findViewById(R.id.dataInputLayout);
         dataInput = this.findViewById(R.id.dataInput);
+
         aquisitionInput = this.findViewById(R.id.aquisitionInput);
 
         setDataListener();
         dataInput.addTextChangedListener(dataInputListener);
+        dataInput.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                dataInputLayout.setBoxStrokeColor(getResources().getColor(R.color.colorPrimary));
+//                dataInputLayout.setHintTextAppearance(R.style.hintLabelNormal);
+            }
+        });
         setHorarioListener();
         horarioInput.addTextChangedListener(horaInputListener);
 
         btnConfigurarTempoEModoTermopar = this.findViewById(R.id.configTermoparTypeAndModeBtn);
 
         btnConfigurarData = this.findViewById(R.id.configDataBtn);
-
+        btnDataPicker = this.findViewById(R.id.dataPickerButton);
         btnConfigurarHorario = this.findViewById(R.id.configHorarioBtn);
 
         switchData = Objects.requireNonNull(this).findViewById(R.id.syncData);
@@ -133,14 +146,38 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
 
         Spinner spinner = Objects.requireNonNull(this).findViewById(R.id.spinnerModoAquisicao);
 
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.modosTermopar, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.modosTermopar, R.layout.spinner_list_item);
+        adapter.setDropDownViewResource(R.layout.spinner_list_item);
         spinner.setAdapter(adapter);
         spinner.setOnItemSelectedListener(this);
 
         btnConfigurarData.setOnClickListener((v) -> setDataTermopar());
         btnConfigurarHorario.setOnClickListener((v) -> setHorarioTermopar());
         btnConfigurarTempoEModoTermopar.setOnClickListener((v) -> setTimeAndTypeTermopar());
+        btnDataPicker.setOnClickListener((v) -> {
+            calendar = Calendar.getInstance();
+            year = calendar.get(Calendar.YEAR);
+            month = calendar.get(Calendar.MONTH);
+            dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
+            datePickerDialog = new DatePickerDialog(ConfigDeviceActivity.this, (datePicker, year, month, day) -> {
+                String myDay = String.valueOf(day);
+                if (myDay.length() == 1) {
+                    myDay = "0".concat(myDay);
+                }
+                String myMonth = String.valueOf(month + 1);
+                if (myMonth.length() == 1) {
+                    myMonth = "0".concat(myMonth);
+                }
+                String myYear = String.valueOf(year);
+                if (myYear.length() == 1) {
+                    myYear = "0".concat(myYear);
+                }
+                dataInput.setText(myDay.concat(myMonth).concat(myYear));
+            }, year, month, dayOfMonth);
+            datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis());
+            datePickerDialog.setTitle("");
+            datePickerDialog.show();
+        });
     }
 
     @Override
@@ -372,6 +409,8 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
                 }
             }).start();
         } else {
+            dataInputLayout.setBoxStrokeColor(getResources().getColor(android.R.color.holo_red_light));
+//            dataInputLayout.setHintTextAppearance(R.style.hintLabelError);
             runOnUiThread(() -> Toast.makeText(this, "Data Inválida!", Toast.LENGTH_SHORT).show());
         }
     }
@@ -482,22 +521,31 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
                 }).start();
             }
         } else {
-            runOnUiThread(() -> Toast.makeText(this, "Tempo de aquisição inválido!", Toast.LENGTH_SHORT).show());
+            runOnUiThread(() -> Toast.makeText(this, "Digite um tempo de aquisição!!", Toast.LENGTH_SHORT).show());
         }
     }
 
     private void configDateToSend() {
         String inputValue = dataInput.getText().toString().replace("/", "");
-        mDay = inputValue.substring(0, 2);
-        mMonth = inputValue.substring(2, 4);
-        mYear = inputValue.substring(4);
+        if (!inputValue.equals("")) {
+            mDay = inputValue.substring(0, 2);
+            mMonth = inputValue.substring(2, 4);
+            mYear = inputValue.substring(4);
+        } else {
+            dataInputLayout = findViewById(R.id.dataInputLayout);
+            Toast.makeText(this, "Digite uma data!", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void configHoursToSend() {
         String inputValue = horarioInput.getText().toString().replace(":", "");
-        mHora = inputValue.substring(0, 2);
-        mMinute = inputValue.substring(2, 4);
-        mSecond = inputValue.substring(4);
+        if (!inputValue.equals("")) {
+            mHora = inputValue.substring(0, 2);
+            mMinute = inputValue.substring(2, 4);
+            mSecond = inputValue.substring(4);
+        } else {
+            Toast.makeText(this, "Digite um Horário!", Toast.LENGTH_SHORT).show();
+        }
     }
 
 
