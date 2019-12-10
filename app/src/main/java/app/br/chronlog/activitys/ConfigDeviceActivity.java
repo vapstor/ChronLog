@@ -427,7 +427,6 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
         String infoHorario = horarioInput.getText().toString();
         if (infoHorario.equals("")) {
             if (infoHorario.contains("h") || infoHorario.contains("m") || infoHorario.contains("s")) {
-
                 runOnUiThread(() -> Toast.makeText(this, "Horário Inválido!", Toast.LENGTH_SHORT).show());
             } else {
                 receivedData = "";
@@ -471,8 +470,6 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
                 }).start();
             }
         } else {
-            btnConfigurarHorario.setEnabled(true);
-            btnConfigurarHorario.setText(R.string.configurar);
             Toast.makeText(this, "Digite um Horário!", Toast.LENGTH_SHORT).show();
         }
     }
