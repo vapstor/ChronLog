@@ -430,7 +430,6 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
                 runOnUiThread(() -> Toast.makeText(this, "Horário Inválido!", Toast.LENGTH_SHORT).show());
             } else {
                 receivedData = "";
-
                 Log.d(TAG_LOG, "infos horario:" + infoHorario);
                 /**
                  * @02HHMMSSRRCRLF HH hour, MM minute, SS second, RR reserved for future
