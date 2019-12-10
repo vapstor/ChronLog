@@ -425,48 +425,55 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
         }
 
         String infoHorario = horarioInput.getText().toString();
-        if (infoHorario.contains("h") || infoHorario.contains("m") || infoHorario.contains("s")) {
-            runOnUiThread(() -> Toast.makeText(this, "Horário Inválido!", Toast.LENGTH_SHORT).show());
-        } else {
-            receivedData = "";
+        if (infoHorario.equals("")) {
+            if (infoHorario.contains("h") || infoHorario.contains("m") || infoHorario.contains("s")) {
 
-            Log.d(TAG_LOG, "infos horario:" + infoHorario);
-            /**
-             * @02HHMMSSRRCRLF HH hour, MM minute, SS second, RR reserved for future
-             * */
-            configHoursToSend();
-            String protocolSetHorario = "@02" + mHora + mMinute + mSecond + "00" + "0000";
+                runOnUiThread(() -> Toast.makeText(this, "Horário Inválido!", Toast.LENGTH_SHORT).show());
+            } else {
+                receivedData = "";
 
-            sendCommandThread = new Thread(() -> send(protocolSetHorario, this, this));
-            sendCommandThread.start();
+                Log.d(TAG_LOG, "infos horario:" + infoHorario);
+                /**
+                 * @02HHMMSSRRCRLF HH hour, MM minute, SS second, RR reserved for future
+                 * */
+                configHoursToSend();
+                String protocolSetHorario = "@02" + mHora + mMinute + mSecond + "00" + "0000";
 
-            runOnUiThread(() -> {
-                btnConfigurarData.setEnabled(false);
-                btnConfigurarData.setText(R.string.configurando___);
-            });
+                sendCommandThread = new Thread(() -> send(protocolSetHorario, this, this));
+                sendCommandThread.start();
 
-            new Thread(() -> {
-                synchronized (sendCommandThread) {
-                    try {
-                        sendCommandThread.wait(750);
-                        if (receivedData.equals("")) {
-                            runOnUiThread(() -> {
-                                Toast.makeText(getApplicationContext(), "Falhou ao Configurar!", Toast.LENGTH_SHORT).show();
-                                btnConfigurarData.setEnabled(true);
-                                btnConfigurarData.setText(R.string.configurar);
-                            });
-                        } else {
-                            runOnUiThread(() -> {
-                                Toast.makeText(getApplicationContext(), "Configurado com Sucesso!", Toast.LENGTH_SHORT).show();
-                                btnConfigurarData.setEnabled(true);
-                                btnConfigurarData.setText(R.string.configurar);
-                            });
+                runOnUiThread(() -> {
+                    btnConfigurarHorario.setEnabled(false);
+                    btnConfigurarHorario.setText(R.string.configurando___);
+                });
+
+                new Thread(() -> {
+                    synchronized (sendCommandThread) {
+                        try {
+                            sendCommandThread.wait(750);
+                            if (receivedData.equals("")) {
+                                runOnUiThread(() -> {
+                                    Toast.makeText(getApplicationContext(), "Falhou ao Configurar!", Toast.LENGTH_SHORT).show();
+                                    btnConfigurarData.setEnabled(true);
+                                    btnConfigurarData.setText(R.string.configurar);
+                                });
+                            } else {
+                                runOnUiThread(() -> {
+                                    Toast.makeText(getApplicationContext(), "Configurado com Sucesso!", Toast.LENGTH_SHORT).show();
+                                    btnConfigurarData.setEnabled(true);
+                                    btnConfigurarData.setText(R.string.configurar);
+                                });
+                            }
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
                         }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
                     }
-                }
-            }).start();
+                }).start();
+            }
+        } else {
+            btnConfigurarHorario.setEnabled(true);
+            btnConfigurarHorario.setText(R.string.configurar);
+            Toast.makeText(this, "Digite um Horário!", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -545,8 +552,6 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
             mHora = inputValue.substring(0, 2);
             mMinute = inputValue.substring(2, 4);
             mSecond = inputValue.substring(4);
-        } else {
-            Toast.makeText(this, "Digite um Horário!", Toast.LENGTH_SHORT).show();
         }
     }
 
