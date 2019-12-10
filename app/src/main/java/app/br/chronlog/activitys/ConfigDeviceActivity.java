@@ -119,8 +119,10 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
         switchData.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
                 dataInput.setEnabled(false);
+                btnDataPicker.setEnabled(false);
                 syncData();
             } else {
+                btnDataPicker.setEnabled(true);
                 dataInput.setEnabled(true);
                 dataInput.setText("");
                 dataInput.requestFocus();
