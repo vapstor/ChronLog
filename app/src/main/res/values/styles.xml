@@ -133,5 +133,10 @@
         <!--        <item name="boxStrokeColor">@color/colorPrimary</item>-->
     </style>
 
+    <style name="DialogOpenLogStyle" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
+        <item name="android:colorAccent">@color/colorPrimary</item>
+        <item name="android:progressBackgroundTint">@color/colorPrimary</item>
+    </style>
+
 
 </resources>

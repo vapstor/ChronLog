@@ -1,6 +1,5 @@
 package app.br.chronlog.activitys;
 
-import android.app.DatePickerDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -11,7 +10,6 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -19,13 +17,12 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.material.textfield.TextInputLayout;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import java.util.Calendar;
 import java.util.Locale;
@@ -49,14 +46,11 @@ import static app.br.chronlog.utils.Utils.setStatus;
 public class ConfigDeviceActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemSelectedListener, SerialListener, ServiceConnection {
     private String mYear, mMonth, mDay, mHora, mMinute, mSecond, modoTermopar;
     private ProgressBar progressBar;
-    private Switch switchData, switchHorario;
+    private SwitchMaterial switchData, switchHorario;
     private EditText horarioInput, dataInput, aquisitionInput;
     private TextWatcher dataInputListener, horaInputListener;
-    private View btnConfigurarTempoEModoTermopar;
     private String[] todosModosTermopar;
-    final public static Object lockObject = new Object();
-    private Thread mySendThread;
-    private Button btnConfigurarData, btnConfigurarHorario;
+    private Button btnConfigurarData, btnConfigurarHorario, btnConfigurarTempoEModoTermopar;
     private ImageButton refreshButton;
     private TextView statusView;
 
@@ -64,11 +58,6 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
     private Thread sendCommandThread;
     private String protocolSetData;
     private static String receivedData = "";
-    private TextInputLayout dataInputLayout;
-    private ImageButton btnDataPicker;
-    private Calendar calendar;
-    private int year, month, day, dayOfMonth;
-    private DatePickerDialog datePickerDialog;
 
 
     @Override
@@ -87,31 +76,23 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
         progressBar = findViewById(R.id.progressBarAppBar);
         statusView = findViewById(R.id.status);
         refreshButton = findViewById(R.id.iconBar);
+        refreshButton.setImageDrawable(getDrawable(R.drawable.baseline_home_white_24dp));
 
         todosModosTermopar = getResources().getStringArray(R.array.modosTermopar);
 
         horarioInput = Objects.requireNonNull(this).findViewById(R.id.horaInput);
 
-        dataInputLayout = Objects.requireNonNull(this).findViewById(R.id.dataInputLayout);
         dataInput = this.findViewById(R.id.dataInput);
-
         aquisitionInput = this.findViewById(R.id.aquisitionInput);
 
         setDataListener();
         dataInput.addTextChangedListener(dataInputListener);
-        dataInput.setOnFocusChangeListener((v, hasFocus) -> {
-            if (hasFocus) {
-                dataInputLayout.setBoxStrokeColor(getResources().getColor(R.color.colorPrimary));
-//                dataInputLayout.setHintTextAppearance(R.style.hintLabelNormal);
-            }
-        });
         setHorarioListener();
         horarioInput.addTextChangedListener(horaInputListener);
 
         btnConfigurarTempoEModoTermopar = this.findViewById(R.id.configTermoparTypeAndModeBtn);
 
         btnConfigurarData = this.findViewById(R.id.configDataBtn);
-        btnDataPicker = this.findViewById(R.id.dataPickerButton);
         btnConfigurarHorario = this.findViewById(R.id.configHorarioBtn);
 
         switchData = Objects.requireNonNull(this).findViewById(R.id.syncData);
@@ -119,16 +100,11 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
         switchData.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
                 dataInput.setEnabled(false);
-                btnDataPicker.setEnabled(false);
                 syncData();
             } else {
-                btnDataPicker.setEnabled(true);
                 dataInput.setEnabled(true);
                 dataInput.setText("");
                 dataInput.requestFocus();
-                InputMethodManager imm = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
-                assert imm != null;
-                imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
             }
         });
         switchHorario.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -139,9 +115,6 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
                 horarioInput.setEnabled(true);
                 horarioInput.setText("");
                 horarioInput.requestFocus();
-                InputMethodManager imm = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
-                assert imm != null;
-                imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
             }
         });
 
@@ -156,30 +129,7 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
         btnConfigurarData.setOnClickListener((v) -> setDataTermopar());
         btnConfigurarHorario.setOnClickListener((v) -> setHorarioTermopar());
         btnConfigurarTempoEModoTermopar.setOnClickListener((v) -> setTimeAndTypeTermopar());
-        btnDataPicker.setOnClickListener((v) -> {
-            calendar = Calendar.getInstance();
-            year = calendar.get(Calendar.YEAR);
-            month = calendar.get(Calendar.MONTH);
-            dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
-            datePickerDialog = new DatePickerDialog(ConfigDeviceActivity.this, (datePicker, year, month, day) -> {
-                String myDay = String.valueOf(day);
-                if (myDay.length() == 1) {
-                    myDay = "0".concat(myDay);
-                }
-                String myMonth = String.valueOf(month + 1);
-                if (myMonth.length() == 1) {
-                    myMonth = "0".concat(myMonth);
-                }
-                String myYear = String.valueOf(year);
-                if (myYear.length() == 1) {
-                    myYear = "0".concat(myYear);
-                }
-                dataInput.setText(myDay.concat(myMonth).concat(myYear));
-            }, year, month, dayOfMonth);
-            datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis());
-            datePickerDialog.setTitle("");
-            datePickerDialog.show();
-        });
+        refreshButton.setOnClickListener((v) -> finish());
     }
 
     @Override
@@ -391,13 +341,14 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
             new Thread(() -> {
                 synchronized (sendCommandThread) {
                     try {
-                        sendCommandThread.wait(750);
+                        sendCommandThread.wait(300);
                         if (receivedData.equals("")) {
-                            runOnUiThread(() -> {
-                                Toast.makeText(getApplicationContext(), "Falhou ao Configurar!", Toast.LENGTH_SHORT).show();
-                                btnConfigurarData.setEnabled(true);
-                                btnConfigurarData.setText(R.string.configurar);
-                            });
+                            setDataTermopar();
+//                            runOnUiThread(() -> {
+//                                Toast.makeText(getApplicationContext(), "Falhou ao Configurar!", Toast.LENGTH_SHORT).show();
+//                                btnConfigurarData.setEnabled(true);
+//                                btnConfigurarData.setText(R.string.configurar);
+//                            });
                         } else {
                             runOnUiThread(() -> {
                                 Toast.makeText(getApplicationContext(), "Configurado com Sucesso!", Toast.LENGTH_SHORT).show();
@@ -411,8 +362,6 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
                 }
             }).start();
         } else {
-            dataInputLayout.setBoxStrokeColor(getResources().getColor(android.R.color.holo_red_light));
-//            dataInputLayout.setHintTextAppearance(R.style.hintLabelError);
             runOnUiThread(() -> Toast.makeText(this, "Data Inválida!", Toast.LENGTH_SHORT).show());
         }
     }
@@ -448,18 +397,20 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
                 new Thread(() -> {
                     synchronized (sendCommandThread) {
                         try {
-                            sendCommandThread.wait(750);
+                            sendCommandThread.wait(300);
                             if (receivedData.equals("")) {
-                                runOnUiThread(() -> {
-                                    Toast.makeText(getApplicationContext(), "Falhou ao Configurar!", Toast.LENGTH_SHORT).show();
-                                    btnConfigurarData.setEnabled(true);
-                                    btnConfigurarData.setText(R.string.configurar);
-                                });
+                                setHorarioTermopar();
+//                                runOnUiThread(() -> {
+//                                    Toast.makeText(getApplicationContext(), "Falhou ao Configurar!", Toast.LENGTH_SHORT).show();
+//                                    btnConfigurarData.setEnabled(true);
+//                                    btnConfigurarData.setText(R.string.configurar);
+//                                });
                             } else {
                                 runOnUiThread(() -> {
+                                    btnConfigurarHorario.setEnabled(true);
+                                    btnConfigurarHorario.setText(R.string.configurar);
                                     Toast.makeText(getApplicationContext(), "Configurado com Sucesso!", Toast.LENGTH_SHORT).show();
-                                    btnConfigurarData.setEnabled(true);
-                                    btnConfigurarData.setText(R.string.configurar);
+
                                 });
                             }
                         } catch (InterruptedException e) {
@@ -491,32 +442,33 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
                 /**
                  *@03TTNNNRRRCRLF TT termocouple type, NNN acquisition time in seconds, RRR reserved for future*
                  * */
-                configHoursToSend();
-                String protocolSetTimeAndMode = "@03" + modoTermopar + infoTempoAquisicao + "000" + "0000";
+                configTempoAquisicao(infoTempoAquisicao);
+                String protocolSetTimeAndMode = "@03" + "0" + modoTermopar + infoTempoAquisicao + "000" + "0000";
 
                 sendCommandThread = new Thread(() -> send(protocolSetTimeAndMode, this, this));
                 sendCommandThread.start();
 
                 runOnUiThread(() -> {
-                    btnConfigurarData.setEnabled(false);
-                    btnConfigurarData.setText(R.string.configurando___);
+                    btnConfigurarTempoEModoTermopar.setEnabled(false);
+                    btnConfigurarTempoEModoTermopar.setText(R.string.configurando___);
                 });
 
                 new Thread(() -> {
                     synchronized (sendCommandThread) {
                         try {
-                            sendCommandThread.wait(750);
+                            sendCommandThread.wait(300);
                             if (receivedData.equals("")) {
-                                runOnUiThread(() -> {
-                                    Toast.makeText(getApplicationContext(), "Falhou ao Configurar!", Toast.LENGTH_SHORT).show();
-                                    btnConfigurarData.setEnabled(true);
-                                    btnConfigurarData.setText(R.string.configurar);
-                                });
+                                setTimeAndTypeTermopar();
+//                                runOnUiThread(() -> {
+//                                    Toast.makeText(getApplicationContext(), "Falhou ao Configurar!", Toast.LENGTH_SHORT).show();
+//                                    btnConfigurarData.setEnabled(true);
+//                                    btnConfigurarData.setText(R.string.configurar);
+//                                });
                             } else {
                                 runOnUiThread(() -> {
                                     Toast.makeText(getApplicationContext(), "Configurado com Sucesso!", Toast.LENGTH_SHORT).show();
-                                    btnConfigurarData.setEnabled(true);
-                                    btnConfigurarData.setText(R.string.configurar);
+                                    btnConfigurarTempoEModoTermopar.setEnabled(true);
+                                    btnConfigurarTempoEModoTermopar.setText(R.string.configurar);
                                 });
                             }
                         } catch (InterruptedException e) {
@@ -530,6 +482,17 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
         }
     }
 
+    private String configTempoAquisicao(String infoTempoAquisicao) {
+        int size = infoTempoAquisicao.length();
+        if (size == 1) {
+            return "00".concat(infoTempoAquisicao);
+        } else if (size == 2) {
+            return "0".concat(infoTempoAquisicao);
+        } else {
+            return infoTempoAquisicao;
+        }
+    }
+
     private void configDateToSend() {
         String inputValue = dataInput.getText().toString().replace("/", "");
         if (!inputValue.equals("")) {
@@ -537,7 +500,6 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
             mMonth = inputValue.substring(2, 4);
             mYear = inputValue.substring(4);
         } else {
-            dataInputLayout = findViewById(R.id.dataInputLayout);
             Toast.makeText(this, "Digite uma data!", Toast.LENGTH_SHORT).show();
         }
     }

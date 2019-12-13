@@ -119,4 +119,16 @@ public class SerialSocket implements Runnable {
             socket = null;
         }
     }
+
+    public void closeOutPutStream() {
+        try {
+            if (socket != null) {
+                socket.getOutputStream().close();
+            }
+        } catch (IOException e) {
+            listener.onSerialIoError(e);
+            e.printStackTrace();
+        }
+    }
+
 }

@@ -71,30 +71,30 @@ public class LoginActivity extends AppCompatActivity {
             Toast.makeText(this, "Configurando aparelho...", Toast.LENGTH_SHORT).show();
 //                alert = createLoadingDialog(this, "Efetuando Login", "Por Favor aguarde enquanto efetuamos a autenticação!");
 //                alert.show();
-            findViewById(R.id.serial_input).setVisibility(View.INVISIBLE);
+
+            findViewById(R.id.serial_input).setVisibility(View.GONE);
             findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
             new Thread(() -> {
                 final TextView[] status = new TextView[1];
                 try {
-                    Thread.sleep(1200);
+                    Thread.sleep(500);
                     runOnUiThread(() -> {
                         findViewById(R.id.progressBar).setVisibility(View.GONE);
                         status[0] = findViewById(R.id.status);
                         status[0].setVisibility(View.VISIBLE);
                         status[0].setText(R.string.serial_configurado);
                     });
-                    Thread.sleep(500);
 
-                    Intent intent = new Intent(this, MainActivity.class);
+                    Thread.sleep(750);
 
-                    runOnUiThread(() -> status[0].setVisibility(View.INVISIBLE));
-                    Thread.sleep(500);
                     runOnUiThread(() -> {
-                        findViewById(R.id.serial_input).setVisibility(View.VISIBLE);
+                        runOnUiThread(() -> status[0].setVisibility(View.INVISIBLE));
+                        Intent intent = new Intent(this, MainActivity.class);
                         startActivityWithExplosion(this, intent);
-//                            destroyDialog(alert);
                         v.setEnabled(true);
                     });
+
+
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

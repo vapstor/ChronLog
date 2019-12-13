@@ -1,6 +1,9 @@
 package app.br.chronlog.utils;
 
-public class MyLogEntry {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class MyLogEntry implements Parcelable {
     private String data, hora, t1, t2, t3, t4;
 
     public MyLogEntry(String data, String hora, String t1, String t2, String t3, String t4) {
@@ -10,6 +13,15 @@ public class MyLogEntry {
         this.t2 = t2;
         this.t3 = t3;
         this.t4 = t4;
+    }
+
+    public MyLogEntry(Parcel parcel) {
+        this.data = parcel.readString();
+        this.hora = parcel.readString();
+        this.t1 = parcel.readString();
+        this.t2 = parcel.readString();
+        this.t3 = parcel.readString();
+        this.t4 = parcel.readString();
     }
 
     public String getData() {
@@ -36,4 +48,32 @@ public class MyLogEntry {
         return t4;
     }
 
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(data);
+        dest.writeString(hora);
+        dest.writeString(t1);
+        dest.writeString(t2);
+        dest.writeString(t3);
+        dest.writeString(t4);
+    }
+
+    public static final Parcelable.Creator<MyLogEntry> CREATOR = new Parcelable.Creator<MyLogEntry>() {
+
+        @Override
+        public MyLogEntry createFromParcel(Parcel source) {
+            return new MyLogEntry(source);
+        }
+
+        @Override
+        public MyLogEntry[] newArray(int size) {
+            return new MyLogEntry[size];
+        }
+    };
 }

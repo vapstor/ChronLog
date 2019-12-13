@@ -202,10 +202,10 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
     @Override
     public void onSerialConnectError(Exception e) {
-        isDeviceConnected = Connected.False;
         if (Objects.requireNonNull(e.getMessage()).contains(JA_CONECTADO)) {
             runOnUiThread(() -> Toast.makeText(this, "Já conectado!", Toast.LENGTH_SHORT).show());
         } else {
+            isDeviceConnected = Connected.False;
             runOnUiThread(() -> setStatus(CONEXAO_FALHOU, this));
         }
         runOnUiThread(this::setButtonsEnabledDisabled);

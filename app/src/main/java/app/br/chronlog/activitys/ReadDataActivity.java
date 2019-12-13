@@ -4,56 +4,61 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.google.gson.Gson;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import app.br.chronlog.R;
+import app.br.chronlog.utils.ItemClickSupport;
 import app.br.chronlog.utils.MyLog;
 import app.br.chronlog.utils.MyLogEntry;
+import app.br.chronlog.utils.RecyclerAdapter;
 import app.br.chronlog.utils.Utils;
 import app.br.chronlog.utils.bluetooth.SerialListener;
 import app.br.chronlog.utils.bluetooth.SerialService;
 
+import static androidx.recyclerview.widget.RecyclerView.VERTICAL;
 import static app.br.chronlog.utils.Utils.TAG_LOG;
 import static app.br.chronlog.utils.Utils.isDeviceConnected;
 import static app.br.chronlog.utils.Utils.myBluetoothController;
 import static app.br.chronlog.utils.Utils.send;
+import static app.br.chronlog.utils.Utils.serialSocket;
 import static java.lang.Thread.sleep;
 
 public class ReadDataActivity extends AppCompatActivity implements ServiceConnection, SerialListener {
     private SerialService service;
-    public ListView logsListView;
-    public static ArrayAdapter<MyLog> logListAdapter;
+    public RecyclerView logsRecyclerView;
     public static ArrayList<MyLog> logsList = new ArrayList<>();
     final String protocolReadSdData = "@04000000000000";
     private static String receivedData = "";
     private ImageButton iconRefresh;
-    private ProgressBar progressBar;
     private MyLog selectedLog;
     private String[] receivedStrArray;
-    private ProgressBar progressBarItem;
+    private ProgressBar progressBarContainerView, progressBarItem, progressBarOpenLogDialog;
     private int receivedSize = 0;
     private final Object lock = new Object();
     private Thread myCommandThread;
+    private int stopReceiveFlag = 0;
+    private boolean aberturaCancelada;
+    private RecyclerAdapter adapter;
+    AlertDialog[] alertDialog = new AlertDialog[1];
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -67,56 +72,65 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
         }
 
         iconRefresh = findViewById(R.id.refreshListIcon);
-        progressBar = findViewById(R.id.progressBar);
+        progressBarContainerView = findViewById(R.id.progressBar);
 
-        logsListView = findViewById(R.id.logsListView);
-        logsListView.setDivider(new ColorDrawable(0x752ab3cf));
-        logsListView.setDividerHeight(1);
-        logListAdapter = new ArrayAdapter<MyLog>(this, 0, logsList) {
+        logsRecyclerView = findViewById(R.id.logsListView);
+        DividerItemDecoration decoration = new DividerItemDecoration(getApplicationContext(), VERTICAL);
+        logsRecyclerView.addItemDecoration(decoration);
+//        logsRecyclerView.setDivider(new ColorDrawable(0x752ab3cf));
+//        logsRecyclerView.setDividerHeight(1);
+        adapter = new RecyclerAdapter(logsList);
+        adapter.setHasStableIds(true);
+
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        logsRecyclerView.setLayoutManager(linearLayoutManager);
+
+        logsRecyclerView.setAdapter(adapter);
+
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
             @Override
-            public View getView(int position, View view, ViewGroup parent) {
-                MyLog log = logsList.get(position);
-                if (view == null)
-                    view = getLayoutInflater().inflate(R.layout.log_list_item, parent, false);
-                TextView logTitle = view.findViewById(R.id.logTitle);
-                TextView peso = view.findViewById(R.id.peso);
-                logTitle.setText(log.getName());
-                peso.setText("(" + log.getPeso().trim() + " kb)");
-                return view;
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                return false;
             }
 
             @Override
-            public boolean hasStableIds() {
-                return true;
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
+                if (swipeDir == ItemTouchHelper.LEFT) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(ReadDataActivity.this, R.style.DialogOpenLogStyle);
+                    builder.setTitle(getResources().getString(R.string.atencao_));
+                    builder.setMessage("Deseja realmente excluir o log: " + "\n" + logsList.get(viewHolder.getAdapterPosition()).getName() + "?");
+                    builder.setPositiveButton("Excluir", (dialog, which) -> deleteLogFile(logsList.get(viewHolder.getAdapterPosition()).getName()));
+                    builder.setNegativeButton("Cancelar", (dialog, which) -> {
+                    });
+                    builder.create().show();
+                }
+                // Remove item from backing list here
+                adapter.notifyDataSetChanged();
             }
-
-            @Override
-            public int getCount() {
-                return super.getCount();
-            }
-        };
-
-        logsListView.setOnItemClickListener((parent, view, position, id) -> {
+        });
+        itemTouchHelper.attachToRecyclerView(logsRecyclerView);
+        ItemClickSupport.addTo(logsRecyclerView).setOnItemClickListener((recyclerView, position, v) -> {
             if (myBluetoothController.getBluetoothAdapter().isDiscovering()) {
                 myBluetoothController.getBluetoothAdapter().cancelDiscovery();
             }
             selectedLog = logsList.get(position);
-            progressBarItem = view.findViewById(R.id.progressBarItem);
+            progressBarItem = v.findViewById(R.id.progressBarItem);
             readFile(selectedLog);
         });
-        logsListView.setOnItemLongClickListener((parent, view, position, id) -> {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(getResources().getString(R.string.atencao_));
-            builder.setMessage("Deseja realmente excluir o log: " + "\n" + logsList.get(position).getName() + "?");
-            builder.setPositiveButton("Excluir", (dialog, which) -> deleteLogFile(logsList.get(position).getName()));
-            builder.setNegativeButton("Cancelar", (dialog, which) -> {
-            });
-            builder.create().show();
+        ItemClickSupport.addTo(logsRecyclerView).setOnItemLongClickListener((RecyclerView recyclerView, int position, View v) -> {
+            Intent sharingIntent = new Intent(
+                    android.content.Intent.ACTION_SEND);
+            sharingIntent.setType("text/plain");
+            String shareBody = "Tela de Compartilhamento!";
+            sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
+                    "Compartilhar Log: " + logsList.get(position).getName());
+            sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
+            startActivity(Intent.createChooser(sharingIntent, "Compartilhar Via"));
             return true;
         });
-        iconRefresh.setOnClickListener((v) -> {
-            getFilesNameByProtocol();
-        });
+
+        iconRefresh.setOnClickListener((v) -> getFilesNameByProtocol());
 
         setFinishOnTouchOutside(true);
     }
@@ -127,15 +141,13 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
         receivedSize = 0;
         progressBarItem.setVisibility(View.VISIBLE);
 
-        //simula carregamento
+        //interface para informar que estamos tentando ler o arquivo
         progressBarItem.setVisibility(View.VISIBLE);
 
         String protocolReadFileData = "@05" + selectedLog.getName() + "0000";
         if (myCommandThread != null) {
             if (myCommandThread.isAlive()) {
                 myCommandThread.interrupt();
-                //cancela carregamento
-                progressBarItem.setVisibility(View.GONE);
             }
         }
         new Thread(() -> {
@@ -143,86 +155,147 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
                 try {
                     myCommandThread = new Thread(() -> send(protocolReadFileData, this, this));
                     myCommandThread.start();
-                    lock.wait(500);
-                    if (!receivedData.equals("")) {
+                    lock.wait(300);
+                    if (receivedData.equals("")) {
+                        readFile(selectedLog);
+                    } else {
+                        //começou a receber o arquivo, esconde a progress bar do item e inicia a do dialogo
+                        runOnUiThread(() -> {
+                            progressBarItem.setVisibility(View.INVISIBLE);
+
+                            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                            builder.setView(R.layout.open_log_dialog);
+
+                            alertDialog[0] = builder.create();
+                            alertDialog[0].show();
+
+                            runOnUiThread(() -> {
+                                progressBarOpenLogDialog = alertDialog[0].findViewById(R.id.progressBarOpenLog);
+                                if (progressBarOpenLogDialog != null) {
+                                    progressBarOpenLogDialog.setMax(Integer.parseInt(selectedLog.getPeso().trim()) * 10);
+                                }
+                                Button btnCancel = alertDialog[0].findViewById(R.id.btnCancelOpenLog);
+                                if (btnCancel != null) {
+                                    btnCancel.setOnClickListener(v -> {
+                                        progressBarOpenLogDialog.setProgress(0);
+                                        aberturaCancelada = true;
+                                        cancelaAbertura();
+                                    });
+                                }
+                            });
+
+                        });
                         lock.wait();
+                        runOnUiThread(() -> alertDialog[0].dismiss());
+
+
+                        if (!aberturaCancelada) {
+                            configFileReceived(selectedLog);
+                        } else {
+                            runOnUiThread(() -> {
+                                serialSocket.closeOutPutStream();
+                                Toast.makeText(this, "Cancelado!", Toast.LENGTH_SHORT).show();
+                                alertDialog[0].dismiss();
+                            });
+                        }
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                configFileReceived(selectedLog);
             }
         }).start();
     }
 
-    //Configura o arquivo em objeto e transforma em String para enviar ao chart
-    private void configFileReceived(MyLog selectedLog) {
-        runOnUiThread(() -> progressBarItem.setVisibility(View.GONE));
-        if (receivedData.equals("")) {
-            runOnUiThread(() -> Toast.makeText(this, "Tente Novamente!", Toast.LENGTH_SHORT).show());
-        } else {
-            receivedStrArray = receivedData.split("(\\r?\\n|\\r)");
-            String lineValue;
-            ArrayList<MyLogEntry> entries = new ArrayList<>();
-
-            for (int i = 0; i < receivedStrArray.length; i++) {
-                if (i >= 2) { // 2 = 3ª linha
-                    lineValue = receivedStrArray[i]; //valores a partir da 2 linha [0 - @05, 1 - Data/Hora/...
-                    String[] lineValues = lineValue.split(" ");
-                    lineValues = Arrays.copyOf(lineValues, 6);
-                    if (lineValues[0] == null || lineValues[0].contains("�")) {
-                        lineValues[0] = "OPEN";
-                    }
-                    if (lineValues[1] == null || lineValues[1].contains("�")) {
-                        lineValues[1] = "OPEN";
-                    }
-                    if (lineValues[2] == null || lineValues[2].contains("�")) {
-                        lineValues[2] = "OPEN";
-                    }
-                    if (lineValues[3] == null || lineValues[3].contains("�")) {
-                        lineValues[3] = "OPEN";
-                    }
-                    if (lineValues[4] == null || lineValues[4].contains("�")) {
-                        lineValues[4] = "OPEN";
-                    }
-                    if (lineValues[5] == null || lineValues[5].contains("�")) {
-                        lineValues[5] = "OPEN";
-                    }
-
-                    entries.add(new MyLogEntry(lineValues[0], lineValues[1], lineValues[2], lineValues[3], lineValues[4], lineValues[5]));
+    private void cancelaAbertura() {
+        synchronized (lock) {
+            if (myCommandThread != null) {
+                if (myCommandThread.isAlive()) {
+                    myCommandThread.interrupt();
                 }
             }
-            selectedLog.setEntries(entries);
-            if (entries.size() > 1) {
-                Gson gs = new Gson();
-                String selectedLogAsString = gs.toJson(selectedLog);
-                Intent intent = new Intent(this, ChartViewActivity.class);
-                intent.putExtra("selectedLogAsString", selectedLogAsString);
-                startActivity(intent);
-            } else if (entries.size() == 1) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setMessage("Só existe apenas um registro no Log: "
-                        + "\n" + "\n" +
-                        "Data: " + selectedLog.getEntries().get(0).getData() + "\n" +
-                        "Horário: " + selectedLog.getEntries().get(0).getHora() + "\n" +
-                        "T1: " + selectedLog.getEntries().get(0).getT1() + "\n" +
-                        "T2: " + selectedLog.getEntries().get(0).getT2() + "\n" +
-                        "T3: " + selectedLog.getEntries().get(0).getT3() + "\n" +
-                        "T4: " + selectedLog.getEntries().get(0).getT4()
-                );
-                builder.setPositiveButton("OK", (dialog, which) -> {
-                });
-                builder.setTitle("Log Único!");
-                runOnUiThread(() -> builder.create().show());
-            } else {
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setMessage("Não existem registros no Log!");
-                builder.setTitle("Log Inválido!");
-                builder.setPositiveButton("OK", (dialog, which) -> {
-                });
-                runOnUiThread(() -> builder.create().show());
+            lock.notifyAll();
+        }
+    }
+
+    //Configura o arquivo PARCELABLE para enviar ao chart
+    private void configFileReceived(MyLog selectedLog) {
+        receivedStrArray = receivedData.split("(\\r?\\n|\\r)");
+        String lineValue;
+        ArrayList<MyLogEntry> entries = new ArrayList<>();
+        for (int i = 0; i < receivedStrArray.length; i++) {
+            if (i >= 2) { // 2 = 3ª linha
+                lineValue = receivedStrArray[i]; //valores a partir da 2 linha [0 - @05, 1 - Data/Hora/...
+                String[] lineValues = lineValue.split(" ");
+                lineValues = Arrays.copyOf(lineValues, 6);
+                if (lineValues[0] == null || lineValues[0].contains("�")) {
+                    lineValues[0] = "OPEN";
+                }
+                if (lineValues[1] == null || lineValues[1].contains("�")) {
+                    lineValues[1] = "OPEN";
+                }
+                if (lineValues[2] == null || lineValues[2].contains("�")) {
+                    lineValues[2] = "OPEN";
+                }
+                if (lineValues[3] == null || lineValues[3].contains("�")) {
+                    lineValues[3] = "OPEN";
+                }
+                if (lineValues[4] == null || lineValues[4].contains("�")) {
+                    lineValues[4] = "OPEN";
+                }
+                if (lineValues[5] == null || lineValues[5].contains("�")) {
+                    lineValues[5] = "OPEN";
+                }
+
+                entries.add(new MyLogEntry(lineValues[0], lineValues[1], lineValues[2], lineValues[3], lineValues[4], lineValues[5]));
             }
         }
+
+        //resgatou os dados e setou em um objeto
+        runOnUiThread(() -> {
+            if (alertDialog[0] != null) {
+                if (alertDialog[0].isShowing()) {
+                    progressBarOpenLogDialog.setProgress(0);
+                    alertDialog[0].dismiss();
+                }
+                alertDialog[0] = null;
+            }
+            Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show();
+        });
+
+        selectedLog.setEntries(entries);
+        if (entries.size() > 1) {
+
+            ArrayList<MyLog> myLog = new ArrayList<>();
+            myLog.add(selectedLog);
+
+            Intent intent = new Intent(this, ChartViewActivity.class);
+            intent.putParcelableArrayListExtra("selectedLog", myLog);
+            startActivity(intent);
+
+        } else if (entries.size() == 1) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("Só existe apenas um registro no Log: "
+                    + "\n" + "\n" +
+                    "Data: " + selectedLog.getEntries().get(0).getData() + "\n" +
+                    "Horário: " + selectedLog.getEntries().get(0).getHora() + "\n" +
+                    "T1: " + selectedLog.getEntries().get(0).getT1() + "\n" +
+                    "T2: " + selectedLog.getEntries().get(0).getT2() + "\n" +
+                    "T3: " + selectedLog.getEntries().get(0).getT3() + "\n" +
+                    "T4: " + selectedLog.getEntries().get(0).getT4()
+            );
+            builder.setPositiveButton("OK", (dialog, which) -> {
+            });
+            builder.setTitle("Log Único!");
+            runOnUiThread(() -> builder.create().show());
+        } else {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("Não existem registros no Log!");
+            builder.setTitle("Log Inválido!");
+            builder.setPositiveButton("OK", (dialog, which) -> {
+            });
+            runOnUiThread(() -> builder.create().show());
+        }
+
     }
 
     //Resgata Todos os Arquivos
@@ -233,36 +306,37 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
         send(protocolReadSdData, this, this);
         new Thread(() -> {
             runOnUiThread(() -> {
-                logsListView.setAdapter(null);
-                logsListView.setAdapter(logListAdapter);
+                logsRecyclerView.setAdapter(null);
+                logsRecyclerView.setAdapter(adapter);
 
                 //simula carregamento
                 iconRefresh.setVisibility(View.GONE);
-                progressBar.setVisibility(View.VISIBLE);
+                progressBarContainerView.setVisibility(View.VISIBLE);
             });
-
-            try {
-                sleep(3000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
             configLogsReceived();
         }).start();
     }
 
     //Configura arquivos resgatados
     private void configLogsReceived() {
+        try {
+            sleep(2500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         if (receivedData.equals("")) {
-            runOnUiThread(() -> {
-                Toast.makeText(this, "Tente Novamente!", Toast.LENGTH_SHORT).show();
-                progressBar.setVisibility(View.GONE);
-                iconRefresh.setVisibility(View.VISIBLE);
-            });
+            getFilesNameByProtocol();
+//            runOnUiThread(() -> {
+//                Toast.makeText(this, "Tente Novamente!", Toast.LENGTH_SHORT).show();
+//                progressBarContainerView.setVisibility(View.GONE);
+//                iconRefresh.setVisibility(View.VISIBLE);
+//            });
         } else {
+
             runOnUiThread(() -> {
                 Toast.makeText(this, "Logs Resgatados com Sucesso!", Toast.LENGTH_SHORT).show();
                 iconRefresh.setVisibility(View.GONE);
-                progressBar.setVisibility(View.GONE);
+                progressBarContainerView.setVisibility(View.GONE);
             });
             receivedStrArray = receivedData.split("(\\r?\\n|\\r)");
             String nome, peso;
@@ -302,29 +376,24 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
         send(protocolDeleteData, this, this);
         new Thread(() -> {
             runOnUiThread(() -> {
-                logsListView.setAdapter(null);
-                logsListView.setAdapter(logListAdapter);
+                logsRecyclerView.setAdapter(null);
+                logsRecyclerView.setAdapter(adapter);
             });
-            try {
-                sleep(750);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
             if (!receivedData.equals("")) {
                 runOnUiThread(() -> {
-                    logListAdapter.notifyDataSetChanged();
+                    adapter.notifyDataSetChanged();
                     Toast.makeText(this, "Log excluído com sucesso!", Toast.LENGTH_SHORT).show();
                 });
             } else {
-                runOnUiThread(() -> Toast.makeText(this, "Falhou ao excluír log, tente novamente!", Toast.LENGTH_SHORT).show());
+                deleteLogFile(fileName);
+//                runOnUiThread(() -> Toast.makeText(this, "Falhou ao excluír log, tente novamente!", Toast.LENGTH_SHORT).show());
             }
         }).start();
     }
 
     public void swapItems(ArrayList<MyLog> items) {
         logsList = items;
-        logsListView.invalidateViews();
-        logListAdapter.notifyDataSetChanged();
+        adapter.notifyDataSetChanged();
     }
 
     @Override
@@ -337,8 +406,8 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
         } else {
             bindService(new Intent(this, SerialService.class), this, Context.BIND_AUTO_CREATE);
         }
-        logsListView.setAdapter(null);
-        logsListView.setAdapter(logListAdapter);
+        logsRecyclerView.setAdapter(null);
+        logsRecyclerView.setAdapter(adapter);
     }
 
     @Override
@@ -379,8 +448,6 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
 
     @Override
     public void onSerialRead(byte[] data) {
-        Log.d(TAG_LOG, "Dado Vindo Direto do SOCKET [2]: " + Arrays.toString(data));
-        Log.d(TAG_LOG, "Dado Vindo Direto do SOCKET [2]: " + data.length);
         String valorRecebido = new String(data);
         Log.d(TAG_LOG, "VALOR RECEBIDO : " + valorRecebido);
         if (selectedLog != null) {
@@ -401,17 +468,45 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
                     Toast.makeText(this, "Valor � Recebido!", Toast.LENGTH_SHORT).show();
                 }
                 Log.d(TAG_LOG, "\nPESO DO ARQUIVO: " + pesoTodosAsEntradas);
-                Log.d(TAG_LOG, "\nPESO JA RECEBIDO" + receivedSize);
+                Log.d(TAG_LOG, "\nPESO JA RECEBIDO: " + receivedSize);
                 Log.d(TAG_LOG, "\nPESO JA RECEBIDO + PESO DO DADO RECEBIDO - > " + (receivedSize + data.length));
 
-                receivedData = receivedData.concat(valorRecebido);
-                receivedSize = receivedSize + data.length;
+                String same = receivedData.concat(valorRecebido);
 
-                if (receivedSize >= pesoTodosAsEntradas) {
-                    Log.d(TAG_LOG, "\nALERTA: receivedSize >= pesoTodosAsEntradas -> receivedSize = " + receivedSize);
-                    lock.notify();
+                if (!receivedData.equals(same)) {
+                    if (receivedData.equalsIgnoreCase("@05\r\nerror opening file\r\n")) {
+                        if (alertDialog[0] != null) {
+                            if (alertDialog[0].isShowing()) {
+                                alertDialog[0].dismiss();
+                                Toast.makeText(this, "Arquivo Corrompido!", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    } else {
+                        stopReceiveFlag = 0;
+
+                        receivedData = same;
+                        receivedSize = receivedSize + data.length;
+
+                        //atualiza progress bar do dialogo com peso recebido;
+                        if (progressBarOpenLogDialog != null) {
+                            //*10 para ficar melhor a progressão do dialogo
+                            runOnUiThread(() -> progressBarOpenLogDialog.setProgress(receivedSize * 10));
+                        }
+
+                        if (receivedSize >= pesoTodosAsEntradas) {
+                            lock.notify();
+                        } else {
+                            Log.d(TAG_LOG, "ELSE RECEIVED SIZE" + receivedSize);
+                            Log.d(TAG_LOG, "ELSE RECEIVED DATA" + receivedData);
+                        }
+                    }
                 } else {
-                    Log.d(TAG_LOG, "ELSE" + receivedSize);
+                    stopReceiveFlag++;
+                    if (stopReceiveFlag == 50) {
+                        stopReceiveFlag = 0;
+                        Log.d(TAG_LOG, "\nErro no Arquivo!");
+                        lock.notify();
+                    }
                 }
             }
         } else {
@@ -427,4 +522,5 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
             finish();
         });
     }
+
 }

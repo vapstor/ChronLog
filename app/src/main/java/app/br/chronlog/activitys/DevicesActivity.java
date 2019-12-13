@@ -234,19 +234,23 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
         try {
             if (myBluetoothController.getBluetoothAdapter() != null) {
                 if (myBluetoothController.getBluetoothAdapter().isEnabled()) {
-                    deviceAddress = deviceSelected.getAddress();
-                    deviceName = deviceSelected.getName();
-                    bluetoothDeviceSelected = myBluetoothController.getBluetoothAdapter().getRemoteDevice(deviceAddress);
-                    if (serialSocket == null) {
-                        serialSocket = new SerialSocket();
+                    if (isDeviceConnected == Connected.Pending) {
+                        Toast.makeText(this, "Aguarde...", Toast.LENGTH_SHORT).show();
+                    } else {
+                        deviceAddress = deviceSelected.getAddress();
+                        deviceName = deviceSelected.getName();
+                        bluetoothDeviceSelected = myBluetoothController.getBluetoothAdapter().getRemoteDevice(deviceAddress);
+                        if (serialSocket == null) {
+                            serialSocket = new SerialSocket();
+                        }
+                        if (isDeviceConnected == Connected.False) {
+                            showProgressBar(this);
+                            setStatus(CONECTANDO_, this);
+                            isDeviceConnected = Connected.Pending;
+                        }
+                        service.connect(this, "Connected to " + deviceName);
+                        serialSocket.connect(this, service, bluetoothDeviceSelected);
                     }
-                    if (isDeviceConnected == Connected.False) {
-                        showProgressBar(this);
-                        setStatus(CONECTANDO_, this);
-                        isDeviceConnected = Connected.Pending;
-                    }
-                    service.connect(this, "Connected to " + deviceName);
-                    serialSocket.connect(this, service, bluetoothDeviceSelected);
                 } else {
                     Toast.makeText(this, "Bluetooth Desabilitado!", Toast.LENGTH_SHORT).show();
                 }

@@ -3,6 +3,7 @@ package app.br.chronlog.activitys;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,7 +26,6 @@ import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
-import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +41,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
         OnChartValueSelectedListener {
 
     private LineChart chart;
+    private ArrayList<Parcelable> selectedLog;
 //    private SeekBar seekBarX, seekBarY;
 //    private TextView tvX, tvY;
 
@@ -54,12 +55,17 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
         if (extras == null) {
             finish();
         } else {
-            Gson gs = new Gson();
-            String selectedLogAsString = extras.getString("selectedLogAsString");
-            MyLog selectedLog = gs.fromJson(selectedLogAsString, MyLog.class); // Converts the JSON String to an Object
+            selectedLog = getIntent().getParcelableArrayListExtra("selectedLog");
+            List entriesList;
+            if (selectedLog != null) {
+                MyLog myLog = (MyLog) selectedLog.get(0);
+                entriesList = myLog.getEntries();
+                acessaDadosDoArquivo(entriesList);
+            } else {
+                Toast.makeText(this, "Falhou ao resgatar os dados!", Toast.LENGTH_SHORT).show();
+                finish();
+            }
 
-            List entriesList = selectedLog.getEntries();
-            acessaDadosDoArquivo(entriesList);
         }
     }
 

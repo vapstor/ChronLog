@@ -34,9 +34,6 @@
     <string name="configurar_horario">Configurar Horario</string>
     <string name="resgatar_dados">Resgatar Dados</string>
     <string name="configurar">Configurar</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="digite_a_data_ex_10_10_2019">Digite a data: (ex.: 10/10/2019)</string>
     <string name="digite_a_hora_ex_10_23_35">digite a hora (ex.:10:23:35)</string>
     <string name="chronlog">ChronLog</string>
@@ -68,6 +65,7 @@
     <string name="calendar_icon">calendar icon</string>
     <string name="dd_mm_aaaa">dd/mm/aaaa</string>
     <string name="modo">modo</string>
+    <string name="aguarde_estamos_abrindo_seu_arquivo">Aguarde, estamos abrindo seu arquivo…</string>
     <string-array name="modosTermopar">
         <item>K</item>
         <item>J</item>

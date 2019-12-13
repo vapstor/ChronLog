@@ -27,6 +27,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 
 import app.br.chronlog.R;
+import app.br.chronlog.activitys.MainActivity;
 import app.br.chronlog.utils.bluetooth.BluetoothController;
 import app.br.chronlog.utils.bluetooth.SerialListener;
 import app.br.chronlog.utils.bluetooth.SerialSocket;
@@ -184,7 +185,10 @@ public class Utils {
      */
     public static void send(String str, Activity activity, SerialListener listener) {
         if (isDeviceConnected != Connected.True) {
-            Toast.makeText(activity, "not connected", Toast.LENGTH_SHORT).show();
+            activity.runOnUiThread(() -> {
+                Toast.makeText(activity, "Desconectado", Toast.LENGTH_SHORT).show();
+                activity.startActivity(new Intent(activity, MainActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK));
+            });
             return;
         }
         try {
