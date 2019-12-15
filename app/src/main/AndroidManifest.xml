@@ -3,7 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="app.br.chronlog">
 
-    <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_PRIVILEGED"
+        tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -18,46 +20,63 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        tools:ignore="GoogleAppIndexingWarning">
+        tools:ignore="GoogleAppIndexingWarning"
+
+        >
 
         <activity
             android:name=".activitys.DevicesActivity"
+            android:launchMode="singleTask"
             android:screenOrientation="portrait" />
+
         <activity
             android:name=".activitys.ConfigDeviceActivity"
+            android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize|stateVisible" />
+
         <activity
             android:name=".activitys.MainActivity"
+            android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
+
         <activity
             android:name=".activitys.ReadDataActivity"
+            android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:theme="@style/MyAlertDialogStyle"
             android:windowSoftInputMode="adjustResize" />
+
         <activity
             android:name=".activitys.SplashScreenActivity"
             android:fitsSystemWindows="true"
+            android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:theme="@style/fullScreenActivity">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".activitys.LoginActivity"
             android:fitsSystemWindows="true"
+            android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme"
             android:windowSoftInputMode="stateVisible|adjustResize" />
+
         <activity
             android:name=".activitys.ChartViewActivity"
             android:fitsSystemWindows="false"
+            android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme" />
+
 
         <meta-data
             android:name="preloaded_fonts"

@@ -22,6 +22,10 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.button.MaterialButton;
+
+import java.io.FileWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -58,7 +62,10 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
     private int stopReceiveFlag = 0;
     private boolean aberturaCancelada;
     private RecyclerAdapter adapter;
-    AlertDialog[] alertDialog = new AlertDialog[1];
+    AlertDialog[] alertDialog = new AlertDialog[2];
+    private AlertDialog.Builder builder;
+    private ProgressBar progressBarSaveShareLog;
+    private MaterialButton buttonSave, buttonShare;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -68,17 +75,13 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
         if (isDeviceConnected != Utils.Connected.True) {
             Toast.makeText(this, R.string.nao_conectado, Toast.LENGTH_SHORT).show();
             finish();
-            //((TextView) findViewById(R.id.status)).setText(deviceName);
         }
 
-        iconRefresh = findViewById(R.id.refreshListIcon);
         progressBarContainerView = findViewById(R.id.progressBar);
 
         logsRecyclerView = findViewById(R.id.logsListView);
         DividerItemDecoration decoration = new DividerItemDecoration(getApplicationContext(), VERTICAL);
         logsRecyclerView.addItemDecoration(decoration);
-//        logsRecyclerView.setDivider(new ColorDrawable(0x752ab3cf));
-//        logsRecyclerView.setDividerHeight(1);
         adapter = new RecyclerAdapter(logsList);
         adapter.setHasStableIds(true);
 
@@ -100,9 +103,11 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
                     AlertDialog.Builder builder = new AlertDialog.Builder(ReadDataActivity.this, R.style.DialogOpenLogStyle);
                     builder.setTitle(getResources().getString(R.string.atencao_));
                     builder.setMessage("Deseja realmente excluir o log: " + "\n" + logsList.get(viewHolder.getAdapterPosition()).getName() + "?");
-                    builder.setPositiveButton("Excluir", (dialog, which) -> deleteLogFile(logsList.get(viewHolder.getAdapterPosition()).getName()));
-                    builder.setNegativeButton("Cancelar", (dialog, which) -> {
+                    builder.setPositiveButton("Excluir", (dialog, which) -> {
+                        deleteLogFile(logsList.get(viewHolder.getAdapterPosition()).getName());
+                        adapter.notifyDataSetChanged();
                     });
+                    builder.setNegativeButton("Cancelar", (dialog, which) -> adapter.notifyDataSetChanged());
                     builder.create().show();
                 }
                 // Remove item from backing list here
@@ -111,38 +116,102 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
         });
         itemTouchHelper.attachToRecyclerView(logsRecyclerView);
         ItemClickSupport.addTo(logsRecyclerView).setOnItemClickListener((recyclerView, position, v) -> {
-            if (myBluetoothController.getBluetoothAdapter().isDiscovering()) {
-                myBluetoothController.getBluetoothAdapter().cancelDiscovery();
-            }
             selectedLog = logsList.get(position);
             progressBarItem = v.findViewById(R.id.progressBarItem);
-            readFile(selectedLog);
+
+            builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
+            builder.setView(R.layout.open_log_dialog);
+
+            readFile(selectedLog, false);
         });
         ItemClickSupport.addTo(logsRecyclerView).setOnItemLongClickListener((RecyclerView recyclerView, int position, View v) -> {
-            Intent sharingIntent = new Intent(
-                    android.content.Intent.ACTION_SEND);
-            sharingIntent.setType("text/plain");
-            String shareBody = "Tela de Compartilhamento!";
-            sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
-                    "Compartilhar Log: " + logsList.get(position).getName());
-            sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
-            startActivity(Intent.createChooser(sharingIntent, "Compartilhar Via"));
+            builder = new AlertDialog.Builder(ReadDataActivity.this, R.style.DialogOpenLogStyle);
+            builder.setView(R.layout.share_save_item_dialog);
+
+            AlertDialog alertDialog = builder.create();
+            alertDialog.show();
+
+            progressBarSaveShareLog = alertDialog.findViewById(R.id.progressBarSaveShareLog);
+
+            buttonShare = alertDialog.findViewById(R.id.btnShareLog);
+            if (buttonShare != null) {
+                buttonShare.setOnClickListener(v1 -> {
+                    Intent sharingIntent = new Intent(
+                            android.content.Intent.ACTION_SEND);
+                    sharingIntent.setType("text/plain");
+                    String shareBody = receivedData.replace("@05", "");
+                    sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
+                            "Log: " + logsList.get(position).getName());
+                    sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
+                    startActivity(Intent.createChooser(sharingIntent, "Compartilhar Via"));
+                });
+            }
+            buttonSave = alertDialog.findViewById(R.id.btnSaveLog);
+            if (buttonSave != null) {
+                buttonSave.setOnClickListener(v1 -> {
+                    saveFileToLocalSD(logsList.get(position).getName());
+                });
+            }
+            //inicia processo de resgate do log
+            readFile(logsList.get(position), true);
             return true;
         });
-
-        iconRefresh.setOnClickListener((v) -> getFilesNameByProtocol());
 
         setFinishOnTouchOutside(true);
     }
 
+    private void saveFileToLocalSD(String fileName) {
+        receivedStrArray = receivedData.split("(\\r?\\n|\\r)");
+        String lineValue;
+
+        for (int i = 0; i < receivedStrArray.length; i++) {
+            if (i >= 2) {
+                lineValue = receivedStrArray[i]; //valores a partir da 2 linha [0 - @05, 1 - Data/Hora/...
+
+                String[] lineValues = lineValue.split(" ");
+                lineValues = Arrays.copyOf(lineValues, 6);
+
+                if (lineValues[0] == null || lineValues[0].contains("�")) {
+                    lineValues[0] = "OPEN";
+                }
+                if (lineValues[1] == null || lineValues[1].contains("�")) {
+                    lineValues[1] = "OPEN";
+                }
+                if (lineValues[2] == null || lineValues[2].contains("�")) {
+                    lineValues[2] = "OPEN";
+                }
+                if (lineValues[3] == null || lineValues[3].contains("�")) {
+                    lineValues[3] = "OPEN";
+                }
+                if (lineValues[4] == null || lineValues[4].contains("�")) {
+                    lineValues[4] = "OPEN";
+                }
+                if (lineValues[5] == null || lineValues[5].contains("�")) {
+                    lineValues[5] = "OPEN";
+                }
+
+                try {
+                    Writer writer = new FileWriter(getFilesDir() + "/" + fileName + ".txt");
+                    writer.append(lineValue);
+                    writer.append("\n");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        runOnUiThread(() -> Toast.makeText(this, "Log Salvo com Sucesso!", Toast.LENGTH_SHORT).show());
+    }
+
     //Resgata 01 Arquivo
-    private void readFile(MyLog selectedLog) {
+    //@param saveToSd = boolean para definir se é apenas para ler (salvar/compartilhar) ou seguir para tela do chart
+    private void readFile(MyLog selectedLog, boolean saveToSD) {
         receivedData = "";
         receivedSize = 0;
-        progressBarItem.setVisibility(View.VISIBLE);
 
-        //interface para informar que estamos tentando ler o arquivo
-        progressBarItem.setVisibility(View.VISIBLE);
+        //interface no item para informar que estamos tentando ler o arquivo
+        if (!saveToSD) {
+            progressBarItem.setVisibility(View.VISIBLE);
+        }
 
         String protocolReadFileData = "@05" + selectedLog.getName() + "0000";
         if (myCommandThread != null) {
@@ -150,6 +219,27 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
                 myCommandThread.interrupt();
             }
         }
+
+        if (!saveToSD) {
+            if (alertDialog[0] == null) {
+                alertDialog[0] = builder.create();
+                alertDialog[0].show();
+
+                progressBarOpenLogDialog = alertDialog[0].findViewById(R.id.progressBarOpenLog);
+                if (progressBarOpenLogDialog != null) {
+                    progressBarOpenLogDialog.setMax(Integer.parseInt(selectedLog.getPeso().trim()) * 10);
+                }
+                Button btnCancel = alertDialog[0].findViewById(R.id.btnCancelOpenLog);
+                if (btnCancel != null) {
+                    btnCancel.setOnClickListener(v -> {
+                        progressBarOpenLogDialog.setProgress(0);
+                        aberturaCancelada = true;
+                        cancelaAbertura();
+                    });
+                }
+            }
+        }
+
         new Thread(() -> {
             synchronized (lock) {
                 try {
@@ -157,45 +247,38 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
                     myCommandThread.start();
                     lock.wait(300);
                     if (receivedData.equals("")) {
-                        readFile(selectedLog);
+                        readFile(selectedLog, saveToSD);
                     } else {
-                        //começou a receber o arquivo, esconde a progress bar do item e inicia a do dialogo
-                        runOnUiThread(() -> {
-                            progressBarItem.setVisibility(View.INVISIBLE);
+                        if (!saveToSD) {
+                            runOnUiThread(() -> progressBarItem.setVisibility(View.INVISIBLE));
+                        }
 
-                            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                            builder.setView(R.layout.open_log_dialog);
-
-                            alertDialog[0] = builder.create();
-                            alertDialog[0].show();
-
-                            runOnUiThread(() -> {
-                                progressBarOpenLogDialog = alertDialog[0].findViewById(R.id.progressBarOpenLog);
-                                if (progressBarOpenLogDialog != null) {
-                                    progressBarOpenLogDialog.setMax(Integer.parseInt(selectedLog.getPeso().trim()) * 10);
-                                }
-                                Button btnCancel = alertDialog[0].findViewById(R.id.btnCancelOpenLog);
-                                if (btnCancel != null) {
-                                    btnCancel.setOnClickListener(v -> {
-                                        progressBarOpenLogDialog.setProgress(0);
-                                        aberturaCancelada = true;
-                                        cancelaAbertura();
-                                    });
-                                }
-                            });
-
-                        });
                         lock.wait();
-                        runOnUiThread(() -> alertDialog[0].dismiss());
 
-
-                        if (!aberturaCancelada) {
-                            configFileReceived(selectedLog);
+                        //resgatou os dados
+                        runOnUiThread(() -> {
+                            if (alertDialog[0] != null) {
+                                if (alertDialog[0].isShowing()) {
+                                    alertDialog[0].dismiss();
+                                }
+                                alertDialog[0] = null;
+                            }
+                        });
+                        //terminou de receber ou foi cancelado
+                        if (!saveToSD) {
+                            if (!aberturaCancelada) {
+                                configFileReceived(selectedLog);
+                            } else {
+                                runOnUiThread(() -> Toast.makeText(this, "Cancelado!", Toast.LENGTH_SHORT).show());
+                            }
                         } else {
                             runOnUiThread(() -> {
-                                serialSocket.closeOutPutStream();
-                                Toast.makeText(this, "Cancelado!", Toast.LENGTH_SHORT).show();
-                                alertDialog[0].dismiss();
+//                                if (progressBarSaveShareLog != null)
+//                                    progressBarSaveShareLog.setProgress(0);
+                                if (buttonSave != null)
+                                    buttonSave.setEnabled(true);
+                                if (buttonShare != null)
+                                    buttonShare.setEnabled(true);
                             });
                         }
                     }
@@ -214,6 +297,7 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
                 }
             }
             lock.notifyAll();
+            serialSocket.closeOutPutStream();
         }
     }
 
@@ -250,20 +334,9 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
             }
         }
 
-        //resgatou os dados e setou em um objeto
-        runOnUiThread(() -> {
-            if (alertDialog[0] != null) {
-                if (alertDialog[0].isShowing()) {
-                    progressBarOpenLogDialog.setProgress(0);
-                    alertDialog[0].dismiss();
-                }
-                alertDialog[0] = null;
-            }
-            Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show();
-        });
-
         selectedLog.setEntries(entries);
         if (entries.size() > 1) {
+            runOnUiThread(() -> Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show());
 
             ArrayList<MyLog> myLog = new ArrayList<>();
             myLog.add(selectedLog);
@@ -273,7 +346,7 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
             startActivity(intent);
 
         } else if (entries.size() == 1) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
             builder.setMessage("Só existe apenas um registro no Log: "
                     + "\n" + "\n" +
                     "Data: " + selectedLog.getEntries().get(0).getData() + "\n" +
@@ -288,7 +361,7 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
             builder.setTitle("Log Único!");
             runOnUiThread(() -> builder.create().show());
         } else {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
             builder.setMessage("Não existem registros no Log!");
             builder.setTitle("Log Inválido!");
             builder.setPositiveButton("OK", (dialog, which) -> {
@@ -310,7 +383,6 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
                 logsRecyclerView.setAdapter(adapter);
 
                 //simula carregamento
-                iconRefresh.setVisibility(View.GONE);
                 progressBarContainerView.setVisibility(View.VISIBLE);
             });
             configLogsReceived();
@@ -332,10 +404,8 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
 //                iconRefresh.setVisibility(View.VISIBLE);
 //            });
         } else {
-
             runOnUiThread(() -> {
                 Toast.makeText(this, "Logs Resgatados com Sucesso!", Toast.LENGTH_SHORT).show();
-                iconRefresh.setVisibility(View.GONE);
                 progressBarContainerView.setVisibility(View.GONE);
             });
             receivedStrArray = receivedData.split("(\\r?\\n|\\r)");
@@ -419,6 +489,17 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
     }
 
     @Override
+    protected void onDestroy() {
+        if (myCommandThread != null) {
+            if (myCommandThread.isAlive()) {
+                myCommandThread.interrupt();
+            }
+            myCommandThread = null;
+        }
+        super.onDestroy();
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
     }
@@ -473,39 +554,56 @@ public class ReadDataActivity extends AppCompatActivity implements ServiceConnec
 
                 String same = receivedData.concat(valorRecebido);
 
-                if (!receivedData.equals(same)) {
-                    if (receivedData.equalsIgnoreCase("@05\r\nerror opening file\r\n")) {
-                        if (alertDialog[0] != null) {
-                            if (alertDialog[0].isShowing()) {
-                                alertDialog[0].dismiss();
-                                Toast.makeText(this, "Arquivo Corrompido!", Toast.LENGTH_SHORT).show();
-                            }
+                Log.d(TAG_LOG, "SAME :" + same);
+
+                if (receivedData.contains("error")) {
+                    stopReceiveFlag = 0;
+
+                    if (alertDialog[0] != null) {
+                        if (alertDialog[0].isShowing()) {
+                            alertDialog[0].dismiss();
+                            runOnUiThread(() -> Toast.makeText(this, "Arquivo Corrompido!", Toast.LENGTH_SHORT).show());
                         }
-                    } else {
+                    }
+                    lock.notify();
+                } else {
+                    if (!receivedData.equals(same)) {
+                        Log.d(TAG_LOG, "RECEIVED DATA != SAME (RECEIVED)" + receivedData);
                         stopReceiveFlag = 0;
 
                         receivedData = same;
                         receivedSize = receivedSize + data.length;
+
 
                         //atualiza progress bar do dialogo com peso recebido;
                         if (progressBarOpenLogDialog != null) {
                             //*10 para ficar melhor a progressão do dialogo
                             runOnUiThread(() -> progressBarOpenLogDialog.setProgress(receivedSize * 10));
                         }
+                        if (progressBarSaveShareLog != null) {
+                            //*10 para ficar melhor a progressão do dialogo
+                            runOnUiThread(() -> progressBarSaveShareLog.setProgress(receivedSize * 10));
+                        }
 
                         if (receivedSize >= pesoTodosAsEntradas) {
+                            Log.d(TAG_LOG, "MAIOR OU IGUAL RECEIVEDZISE" + receivedSize);
+                            Log.d(TAG_LOG, "MAIOR OU IGUAL PESO TODAS AS ENTRADAS" + receivedData);
+                            Log.d(TAG_LOG, "NOTIFICADO" + receivedData);
                             lock.notify();
                         } else {
                             Log.d(TAG_LOG, "ELSE RECEIVED SIZE" + receivedSize);
                             Log.d(TAG_LOG, "ELSE RECEIVED DATA" + receivedData);
                         }
-                    }
-                } else {
-                    stopReceiveFlag++;
-                    if (stopReceiveFlag == 50) {
-                        stopReceiveFlag = 0;
-                        Log.d(TAG_LOG, "\nErro no Arquivo!");
-                        lock.notify();
+
+                    } else {
+                        stopReceiveFlag++;
+                        Log.d(TAG_LOG, "RECEIVED DATA == SAME (RECEIVED)" + receivedData);
+                        Log.d(TAG_LOG, "STOP RECEIVE FLAG" + stopReceiveFlag);
+                        if (stopReceiveFlag == 50) {
+                            stopReceiveFlag = 0;
+                            Log.d(TAG_LOG, "\nErro no Arquivo!");
+                            lock.notify();
+                        }
                     }
                 }
             }

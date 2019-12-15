@@ -31,7 +31,7 @@
 
         <Button
             android:id="@+id/configDeviceBtn"
-            android:layout_width="250dp"
+            android:layout_width="300dp"
             android:layout_height="60dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="8dp"
@@ -47,7 +47,7 @@
 
         <Button
             android:id="@+id/gerenciarDadosBtn"
-            android:layout_width="250dp"
+            android:layout_width="300dp"
             android:layout_height="60dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
@@ -65,7 +65,7 @@
 
         <Button
             android:id="@+id/analiseDeDadosBtn"
-            android:layout_width="250dp"
+            android:layout_width="300dp"
             android:layout_height="60dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
@@ -82,7 +82,7 @@
 
         <Button
             android:id="@+id/eeppromBtn"
-            android:layout_width="250dp"
+            android:layout_width="300dp"
             android:layout_height="60dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"

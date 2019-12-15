@@ -40,7 +40,6 @@ public class BluetoothController {
     public SerialSocket socket;
 
     private static final int REQUEST_USE_BLUETOOTH = 1;
-    private static final int REQUEST_USE_COARS_LOCATION = 2;
 
     private IntentFilter filter;
     private CountDownTimer countDownTimer;
@@ -191,39 +190,6 @@ public class BluetoothController {
             this.activity = activity;
             refreshReferenceToAppBar();
             createFilters();
-//            int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 1;
-//            ActivityCompat.requestPermissions(activity,
-//                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-//                    MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
-            //            //busca dispositivos de primeira apenas na criação do fragmento
-//            if (android.os.Build.VERSION.SDK_INT >= 23) {
-//                // ANDROID 6.0 AND UP!
-//                boolean accessCoarseLocationAllowed = false;
-//                try {
-//                    // Invoke checkSelfPermission method from Android 6 (API 23 and UP)
-//                    java.lang.reflect.Method methodCheckPermission = Activity.class.getMethod("checkSelfPermission", java.lang.String.class);
-//                    Object resultObj = methodCheckPermission.invoke(this, Manifest.permission.ACCESS_COARSE_LOCATION);
-//                    int result = Integer.parseInt(resultObj.toString());
-//                    if (result == PackageManager.PERMISSION_GRANTED) {
-//                        accessCoarseLocationAllowed = true;
-//                    }
-//                } catch (Exception ignored) {
-//                }
-//                if (accessCoarseLocationAllowed) {
-//                    refresh();
-//                }
-//                try {
-//                    // We have to invoke the method "void requestPermissions (Activity activity, String[] permissions, int requestCode) "
-//                    // from android 6
-//                    java.lang.reflect.Method methodRequestPermission = Activity.class.getMethod("requestPermissions", java.lang.String[].class, int.class);
-//                    methodRequestPermission.invoke(this, new String[]
-//                            {
-//                                    Manifest.permission.ACCESS_COARSE_LOCATION
-//                            }, 0x12345);
-//                } catch (Exception ignored) {
-//                }
-//            }
-
         }
 
     }
@@ -324,21 +290,6 @@ public class BluetoothController {
 //        Log.d(TAG_LOG, "receive: " + messageReceived);
 //    }
 
-//        @Override
-//    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-//        if (requestCode == REQUEST_USE_BLUETOOTH || requestCode == REQUEST_USE_COARS_LOCATION) {
-//            // If request is cancelled, the result arrays are empty.
-//            if (grantResults.length > 0
-//                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//                // Register for broadcasts when a device is discovered.
-//                createFilters();
-//            } else {
-//                Toast.makeText(this, "Permissão Negada! :(", Toast.LENGTH_SHORT).show();
-//                // permission denied, boo! Disable the
-//                // functionality that depends on this permission.
-//            }
-//        }
-//    }
 
     private void createFilters() {
 //        if (filter == null) {

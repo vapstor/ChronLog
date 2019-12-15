@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="350dp"
+    android:layout_width="300dp"
     android:layout_height="wrap_content"
     android:background="@drawable/shape_border_full_white">
 
@@ -9,11 +9,11 @@
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="16dp"
         android:fontFamily="@font/roboto_condensed_regular"
-        android:text="@string/aguarde_estamos_abrindo_seu_arquivo"
+        android:text="@string/deseja_salvar_ou_compartilhar_o_log"
         android:textAlignment="center"
         android:textAllCaps="true"
         android:textColor="@color/colorPrimary"
@@ -23,30 +23,47 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <ProgressBar
-        android:id="@+id/progressBarOpenLog"
+        android:id="@+id/progressBarSaveShareLog"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="25dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="25dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="32dp"
         android:indeterminate="false"
         android:progressBackgroundTint="@color/colorPrimary"
         android:secondaryProgressTintMode="src_atop"
+        android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnCancelOpenLog"
+        android:id="@+id/btnSaveLog"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
         android:layout_marginBottom="8dp"
-        android:text="@string/cancelar"
+        android:enabled="false"
+        android:text="@string/salvar"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/btnShareLog"
+        app:layout_constraintTop_toBottomOf="@+id/progressBarSaveShareLog"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnShareLog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:enabled="false"
+        android:text="@string/compartilhar"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toBottomOf="@+id/btnSaveLog"
+        app:layout_constraintEnd_toStartOf="@+id/btnSaveLog"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/progressBarOpenLog" />
+        app:layout_constraintTop_toTopOf="@+id/btnSaveLog" />
 </androidx.constraintlayout.widget.ConstraintLayout>

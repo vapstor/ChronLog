@@ -58,6 +58,9 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
     private Thread sendCommandThread;
     private String protocolSetData;
     private static String receivedData = "";
+    private Thread executeCommandThread;
+
+    private final Object lock = new Object();
 
 
     @Override
@@ -318,8 +321,16 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
             if (sendCommandThread.isAlive()) {
                 sendCommandThread.interrupt();
             }
+            sendCommandThread = null;
+        }
+        if (executeCommandThread != null) {
+            if (executeCommandThread.isAlive()) {
+                executeCommandThread.interrupt();
+            }
+            executeCommandThread = null;
         }
         String infoData = dataInput.getText().toString();
+
         if (!infoData.equals("") && !infoData.contains("d") && !infoData.contains("m") && !infoData.contains("a")) {
             receivedData = "";
 
@@ -338,10 +349,10 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
                 btnConfigurarData.setText(R.string.configurando___);
             });
 
-            new Thread(() -> {
-                synchronized (sendCommandThread) {
+            executeCommandThread = new Thread(() -> {
+                synchronized (lock) {
                     try {
-                        sendCommandThread.wait(300);
+                        lock.wait(300);
                         if (receivedData.equals("")) {
                             setDataTermopar();
 //                            runOnUiThread(() -> {
@@ -360,7 +371,8 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
                         e.printStackTrace();
                     }
                 }
-            }).start();
+            });
+            executeCommandThread.start();
         } else {
             runOnUiThread(() -> Toast.makeText(this, "Data Inválida!", Toast.LENGTH_SHORT).show());
         }
@@ -371,6 +383,14 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
             if (sendCommandThread.isAlive()) {
                 sendCommandThread.interrupt();
             }
+            sendCommandThread = null;
+        }
+
+        if (executeCommandThread != null) {
+            if (executeCommandThread.isAlive()) {
+                executeCommandThread.interrupt();
+            }
+            executeCommandThread = null;
         }
 
         String infoHorario = horarioInput.getText().toString();
@@ -394,10 +414,10 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
                     btnConfigurarHorario.setText(R.string.configurando___);
                 });
 
-                new Thread(() -> {
-                    synchronized (sendCommandThread) {
+                executeCommandThread = new Thread(() -> {
+                    synchronized (lock) {
                         try {
-                            sendCommandThread.wait(300);
+                            lock.wait(300);
                             if (receivedData.equals("")) {
                                 setHorarioTermopar();
 //                                runOnUiThread(() -> {
@@ -417,7 +437,8 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
                             e.printStackTrace();
                         }
                     }
-                }).start();
+                });
+                executeCommandThread.start();
             }
         } else {
             Toast.makeText(this, "Digite um Horário!", Toast.LENGTH_SHORT).show();
@@ -429,7 +450,15 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
             if (sendCommandThread.isAlive()) {
                 sendCommandThread.interrupt();
             }
+            sendCommandThread = null;
         }
+        if (executeCommandThread != null) {
+            if (executeCommandThread.isAlive()) {
+                executeCommandThread.interrupt();
+            }
+            executeCommandThread = null;
+        }
+
 
         String infoTempoAquisicao = aquisitionInput.getText().toString();
         if (!infoTempoAquisicao.equals("")) {
@@ -442,7 +471,7 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
                 /**
                  *@03TTNNNRRRCRLF TT termocouple type, NNN acquisition time in seconds, RRR reserved for future*
                  * */
-                configTempoAquisicao(infoTempoAquisicao);
+                infoTempoAquisicao = configTempoAquisicao(infoTempoAquisicao);
                 String protocolSetTimeAndMode = "@03" + "0" + modoTermopar + infoTempoAquisicao + "000" + "0000";
 
                 sendCommandThread = new Thread(() -> send(protocolSetTimeAndMode, this, this));
@@ -453,13 +482,13 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
                     btnConfigurarTempoEModoTermopar.setText(R.string.configurando___);
                 });
 
-                new Thread(() -> {
-                    synchronized (sendCommandThread) {
+                executeCommandThread = new Thread(() -> {
+                    synchronized (lock) {
                         try {
-                            sendCommandThread.wait(300);
+                            lock.wait(300);
                             if (receivedData.equals("")) {
                                 setTimeAndTypeTermopar();
-//                                runOnUiThread(() -> {
+                                //                                runOnUiThread(() -> {
 //                                    Toast.makeText(getApplicationContext(), "Falhou ao Configurar!", Toast.LENGTH_SHORT).show();
 //                                    btnConfigurarData.setEnabled(true);
 //                                    btnConfigurarData.setText(R.string.configurar);
@@ -475,7 +504,8 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
                             e.printStackTrace();
                         }
                     }
-                }).start();
+                });
+                executeCommandThread.start();
             }
         } else {
             runOnUiThread(() -> Toast.makeText(this, "Digite um tempo de aquisição!!", Toast.LENGTH_SHORT).show());
@@ -542,10 +572,19 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
 
     @Override
     protected void onDestroy() {
+        if (sendCommandThread != null) {
+            if (sendCommandThread.isAlive()) {
+                sendCommandThread.interrupt();
+            }
+            sendCommandThread = null;
+        }
+        if (executeCommandThread != null) {
+            if (executeCommandThread.isAlive()) {
+                executeCommandThread.interrupt();
+            }
+            executeCommandThread = null;
+        }
         super.onDestroy();
-//        if (deviceIsConnected != Utils.Connected.False)
-//            disconnect();
-//        this.stopService(new Intent(this, SerialService.class));
     }
 
     private void disconnect() {
@@ -586,12 +625,12 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
 
     @Override
     public void onSerialRead(byte[] data) {
-        synchronized (sendCommandThread) {
+        synchronized (lock) {
             String receveidStr = new String(data);
             Log.d(TAG_LOG, "recebeu: " + receveidStr);
             receivedData = receivedData.concat(receveidStr);
             if (receveidStr.contains("@")) {
-                sendCommandThread.notify();
+                lock.notify();
             }
         }
     }

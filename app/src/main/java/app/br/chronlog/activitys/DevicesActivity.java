@@ -206,15 +206,16 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
             setIconToHome();
             setEmptyText("Bluetooh Não Suportado!");
         } else {
+            myBluetoothController.setActivity(this);
             setIconToRefreshBluetooth();
             if (!myBluetoothController.getBluetoothAdapter().isEnabled()) {
                 btOff();
             } else {
                 btOn();
+                //começa a busca
+                refresh();
             }
         }
-        //começa a busca
-        refresh();
     }
 
     private void showExplanation(Activity activity, String title, String message, final String permission, final int permissionRequestCode) {
@@ -302,6 +303,9 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (myBluetoothController.getBluetoothAdapter().isDiscovering()) {
+            myBluetoothController.getBluetoothAdapter().cancelDiscovery();
+        }
 //        if (isDeviceConnected != Connected.False)
 //            disconnect();
 //        this.stopService(new Intent(this, SerialService.class));

@@ -15,8 +15,8 @@
     <string name="serial">serial</string>
     <string name="serial_configurado">Serial Configurado!</string>
     <string name="reset_zoom">Reset Zoom</string>
-    <string name="block_x">block x</string>
-    <string name="block_y">block y</string>
+    <string name="travar_eixo_x">Travar Eixo X</string>
+    <string name="travar_eixo_y">Travar Eixo Y</string>
     <string name="unblock_x">unblock X</string>
     <string name="unblock_y">unblock Y</string>
     <string name="reset">reset</string>
@@ -66,6 +66,7 @@
     <string name="dd_mm_aaaa">dd/mm/aaaa</string>
     <string name="modo">modo</string>
     <string name="aguarde_estamos_abrindo_seu_arquivo">Aguarde, estamos abrindo seu arquivo…</string>
+    <string name="deseja_salvar_ou_compartilhar_o_log">deseja salvar ou compartilhar o log?</string>
     <string-array name="modosTermopar">
         <item>K</item>
         <item>J</item>
