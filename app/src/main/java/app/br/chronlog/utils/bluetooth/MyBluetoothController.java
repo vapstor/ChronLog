@@ -77,7 +77,7 @@
 //                        device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 //                        int pin = intent.getIntExtra("android.bluetooth.device.extra.PAIRING_KEY", 1234);
 //                        //the pin in case you need to accept for an specific pin
-//                        MyLog.d(TAG_LOG, "Start Auto Pairing. PIN = " + intent.getIntExtra("android.bluetooth.device.extra.PAIRING_KEY", 1234));
+//                        TermoparLog.d(TAG_LOG, "Start Auto Pairing. PIN = " + intent.getIntExtra("android.bluetooth.device.extra.PAIRING_KEY", 1234));
 //                        byte[] pinBytes;
 //                        pinBytes = ("" + pin).getBytes(StandardCharsets.UTF_8);
 //                        assert device != null;
@@ -85,7 +85,7 @@
 //                        //setPairing confirmation if neeeded
 //                        device.setPairingConfirmation(true);
 //                    } catch (Exception e) {
-//                        MyLog.e(TAG_LOG, "Error occurs when trying to auto pair");
+//                        TermoparLog.e(TAG_LOG, "Error occurs when trying to auto pair");
 //                        e.printStackTrace();
 //                    }
 //                    break;
@@ -137,7 +137,7 @@
 //
 //
 //    public void send(String str) {
-//        MyLog.d(TAG_LOG, "String a enviar para termopar: " + str);
+//        TermoparLog.d(TAG_LOG, "String a enviar para termopar: " + str);
 //        if (connected != BluetoothController.Connected.True) {
 //            activity.runOnUiThread(() -> Toast.makeText(activity, "Não Conectado", Toast.LENGTH_SHORT).show());
 //            return;
@@ -156,7 +156,7 @@
 //            recebido = true;
 //        }
 //        String messageReceived = new String(data);
-//        MyLog.d(TAG_LOG, "receive: " + messageReceived);
+//        TermoparLog.d(TAG_LOG, "receive: " + messageReceived);
 //    }
 //
 ////        @Override

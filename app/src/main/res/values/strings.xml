@@ -17,8 +17,8 @@
     <string name="reset_zoom">Reset Zoom</string>
     <string name="travar_eixo_x">Travar Eixo X</string>
     <string name="travar_eixo_y">Travar Eixo Y</string>
-    <string name="unblock_x">unblock X</string>
-    <string name="unblock_y">unblock Y</string>
+    <string name="destravar_x">Liberar Eixo X</string>
+    <string name="destravar_y">Liberar Eixo Y</string>
     <string name="reset">reset</string>
     <string name="compartilhar">compartilhar</string>
     <string name="salvar">salvar</string>
@@ -60,6 +60,7 @@
     <string name="ajustes">ajustes</string>
     <string name="log_title">log title</string>
     <string name="arquivos_do_sd">Arquivos do SD</string>
+    <string name="arquivos_do_termopar">Arquivos do Termopar</string>
     <string name="refreshicon">refreshIcon</string>
     <string name="peso">peso</string>
     <string name="calendar_icon">calendar icon</string>

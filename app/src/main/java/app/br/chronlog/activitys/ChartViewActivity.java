@@ -32,8 +32,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import app.br.chronlog.R;
-import app.br.chronlog.utils.MyLog;
-import app.br.chronlog.utils.MyLogEntry;
+import app.br.chronlog.utils.TermoparLog;
+import app.br.chronlog.utils.TermoparLogEntry;
 import app.br.chronlog.utils.MyMarkerView;
 
 import static android.graphics.Color.GREEN;
@@ -65,8 +65,8 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             selectedLog = getIntent().getParcelableArrayListExtra("selectedLog");
             List entriesList;
             if (selectedLog != null) {
-                MyLog myLog = (MyLog) selectedLog.get(0);
-                entriesList = myLog.getEntries();
+                TermoparLog termoparLog = (TermoparLog) selectedLog.get(0);
+                entriesList = termoparLog.getEntries();
                 acessaDadosDoArquivo(entriesList);
             } else {
                 Toast.makeText(this, "Falhou ao resgatar os dados!", Toast.LENGTH_SHORT).show();
@@ -141,7 +141,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             horariosX = new String[entriesList.size()];
             // the labels that should be drawn on the XAxis
             for (int i = 0; i < entriesList.size(); i++) {
-                horariosX[i] = ((MyLogEntry) entriesList.get(i)).getHora();
+                horariosX[i] = ((TermoparLogEntry) entriesList.get(i)).getHora();
             }
             ValueFormatter formatter = new ValueFormatter() {
                 @Override
@@ -188,20 +188,20 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
     }
 
     private void setData(List entriesList) {
-        MyLogEntry myLogEntry;
+        TermoparLogEntry termoparLogEntry;
         ArrayList<ILineDataSet> dataSets = new ArrayList<>();
 
         for (int z = 0; z < 4; z++) {
             ArrayList<Entry> values = new ArrayList<>();
 
             for (int i = 0; i < entriesList.size(); i++) {
-                myLogEntry = (MyLogEntry) entriesList.get(i);
-                String entryHour = myLogEntry.getHora();
-                String entryData = myLogEntry.getData();
+                termoparLogEntry = (TermoparLogEntry) entriesList.get(i);
+                String entryHour = termoparLogEntry.getHora();
+                String entryData = termoparLogEntry.getData();
                 try {
                     if (!entryHour.contains("OVUV") && !entryData.contains("OPEN")) {
                         int posicaoTermopar = z + 1;
-                        String entryT = (String) myLogEntry.getClass().getMethod("getT" + posicaoTermopar).invoke(myLogEntry);
+                        String entryT = (String) termoparLogEntry.getClass().getMethod("getT" + posicaoTermopar).invoke(termoparLogEntry);
                         float entryTAsFloat = 50f;
                         if (entryT != null) {
                             if (entryT.contains("OVUV") || entryT.contains("OPEN")) {
@@ -407,7 +407,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
 
     public void blockX(View v) {
         if (chart.isScaleXEnabled()) {
-            ((Button) v).setText(R.string.unblock_x);
+            ((Button) v).setText(R.string.destravar_x);
             chart.setScaleXEnabled(false);
         } else {
             ((Button) v).setText(R.string.travar_eixo_x);
@@ -417,7 +417,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
 
     public void blockY(View v) {
         if (chart.isScaleYEnabled()) {
-            ((Button) v).setText(R.string.unblock_y);
+            ((Button) v).setText(R.string.destravar_y);
             chart.setScaleYEnabled(false);
         } else {
             ((Button) v).setText(R.string.travar_eixo_y);

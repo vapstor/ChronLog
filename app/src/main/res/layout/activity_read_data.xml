@@ -19,7 +19,7 @@
         android:background="@color/colorPrimary"
         android:lineSpacingExtra="0dp"
         android:padding="10dp"
-        android:text="@string/arquivos_do_sd"
+        android:text="@string/arquivos_do_termopar"
         android:textAlignment="center"
         android:textAllCaps="true"
         android:textColor="@color/white"

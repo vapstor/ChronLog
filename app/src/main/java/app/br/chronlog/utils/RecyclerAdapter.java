@@ -13,7 +13,9 @@ import java.util.ArrayList;
 import app.br.chronlog.R;
 
 public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.MyViewHolder> {
-    private ArrayList<MyLog> mDataset;
+    private boolean adapterApenasString = false;
+    private ArrayList<TermoparLog> mDataset;
+    private ArrayList<String[]> mDatasetAsString;
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
@@ -32,10 +34,16 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.MyView
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public RecyclerAdapter(ArrayList<MyLog> myLogList) {
-        mDataset = myLogList;
+    public RecyclerAdapter(ArrayList<TermoparLog> termoparLogList, ArrayList<String[]> termoparLogListString) {
+        if (termoparLogList == null) {
+            mDatasetAsString = termoparLogListString;
+            adapterApenasString = true;
+        } else {
+            mDataset = termoparLogList;
+        }
         setHasStableIds(true);
     }
+
 
     @Override
     public long getItemId(int position) {
@@ -61,15 +69,24 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.MyView
     public void onBindViewHolder(MyViewHolder holder, int position) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
-        holder.name.setText(mDataset.get(position).getName());
-        holder.peso.setText("(" + mDataset.get(position).getPeso().trim() + " kb)");
+        if (!adapterApenasString) {
+            holder.name.setText(mDataset.get(position).getName());
+            holder.peso.setText("(" + mDataset.get(position).getPeso().trim() + " kb)");
+        } else {
+            holder.name.setText(mDatasetAsString.get(position)[0]);
+            holder.peso.setText("(" + mDatasetAsString.get(position)[1].trim() + " kb)");
+        }
     }
 
 
     // Return the size of your dataset (invoked by the layout manager)
     @Override
     public int getItemCount() {
-        return mDataset.size();
+        if (!adapterApenasString) {
+            return mDataset.size();
+        } else {
+            return mDatasetAsString.size();
+        }
     }
 
 }

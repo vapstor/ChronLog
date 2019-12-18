@@ -16,6 +16,10 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Objects;
 
 import app.br.chronlog.R;
@@ -28,7 +32,6 @@ import static app.br.chronlog.activitys.DevicesActivity.deviceName;
 import static app.br.chronlog.utils.Utils.isDeviceConnected;
 import static app.br.chronlog.utils.Utils.myBluetoothController;
 import static app.br.chronlog.utils.Utils.setStatus;
-import static app.br.chronlog.utils.Utils.startActivityWithExplosion;
 import static app.br.chronlog.utils.bluetooth.Constants.CONECTANDO_;
 import static app.br.chronlog.utils.bluetooth.Constants.CONEXAO_FALHOU;
 import static app.br.chronlog.utils.bluetooth.Constants.CONEXAO_PERDIDA;
@@ -117,10 +120,11 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                 startActivity(new Intent(this, DevicesActivity.class));
                 break;
             case R.id.gerenciarDadosBtn:
-                startActivity(new Intent(this, ReadDataActivity.class));
+                startActivity(new Intent(this, ReadTermoparDataActivity.class));
                 break;
             case R.id.analiseDeDadosBtn:
-                startActivityWithExplosion(this, new Intent(this, ChartViewActivity.class));
+                startActivity(new Intent(this, ReadSdDataActivity.class));
+//                startActivityWithExplosion(this, new Intent(this, ChartViewActivity.class));
                 break;
             case R.id.eeppromBtn:
                 Toast.makeText(this, "EEPROM [?]", Toast.LENGTH_SHORT).show();
@@ -129,6 +133,35 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                 Toast.makeText(this, "erro", Toast.LENGTH_SHORT).show();
                 break;
         }
+    }
+
+    private void openSavedFiles() {
+
+    }
+
+    public boolean saveImageOnExternalData(String filePath, byte[] fileData) {
+
+        boolean isFileSaved = false;
+        try {
+            File f = new File(filePath);
+            if (f.exists())
+                f.delete();
+            f.createNewFile();
+            FileOutputStream fos = new FileOutputStream(f);
+            fos.write(fileData);
+            fos.flush();
+            fos.close();
+            isFileSaved = true;
+            // File Saved
+        } catch (FileNotFoundException e) {
+            System.out.println("FileNotFoundException");
+            e.printStackTrace();
+        } catch (IOException e) {
+            System.out.println("IOException");
+            e.printStackTrace();
+        }
+        return isFileSaved;
+        // File Not Saved
     }
 
     @Override

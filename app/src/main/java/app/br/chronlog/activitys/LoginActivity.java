@@ -92,12 +92,9 @@ public class LoginActivity extends AppCompatActivity {
                         status[0].setText(R.string.serial_configurado);
                     });
 
-                    Thread.sleep(750);
+                    Thread.sleep(500);
 
                     runOnUiThread(() -> {
-                        runOnUiThread(() -> {
-                            status[0].setVisibility(View.INVISIBLE);
-                        });
                         Intent intent = new Intent(this, MainActivity.class);
                         startActivityWithExplosion(this, intent);
                         v.setEnabled(true);
