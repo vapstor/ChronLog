@@ -7,7 +7,7 @@
   <p align="center">
     <img src="https://ci.appveyor.com/api/projects/status/g8d58ipi3auqdtrk/branch/master?svg=true" alt="Current Appveyor build status." />
 <!--     <img src="https://ci.appveyor.com/api/projects/status/216h1g17b8ir009t?svg=true" alt="Config. Device Activity Crashing." /> -->
-    <img src="https://img.shields.io/badge/version-2.11.16-blue.svg" alt="Current APP version." />  
+    <img src="https://img.shields.io/badge/version-2.17.1-blue.svg" alt="Current APP version." />  
   </p>
 </p>
 
@@ -55,6 +55,7 @@
 * Desenvolver Tela Chart 
   - [x] Chart com valores estáticos
   - [x] Chart com valores dinâmicos
+  - [x] Chart com filtro de Termopares
   
 * Desenvolver tela Termostato
   - [ ] Salvar arquivo
@@ -62,7 +63,7 @@
   - [x] Deletar Arquivos
   - [x] Conexão com Termostato
   - [x] Resgatar dados do Termostato
-  - [ ] Implementar Compartilhamento de Dados Resgatados
+  - [x] Implementar Compartilhamento de Dados Resgatados
 
 ## How to version
 
