@@ -32,9 +32,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import app.br.chronlog.R;
+import app.br.chronlog.utils.MyMarkerView;
 import app.br.chronlog.utils.TermoparLog;
 import app.br.chronlog.utils.TermoparLogEntry;
-import app.br.chronlog.utils.MyMarkerView;
 
 import static android.graphics.Color.GREEN;
 import static android.graphics.Color.RED;
@@ -46,11 +46,9 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
 
     private LineChart chart;
     private ArrayList<Parcelable> selectedLog;
-    private boolean hideT1, hideT2, hideT3, hideT4;
     private Button btnT1, btnT2, btnT3, btnT4;
-
-//    private SeekBar seekBarX, seekBarY;
-//    private TextView tvX, tvY;
+    private LineData allData;
+    private ArrayList<ILineDataSet> allDataSets;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,22 +72,71 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             }
         }
 
-        findViewById(R.id.t1Button).setOnClickListener((v) -> {
-            hideT1 = true;
-            chart.invalidate();
+        btnT1 = findViewById(R.id.t1Button);
+        btnT2 = findViewById(R.id.t2Button);
+        btnT3 = findViewById(R.id.t3Button);
+        btnT4 = findViewById(R.id.t4Button);
+
+        btnT1.setOnClickListener((v) -> {
+            blockButtons(v);
+            hideOthersDataSets("T1");
         });
-        findViewById(R.id.t2Button).setOnClickListener((v) -> {
-            hideT2 = true;
-            chart.invalidate();
+        btnT2.setOnClickListener((v) -> {
+            blockButtons(v);
+            hideOthersDataSets("T2");
         });
-        findViewById(R.id.t3Button).setOnClickListener((v) -> {
-            hideT3 = true;
-            chart.invalidate();
+        btnT3.setOnClickListener((v) -> {
+            blockButtons(v);
+            hideOthersDataSets("T3");
         });
-        findViewById(R.id.t4Button).setOnClickListener((v -> {
-            hideT4 = true;
-            chart.invalidate();
+        btnT4.setOnClickListener((v -> {
+            blockButtons(v);
+            hideOthersDataSets("T4");
         }));
+    }
+
+    private void blockButtons(View v) {
+        if (v.getId() == btnT1.getId()) {
+            btnT1.setEnabled(false);
+        } else {
+            btnT1.setEnabled(true);
+        }
+
+        if (v.getId() == btnT2.getId()) {
+            btnT2.setEnabled(false);
+        } else {
+            btnT2.setEnabled(true);
+        }
+
+        if (v.getId() == btnT3.getId()) {
+            btnT3.setEnabled(false);
+        } else {
+            btnT3.setEnabled(true);
+        }
+
+        if (v.getId() == btnT4.getId()) {
+            btnT4.setEnabled(false);
+        } else {
+            btnT4.setEnabled(true);
+        }
+    }
+
+    private void hideOthersDataSets(String label) {
+        chart.invalidate();
+        for (int i = 0; i < allDataSets.size(); i++) {
+            if (label != null) {
+                if (!label.equals(allDataSets.get(i).getLabel())) {
+                    allDataSets.get(i).setVisible(false);
+                } else {
+                    allDataSets.get(i).setVisible(true);
+                }
+            } else {
+                allDataSets.get(i).setVisible(true);
+            }
+        }
+        chart.getData().notifyDataChanged();
+        chart.notifyDataSetChanged();
+        chart.animateX(1500);
     }
 
     private void acessaDadosDoArquivo(List entriesList) {
@@ -178,7 +225,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
 
         setData(entriesList);
         // draw points over time
-        chart.animateXY(1500, 1500);
+        chart.animateX(1500);
 
         // get the legend (only possible after setting data)
         Legend l = chart.getLegend();
@@ -189,7 +236,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
 
     private void setData(List entriesList) {
         TermoparLogEntry termoparLogEntry;
-        ArrayList<ILineDataSet> dataSets = new ArrayList<>();
+        allDataSets = new ArrayList<>();
 
         for (int z = 0; z < 4; z++) {
             ArrayList<Entry> values = new ArrayList<>();
@@ -202,13 +249,15 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
                     if (!entryHour.contains("OVUV") && !entryData.contains("OPEN")) {
                         int posicaoTermopar = z + 1;
                         String entryT = (String) termoparLogEntry.getClass().getMethod("getT" + posicaoTermopar).invoke(termoparLogEntry);
-                        float entryTAsFloat = 50f;
+                        float entryTAsFloat;
                         if (entryT != null) {
                             if (entryT.contains("OVUV") || entryT.contains("OPEN")) {
-                                entryTAsFloat = 50f;
+                                entryTAsFloat = 999f;
                             } else {
                                 entryTAsFloat = Float.parseFloat(entryT);
                             }
+                        } else {
+                            entryTAsFloat = 999f;
                         }
                         values.add(new Entry(i, entryTAsFloat));
                     }
@@ -252,90 +301,15 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             // set the filled area
             d.setDrawFilled(false);
             d.setFillFormatter((dataSet, dataProvider) -> chart.getAxisLeft().getAxisMinimum());
-
-            dataSets.add(d);
+            allDataSets.add(d);
         }
-
-        if (chart.getData() != null && chart.getData().getDataSetCount() > 0) {
-            // make the first DataSet dashed
-            if (!hideT1)
-                ((LineDataSet) dataSets.get(0)).enableDashedLine(10, 10, 0);
-            if (!hideT2)
-                ((LineDataSet) dataSets.get(1)).enableDashedLine(10, 10, 0);
-            if (!hideT3)
-                ((LineDataSet) dataSets.get(2)).enableDashedLine(10, 10, 0);
-            if (!hideT4)
-                ((LineDataSet) dataSets.get(3)).enableDashedLine(10, 10, 0);
-        }
-
-
-        LineData data = new LineData(dataSets);
-        chart.setData(data);
+        allData = new LineData(allDataSets);
+        chart.setData(allData);
         chart.invalidate();
         chart.getData().notifyDataChanged();
         chart.notifyDataSetChanged();
 
     }
-//    private void setData(int count, float range) {
-//
-//        ArrayList<Entry> values = new ArrayList<>();
-//
-//        for (int i = 0; i < count; i++) {
-//            float val = (float) (Math.random() * range) - 30;
-//            values.add(new Entry(i, val, getResources().getDrawable(R.drawable.star)));
-//        }
-//
-//        LineDataSet set1;
-//
-//        if (chart.getData() != null && chart.getData().getDataSetCount() > 0) {
-//            set1 = (LineDataSet) chart.getData().getDataSetByIndex(0);
-//            set1.setValues(values);
-//
-
-//        } else {
-//            // create a dataset and give it a type
-//            set1 = new LineDataSet(values, "Medição de Temperatura");
-//            set1.setDrawIcons(false);
-//            // draw dashed line
-//            set1.enableDashedLine(15f, 0f, 1f);
-//            // black lines and points
-//            set1.setColor(getResources().getColor(R.color.azulClaro));
-//            set1.setCircleColor(Color.RED);
-//            // line thickness and point size
-//            set1.setLineWidth(1f);
-//            set1.setCircleRadius(3f);
-//            // draw points as solid circles
-//            set1.setDrawCircleHole(true);
-//            // customize legend entry
-//            set1.setFormLineWidth(1f);
-//            set1.setFormLineDashEffect(new DashPathEffect(new float[]{10f, 5f}, 0f));
-//            set1.setFormSize(15.f);
-//            // text size of values
-//            set1.setValueTextSize(8f);
-//            // draw selection line as dashed
-//            set1.enableDashedHighlightLine(10f, 5f, 0f);
-//            // set the filled area
-//            set1.setDrawFilled(false);
-//            set1.setFillFormatter((dataSet, dataProvider) -> chart.getAxisLeft().getAxisMinimum());
-//            // set color of filled area
-////            if (Utils.getSDKInt() >= 18) {
-////                // drawables only supported on api level 18 and above
-////                Drawable drawable = ContextCompat.getDrawable(this, R.drawable.fade_red);
-////                set1.setFillDrawable(drawable);
-////            } else {
-////                set1.setFillColor(Color.BLACK);
-////            }
-//
-//            ArrayList<ILineDataSet> dataSets = new ArrayList<>();
-//            dataSets.add(set1); // add the data sets
-//
-//            // create a data object with the data sets
-//            LineData data = new LineData(dataSets);
-//
-//            // set data
-//            chart.setData(data);
-//        }
-//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -380,26 +354,17 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
         Log.i("Nothing selected", "Nothing selected.");
     }
 
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-//        //seta botao positivo
-//        DialogInterface.OnClickListener positiveListener = (dialog, which) -> finishAffinity();
-//        DialogInterface.OnClickListener negativeListener = (dialog, which) -> {
-//            getSharedPreferences(CONFIG_FILE, Context.MODE_PRIVATE).edit().putBoolean("aparelho_verificado", false).apply();
-//            finishAffinity();
-//        };
-//
-//        //cria dialogo
-//        AlertDialog alert = createDialog(this, "Alerta!", "Deseja salvar device para acesso mais rapidamente?", "SALVAR", "NÃO AGORA", true, true, negativeListener, positiveListener, dialog -> {
-//        });
-//        alert.show();
-
-    }
-
     public void resetZoom(View view) {
         if (chart != null) {
-            chart.animateXY(500, 500);
+            btnT4.setEnabled(true);
+            btnT1.setEnabled(true);
+            btnT2.setEnabled(true);
+            btnT3.setEnabled(true);
+
+            hideOthersDataSets(null);
+
+            chart.setData(allData);
+            chart.animateX(1500);
             chart.resetZoom();
             chart.fitScreen();
         }

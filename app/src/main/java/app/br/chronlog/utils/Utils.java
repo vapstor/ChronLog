@@ -187,7 +187,10 @@ public class Utils {
         if (isDeviceConnected != Connected.True) {
             activity.runOnUiThread(() -> {
                 Toast.makeText(activity, "Desconectado", Toast.LENGTH_SHORT).show();
-                activity.startActivity(new Intent(activity, MainActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK));
+                if (!(activity instanceof MainActivity)) {
+                    activity.finishAndRemoveTask();
+                    activity.startActivity(new Intent(activity, MainActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK));
+                }
             });
             return;
         }

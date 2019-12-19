@@ -2,6 +2,7 @@ package app.br.chronlog.activitys;
 
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Build;
@@ -14,6 +15,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.File;
@@ -29,8 +31,11 @@ import app.br.chronlog.utils.bluetooth.SerialListener;
 import app.br.chronlog.utils.bluetooth.SerialService;
 
 import static app.br.chronlog.activitys.DevicesActivity.deviceName;
+import static app.br.chronlog.utils.Utils.CONFIG_FILE;
+import static app.br.chronlog.utils.Utils.createDialog;
 import static app.br.chronlog.utils.Utils.isDeviceConnected;
 import static app.br.chronlog.utils.Utils.myBluetoothController;
+import static app.br.chronlog.utils.Utils.serialSocket;
 import static app.br.chronlog.utils.Utils.setStatus;
 import static app.br.chronlog.utils.bluetooth.Constants.CONECTANDO_;
 import static app.br.chronlog.utils.bluetooth.Constants.CONEXAO_FALHOU;
@@ -211,11 +216,28 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     }
 
     @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        //seta botao positivo
+        DialogInterface.OnClickListener positiveListener = (dialog, which) -> finishAffinity();
+        DialogInterface.OnClickListener negativeListener = (dialog, which) -> {
+            getSharedPreferences(CONFIG_FILE, Context.MODE_PRIVATE).edit().putBoolean("aparelho_verificado", false).apply();
+            finishAffinity();
+        };
+        //cria dialogo
+        AlertDialog alert = createDialog(this, "Alerta!", "Deseja salvar device para acesso mais rapidamente?", "SALVAR", "NÃO AGORA", true, true, negativeListener, positiveListener, dialog -> {
+        });
+        alert.show();
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
-//        if (deviceIsConnected != Connected.False)
-//            disconnect();
-//        this.stopService(new Intent(this, SerialService.class));
+        if (isDeviceConnected != Connected.False)
+            if (serialSocket != null) {
+                serialSocket.disconnect();
+            }
+        this.stopService(new Intent(this, SerialService.class));
     }
 
     /*

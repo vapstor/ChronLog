@@ -68,6 +68,7 @@
     <string name="modo">modo</string>
     <string name="aguarde_estamos_abrindo_seu_arquivo">Aguarde, estamos abrindo seu arquivo…</string>
     <string name="deseja_salvar_ou_compartilhar_o_log">deseja salvar ou compartilhar o log?</string>
+    <string name="deletar">deletar</string>
     <string-array name="modosTermopar">
         <item>K</item>
         <item>J</item>

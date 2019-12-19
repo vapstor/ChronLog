@@ -10,11 +10,9 @@ import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -26,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,6 +33,7 @@ import java.util.Arrays;
 import app.br.chronlog.R;
 import app.br.chronlog.utils.ItemClickSupport;
 import app.br.chronlog.utils.RecyclerAdapter;
+import app.br.chronlog.utils.RecyclerItemTouchHelper;
 import app.br.chronlog.utils.TermoparLog;
 import app.br.chronlog.utils.TermoparLogEntry;
 import app.br.chronlog.utils.Utils;
@@ -48,13 +48,12 @@ import static app.br.chronlog.utils.Utils.send;
 import static app.br.chronlog.utils.Utils.serialSocket;
 import static java.lang.Thread.sleep;
 
-public class ReadTermoparDataActivity extends AppCompatActivity implements ServiceConnection, SerialListener {
+public class ReadTermoparDataActivity extends AppCompatActivity implements ServiceConnection, SerialListener, RecyclerItemTouchHelper.RecyclerItemTouchHelperListener {
     private SerialService service;
     public RecyclerView logsRecyclerView;
     public static ArrayList<TermoparLog> logsList = new ArrayList<>();
     final String protocolReadSdData = "@04000000000000";
     private static String receivedData = "";
-    private ImageButton iconRefresh;
     private TermoparLog selectedLog;
     private String[] receivedStrArray;
     private ProgressBar progressBarContainerView, progressBarItem, progressBarOpenLogDialog;
@@ -72,7 +71,7 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_read_data);
+        setContentView(R.layout.activity_read_termopar_data);
 
         if (isDeviceConnected != Utils.Connected.True) {
             Toast.makeText(this, R.string.nao_conectado, Toast.LENGTH_SHORT).show();
@@ -84,7 +83,7 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
         logsRecyclerView = findViewById(R.id.logsListView);
         DividerItemDecoration decoration = new DividerItemDecoration(getApplicationContext(), VERTICAL);
         logsRecyclerView.addItemDecoration(decoration);
-        adapter = new RecyclerAdapter(logsList, null);
+        adapter = new RecyclerAdapter(logsList, null, progressBarContainerView);
         adapter.setHasStableIds(true);
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
@@ -93,29 +92,8 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
 
         logsRecyclerView.setAdapter(adapter);
 
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
-            @Override
-            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-                return false;
-            }
-
-            @Override
-            public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
-                if (swipeDir == ItemTouchHelper.LEFT) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(ReadTermoparDataActivity.this, R.style.DialogOpenLogStyle);
-                    builder.setTitle(getResources().getString(R.string.atencao_));
-                    builder.setMessage("Deseja realmente excluir o log: " + "\n" + logsList.get(viewHolder.getAdapterPosition()).getName() + "?");
-                    builder.setPositiveButton("Excluir", (dialog, which) -> {
-                        deleteLogFile(logsList.get(viewHolder.getAdapterPosition()).getName());
-                        logsList.remove(viewHolder.getAdapterPosition());
-                        adapter.notifyItemRemoved(viewHolder.getAdapterPosition());
-                    });
-                    builder.setNegativeButton("Cancelar", (dialog, which) -> adapter.notifyDataSetChanged());
-                    builder.create().show();
-                }
-            }
-        });
-        itemTouchHelper.attachToRecyclerView(logsRecyclerView);
+        ItemTouchHelper.SimpleCallback itemTouchHelperCallback = new RecyclerItemTouchHelper(0, ItemTouchHelper.LEFT, this);
+        new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(logsRecyclerView);
         ItemClickSupport.addTo(logsRecyclerView).setOnItemClickListener((recyclerView, position, v) -> {
             selectedLog = logsList.get(position);
             progressBarItem = v.findViewById(R.id.progressBarItem);
@@ -153,8 +131,58 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
             if (buttonSave != null) {
                 buttonSave.setOnClickListener(v1 -> {
                     try {
-                        saveFileToLocalSD(logsList.get(position).getName());
-                        Toast.makeText(ReadTermoparDataActivity.this, "Arquivo salvo com sucesso!", Toast.LENGTH_SHORT).show();
+                        String name = logsList.get(position).getName();
+                        String peso = logsList.get(position).getPeso();
+
+                        if (peso == null) {
+                            if (isFilePresent(name)) {
+                                AlertDialog.Builder builder = new AlertDialog.Builder(ReadTermoparDataActivity.this);
+                                builder.setTitle("Arquivo já existe!");
+                                builder.setMessage("Arquivo já existe no aparelho, deseja sobreescrever?");
+                                builder.setPositiveButton("Salvar", (dialog, which) -> {
+                                    try {
+                                        saveFileToLocalSD(logsList.get(position).getName(), null);
+                                        adapter.notifyItemChanged(position);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                        Toast.makeText(ReadTermoparDataActivity.this, "Falhou ao salvar o arquivo!", Toast.LENGTH_SHORT).show();
+                                        adapter.notifyItemChanged(position);
+                                    }
+                                });
+                                builder.setNegativeButton("Cancelar", (dialog, which) -> {
+                                    adapter.notifyItemChanged(position);
+                                });
+                                builder.setCancelable(false);
+                                builder.create().show();
+                            } else {
+                                saveFileToLocalSD(logsList.get(position).getName(), logsList.get(position).getPeso());
+                                Toast.makeText(ReadTermoparDataActivity.this, "Arquivo salvo com sucesso!", Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            if (isFilePresent(name + peso)) {
+                                AlertDialog.Builder builder = new AlertDialog.Builder(ReadTermoparDataActivity.this);
+                                builder.setTitle("Arquivo já existe!");
+                                builder.setMessage("Arquivo já existe no aparelho, deseja sobreescrever?");
+                                builder.setPositiveButton("Salvar", (dialog, which) -> {
+                                    try {
+                                        saveFileToLocalSD(logsList.get(position).getName(), logsList.get(position).getPeso());
+                                        adapter.notifyItemChanged(position);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                        Toast.makeText(ReadTermoparDataActivity.this, "Falhou ao salvar o arquivo!", Toast.LENGTH_SHORT).show();
+                                        adapter.notifyItemChanged(position);
+                                    }
+                                });
+                                builder.setNegativeButton("Cancelar", (dialog, which) -> {
+                                    adapter.notifyItemChanged(position);
+                                });
+                                builder.setCancelable(false);
+                                builder.create().show();
+                            } else {
+                                saveFileToLocalSD(logsList.get(position).getName(), logsList.get(position).getPeso());
+                                Toast.makeText(ReadTermoparDataActivity.this, "Arquivo salvo com sucesso!", Toast.LENGTH_SHORT).show();
+                            }
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                         Toast.makeText(ReadTermoparDataActivity.this, "Falhou ao salvar o arquivo!", Toast.LENGTH_SHORT).show();
@@ -169,7 +197,13 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
         setFinishOnTouchOutside(true);
     }
 
-    private void saveFileToLocalSD(String fileName) throws IOException {
+    public boolean isFilePresent(String fileName) {
+        String path = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + fileName;
+        File file = new File(path);
+        return file.exists();
+    }
+
+    private void saveFileToLocalSD(String fileName, String peso) throws IOException {
         if (receivedData != null) {
             String logRecebido;
             if (receivedData.startsWith("@05")) {
@@ -177,11 +211,20 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
             } else {
                 logRecebido = receivedData;
             }
-            BufferedWriter file = new BufferedWriter(new FileWriter(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + fileName)); //ja salva com ".LOG"
-            file.write(logRecebido);
-            file.flush();
-            file.close();
+            saveFile(fileName, peso, logRecebido);
         }
+    }
+
+    private void saveFile(String fileName, String peso, String value) throws IOException {
+        BufferedWriter file;
+        if (peso != null) {
+            file = new BufferedWriter(new FileWriter(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + fileName + " " + peso)); //ja salva com ".LOG"
+        } else {
+            file = new BufferedWriter(new FileWriter(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + fileName + "_")); //ja salva com ".LOG"
+        }
+        file.write(value);
+        file.flush();
+        file.close();
     }
 
     //Resgata 01 Arquivo
@@ -296,8 +339,8 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                 colunas = Arrays.copyOf(colunas, 6);
 
                 for (int j = 0; j < colunas.length; j++) {
-                    if (colunas[i] == null || colunas[i].contains("�") || colunas[i].contains("OVUV")) {
-                        colunas[i] = "OPEN";
+                    if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
+                        colunas[j] = "OPEN";
                     }
                 }
                 entries.add(new TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5]));
@@ -591,4 +634,27 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
         });
     }
 
+
+    //SWIPE
+
+
+    @Override
+    public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction, int position) {
+        if (viewHolder instanceof RecyclerAdapter.MyViewHolder) {
+            if (direction == ItemTouchHelper.LEFT) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(ReadTermoparDataActivity.this, R.style.DialogOpenLogStyle);
+                builder.setTitle(getResources().getString(R.string.atencao_));
+                builder.setMessage("Deseja realmente excluir o log: " + "\n" + logsList.get(viewHolder.getAdapterPosition()).getName() + "?");
+                builder.setPositiveButton("Excluir", (dialog, which) -> {
+                    deleteLogFile(logsList.get(viewHolder.getAdapterPosition()).getName());
+                    logsList.remove(viewHolder.getAdapterPosition());
+                    adapter.notifyItemChanged(viewHolder.getAdapterPosition());
+                });
+                builder.setNegativeButton("Cancelar", (dialog, which) -> adapter.notifyItemChanged(viewHolder.getAdapterPosition()));
+                builder.setCancelable(false);
+                builder.create().show();
+
+            }
+        }
+    }
 }

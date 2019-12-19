@@ -2,105 +2,20 @@
 
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/chart_activity_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/zoomControlLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="25dp"
-        android:background="@color/white"
-        android:elevation="1dp"
-        android:fontFamily="sans-serif-condensed-light"
-        android:includeFontPadding="false"
-        android:paddingStart="10dp"
-        android:paddingEnd="10dp"
-        android:text="@string/zoom"
-        android:textAllCaps="true"
-        app:layout_constraintBottom_toTopOf="@+id/zoomControlsPanel"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/zoomControlsPanel"
-        app:textAllCaps="true" />
-
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/zoomControlsPanel"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="10dp"
-        android:background="@drawable/shape_border_white"
-        android:elevation="0dp"
-        android:paddingStart="5dp"
-        android:paddingEnd="5dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tControlsPanel">
-
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/blockX"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"
-            android:layout_marginStart="15dp"
-            android:layout_marginTop="15dp"
-            android:backgroundTint="@color/colorPrimary"
-            android:onClick="blockX"
-            android:text="@string/travar_eixo_x"
-            app:layout_constraintEnd_toStartOf="@+id/resetZoom"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/blockY"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_marginStart="15dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="15dp"
-            android:layout_toStartOf="@+id/resetZoom"
-            android:layout_toEndOf="@+id/blockX"
-            android:backgroundTint="@color/colorPrimary"
-            android:onClick="blockY"
-            android:text="@string/travar_eixo_y"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@+id/blockX"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/blockX" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/resetZoom"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentEnd="true"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="15dp"
-            android:backgroundTint="@color/colorPrimary"
-            android:onClick="resetZoom"
-            android:text="@string/reset"
-            app:layout_constraintBottom_toBottomOf="@+id/blockY"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/blockX"
-            app:layout_constraintTop_toTopOf="@+id/blockX" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/chart"
         android:layout_width="match_parent"
-        android:layout_height="550dp"
+        android:layout_height="0dp"
         android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
         android:background="@drawable/shape_border_gray"
         android:foregroundGravity="center"
+        app:layout_constraintBottom_toTopOf="@+id/graficoControlsLabel"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -108,24 +23,6 @@
 
     </com.github.mikephil.charting.charts.LineChart>
 
-
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/graficoControlsLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="25dp"
-        android:background="@color/white"
-        android:elevation="1dp"
-        android:fontFamily="sans-serif-condensed-light"
-        android:includeFontPadding="false"
-        android:paddingStart="10dp"
-        android:paddingEnd="10dp"
-        android:text="@string/grafico"
-        android:textAllCaps="true"
-        app:layout_constraintBottom_toTopOf="@+id/tControlsPanel"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/tControlsPanel"
-        app:textAllCaps="true" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/tControlsPanel"
@@ -136,6 +33,7 @@
         android:layout_marginEnd="10dp"
         android:background="@drawable/shape_border_white"
         android:elevation="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/zoomControlsPanel"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/chart">
@@ -198,6 +96,110 @@
             app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/zoomControlLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="25dp"
+        android:background="@color/white"
+        android:elevation="1dp"
+        android:fontFamily="sans-serif-condensed-light"
+        android:includeFontPadding="false"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:text="@string/zoom"
+        android:textAllCaps="true"
+        app:layout_constraintBottom_toTopOf="@+id/zoomControlsPanel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/zoomControlsPanel"
+        app:textAllCaps="true" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/zoomControlsPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/shape_border_white"
+        android:elevation="0dp"
+        android:paddingStart="5dp"
+        android:paddingEnd="5dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent">
+
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/blockX"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginStart="15dp"
+            android:layout_marginTop="15dp"
+            android:backgroundTint="@color/colorPrimary"
+            android:onClick="blockX"
+            android:text="@string/travar_eixo_x"
+            app:layout_constraintEnd_toStartOf="@+id/resetZoom"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/blockY"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_marginStart="15dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="15dp"
+            android:layout_toStartOf="@+id/resetZoom"
+            android:layout_toEndOf="@+id/blockX"
+            android:backgroundTint="@color/colorPrimary"
+            android:onClick="blockY"
+            android:text="@string/travar_eixo_y"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/blockX"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/blockX" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/resetZoom"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="15dp"
+            android:backgroundTint="@color/colorPrimary"
+            android:onClick="resetZoom"
+            android:text="@string/reset"
+            app:layout_constraintBottom_toBottomOf="@+id/blockY"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/blockX"
+            app:layout_constraintTop_toTopOf="@+id/blockX" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/graficoControlsLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="25dp"
+        android:background="@color/white"
+        android:elevation="1dp"
+        android:fontFamily="sans-serif-condensed-light"
+        android:includeFontPadding="false"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:text="@string/grafico"
+        android:textAllCaps="true"
+        app:layout_constraintBottom_toTopOf="@+id/tControlsPanel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/cha"
+        app:textAllCaps="true" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
