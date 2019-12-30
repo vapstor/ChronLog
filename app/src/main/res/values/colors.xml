@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="colorPrimary">@color/azulClaro</color>
-    <color name="colorPrimaryDark">@color/cinzaClaro</color>
+    <color name="colorPrimaryDark">@color/azulEscuro</color>
+    <color name="colorSecondaryDark">@color/cinzaClaro</color>
     <color name="colorAccent">@color/azulClaro</color>
+    <color name="azulEscuro">#FF2A67CF</color>
     <color name="azulClaro">#2ab3cf</color>
     <color name="cinzaClaro">#d1d2d4</color>
-    <color name="white">#FFFFFF</color>
+    <color name="branco">#FFFFFF</color>
     <color name="transparent">@android:color/transparent</color>
 </resources>

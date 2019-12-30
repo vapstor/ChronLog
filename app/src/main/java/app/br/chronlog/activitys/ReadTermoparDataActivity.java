@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -29,6 +30,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Objects;
 
 import app.br.chronlog.R;
 import app.br.chronlog.utils.ItemClickSupport;
@@ -45,7 +47,6 @@ import static app.br.chronlog.utils.Utils.TAG_LOG;
 import static app.br.chronlog.utils.Utils.isDeviceConnected;
 import static app.br.chronlog.utils.Utils.myBluetoothController;
 import static app.br.chronlog.utils.Utils.send;
-import static app.br.chronlog.utils.Utils.serialSocket;
 import static java.lang.Thread.sleep;
 
 public class ReadTermoparDataActivity extends AppCompatActivity implements ServiceConnection, SerialListener, RecyclerItemTouchHelper.RecyclerItemTouchHelperListener {
@@ -109,12 +110,20 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
 
             selectedLog = logsList.get(position);
 
-            AlertDialog alertDialog = builder.create();
-            alertDialog.show();
+            if (alertDialog[0] != null) {
+                if (alertDialog[0].isShowing()) {
+                    alertDialog[0].dismiss();
+                }
+                alertDialog[0] = null;
+            }
 
-            progressBarSaveShareLog = alertDialog.findViewById(R.id.progressBarSaveShareLog);
+            alertDialog[0] = builder.create();
+            alertDialog[0].show();
 
-            buttonShare = alertDialog.findViewById(R.id.btnShareLog);
+            progressBarSaveShareLog = alertDialog[0].findViewById(R.id.progressBarSaveShareLog);
+            ((TextView) Objects.requireNonNull(alertDialog[0].findViewById(R.id.logId))).setText(selectedLog.getName() + " (" + selectedLog.getPeso().trim() + " bytes)");
+
+            buttonShare = alertDialog[0].findViewById(R.id.btnShareLog);
             if (buttonShare != null) {
                 buttonShare.setOnClickListener(v1 -> {
                     Intent sharingIntent = new Intent(
@@ -127,7 +136,7 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                     startActivity(Intent.createChooser(sharingIntent, "Compartilhar Via"));
                 });
             }
-            buttonSave = alertDialog.findViewById(R.id.btnSaveLog);
+            buttonSave = alertDialog[0].findViewById(R.id.btnSaveLog);
             if (buttonSave != null) {
                 buttonSave.setOnClickListener(v1 -> {
                     try {
@@ -149,9 +158,7 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                                         adapter.notifyItemChanged(position);
                                     }
                                 });
-                                builder.setNegativeButton("Cancelar", (dialog, which) -> {
-                                    adapter.notifyItemChanged(position);
-                                });
+                                builder.setNegativeButton("Cancelar", (dialog, which) -> adapter.notifyItemChanged(position));
                                 builder.setCancelable(false);
                                 builder.create().show();
                             } else {
@@ -173,9 +180,7 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                                         adapter.notifyItemChanged(position);
                                     }
                                 });
-                                builder.setNegativeButton("Cancelar", (dialog, which) -> {
-                                    adapter.notifyItemChanged(position);
-                                });
+                                builder.setNegativeButton("Cancelar", (dialog, which) -> adapter.notifyItemChanged(position));
                                 builder.setCancelable(false);
                                 builder.create().show();
                             } else {
@@ -259,12 +264,16 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                     btnCancel.setOnClickListener(v -> {
                         progressBarOpenLogDialog.setProgress(0);
                         aberturaCancelada = true;
-                        cancelaAbertura();
                     });
                 }
             }
+        } else {
+            if (alertDialog[0] != null) {
+                if (progressBarSaveShareLog != null) {
+                    progressBarSaveShareLog.setMax(Integer.parseInt(selectedLog.getPeso().trim()) * 10);
+                }
+            }
         }
-
         new Thread(() -> {
             synchronized (lock) {
                 try {
@@ -283,23 +292,23 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                         //resgatou os dados
                         runOnUiThread(() -> {
                             if (alertDialog[0] != null) {
-                                if (alertDialog[0].isShowing()) {
-                                    alertDialog[0].dismiss();
+                                if (!saveToSD) {
+                                    if (alertDialog[0].isShowing()) {
+                                        alertDialog[0].dismiss();
+                                    }
+                                    alertDialog[0] = null;
                                 }
-                                alertDialog[0] = null;
                             }
                         });
                         //terminou de receber ou foi cancelado
                         if (!saveToSD) {
                             if (!aberturaCancelada) {
                                 configFileReceived(selectedLog);
-                            } else {
-                                runOnUiThread(() -> Toast.makeText(this, "Cancelado!", Toast.LENGTH_SHORT).show());
+//                            } else {
+//                                runOnUiThread(() -> Toast.makeText(this, "Cancelado!", Toast.LENGTH_SHORT).show());
                             }
                         } else {
                             runOnUiThread(() -> {
-//                                if (progressBarSaveShareLog != null)
-//                                    progressBarSaveShareLog.setProgress(0);
                                 if (buttonSave != null)
                                     buttonSave.setEnabled(true);
                                 if (buttonShare != null)
@@ -312,18 +321,6 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                 }
             }
         }).start();
-    }
-
-    private void cancelaAbertura() {
-        synchronized (lock) {
-            if (myCommandThread != null) {
-                if (myCommandThread.isAlive()) {
-                    myCommandThread.interrupt();
-                }
-            }
-            lock.notifyAll();
-            serialSocket.closeOutPutStream();
-        }
     }
 
     //Configura o arquivo PARCELABLE para enviar ao chart

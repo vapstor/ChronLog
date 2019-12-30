@@ -29,6 +29,7 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import app.br.chronlog.R;
@@ -49,6 +50,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
     private Button btnT1, btnT2, btnT3, btnT4;
     private LineData allData;
     private ArrayList<ILineDataSet> allDataSets;
+    private static ArrayList<ILineDataSet> myNewDataSets;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,65 +80,131 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
         btnT4 = findViewById(R.id.t4Button);
 
         btnT1.setOnClickListener((v) -> {
-            blockButtons(v);
-            hideOthersDataSets("T1");
+            toogleBtnPressed(v);
+            toggleDataSetVisibility("T1");
         });
         btnT2.setOnClickListener((v) -> {
-            blockButtons(v);
-            hideOthersDataSets("T2");
+            toogleBtnPressed(v);
+            toggleDataSetVisibility("T2");
         });
         btnT3.setOnClickListener((v) -> {
-            blockButtons(v);
-            hideOthersDataSets("T3");
+            toogleBtnPressed(v);
+            toggleDataSetVisibility("T3");
         });
         btnT4.setOnClickListener((v -> {
-            blockButtons(v);
-            hideOthersDataSets("T4");
+            toogleBtnPressed(v);
+            toggleDataSetVisibility("T4");
         }));
     }
 
-    private void blockButtons(View v) {
+    private void toogleBtnPressed(View v) {
         if (v.getId() == btnT1.getId()) {
-            btnT1.setEnabled(false);
-        } else {
-            btnT1.setEnabled(true);
+            if (btnT1.isSelected()) {
+                btnT1.setSelected(false);
+            } else {
+                btnT1.setSelected(true);
+            }
         }
-
         if (v.getId() == btnT2.getId()) {
-            btnT2.setEnabled(false);
-        } else {
-            btnT2.setEnabled(true);
+            if (btnT2.isSelected()) {
+                btnT2.setSelected(false);
+            } else {
+                btnT2.setSelected(true);
+            }
         }
 
         if (v.getId() == btnT3.getId()) {
-            btnT3.setEnabled(false);
-        } else {
-            btnT3.setEnabled(true);
+            if (btnT3.isSelected()) {
+                btnT3.setSelected(false);
+            } else {
+                btnT3.setSelected(true);
+            }
         }
 
         if (v.getId() == btnT4.getId()) {
-            btnT4.setEnabled(false);
-        } else {
-            btnT4.setEnabled(true);
+            if (btnT4.isSelected()) {
+                btnT4.setSelected(false);
+            } else {
+                btnT4.setSelected(true);
+            }
         }
     }
 
-    private void hideOthersDataSets(String label) {
-        chart.invalidate();
-        for (int i = 0; i < allDataSets.size(); i++) {
-            if (label != null) {
-                if (!label.equals(allDataSets.get(i).getLabel())) {
-                    allDataSets.get(i).setVisible(false);
-                } else {
-                    allDataSets.get(i).setVisible(true);
-                }
-            } else {
-                allDataSets.get(i).setVisible(true);
-            }
+    private void toggleDataSetVisibility(String label) {
+        int idx;
+        switch (label) {
+            case "T1":
+                idx = 0;
+                break;
+            case "T2":
+                idx = 1;
+                break;
+            case "T3":
+                idx = 2;
+                break;
+            case "T4":
+                idx = 3;
+                break;
+            default:
+                idx = -1;
+                break;
         }
-        chart.getData().notifyDataChanged();
-        chart.notifyDataSetChanged();
-        chart.animateX(1500);
+
+        if (idx != -1) {
+            List<ILineDataSet> sets = chart.getData().getDataSets();
+            ILineDataSet dataset = sets.get(idx);
+
+            dataset.setVisible(!dataset.isVisible());
+
+            float minAxysYValueT1 = -1500, maxAxysYValueT1 = 1500;
+            float minAxysYValueT2 = -1500, maxAxysYValueT2 = 1500;
+            float minAxysYValueT3 = -1500, maxAxysYValueT3 = 1500;
+            float minAxysYValueT4 = -1500, maxAxysYValueT4 = 1500;
+
+            for (int i = 0; i < sets.size(); i++) {
+                LineDataSet set = (LineDataSet) sets.get(i);
+                if (set.isVisible()) {
+                    float setYmin = Float.parseFloat(String.valueOf(set.getYMin()));
+                    float setYmax = Float.parseFloat(String.valueOf(set.getYMax()));
+                    if (i != idx) {
+                        if (i == 0) {
+                            minAxysYValueT1 = setYmin;
+                            maxAxysYValueT1 = setYmax;
+                        }
+                        if (i == 1) {
+                            minAxysYValueT2 = setYmin;
+                            maxAxysYValueT2 = setYmax;
+                        }
+                        if (i == 2) {
+                            minAxysYValueT3 = setYmin;
+                            maxAxysYValueT3 = setYmax;
+                        }
+                        if (i == 3) {
+                            minAxysYValueT4 = setYmin;
+                            maxAxysYValueT4 = setYmax;
+                        }
+                    }
+                }
+            }
+
+            float[] myArrayMin = new float[]{minAxysYValueT1, minAxysYValueT2, minAxysYValueT3, minAxysYValueT4};
+            float[] myArrayMax = new float[]{maxAxysYValueT1, maxAxysYValueT2, maxAxysYValueT3, maxAxysYValueT4};
+            Arrays.sort(myArrayMin);
+            Arrays.sort(myArrayMax);
+
+            chart.getAxisLeft().setAxisMinimum(myArrayMin[0]);
+            chart.getAxisLeft().setAxisMaximum(myArrayMax[myArrayMax.length - 1]);
+
+//            chart.getAxisLeft().resetAxisMinimum();
+//            chart.getAxisLeft().resetAxisMaximum();
+            chart.offsetTopAndBottom(15);  //'padding top'
+            chart.invalidate();
+            chart.getData().notifyDataChanged();
+            chart.notifyDataSetChanged();
+            chart.animateX(1500);
+        } else {
+            Toast.makeText(this, "DataSet não encontrado!", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void acessaDadosDoArquivo(List entriesList) {
@@ -174,11 +242,10 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             // enable scaling and dragging
             chart.setDragEnabled(true);
             chart.setScaleEnabled(true);
-            // chart.setScaleXEnabled(true);
-            // chart.setScaleYEnabled(true);
 
             // force pinch zoom along both axis
             chart.setPinchZoom(true);
+
         }
 
         XAxis xAxis;
@@ -210,17 +277,20 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             xAxis.setGranularity(1f); // minimum axis-step (interval) is 1
             xAxis.setValueFormatter(formatter);
             // vertical grid lines
-            xAxis.enableGridDashedLine(10f, 10f, 0f);
+            xAxis.enableGridDashedLine(5f, 10f, 0f);
         }
         YAxis yAxis;
         {   // // Y-Axis Style // //
             yAxis = chart.getAxisLeft();
 
+            yAxis.setCenterAxisLabels(true);
+
             // disable dual axis (only use LEFT axis)
             chart.getAxisRight().setEnabled(false);
 
             // horizontal grid lines
-            yAxis.enableGridDashedLine(10f, 10f, 0f);
+            yAxis.enableGridDashedLine(5f, 10f, 0f);
+
         }
 
         setData(entriesList);
@@ -305,6 +375,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
         }
         allData = new LineData(allDataSets);
         chart.setData(allData);
+        chart.setAutoScaleMinMaxEnabled(true);
         chart.invalidate();
         chart.getData().notifyDataChanged();
         chart.notifyDataSetChanged();
@@ -356,14 +427,15 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
 
     public void resetZoom(View view) {
         if (chart != null) {
-            btnT4.setEnabled(true);
-            btnT1.setEnabled(true);
-            btnT2.setEnabled(true);
-            btnT3.setEnabled(true);
-
-            hideOthersDataSets(null);
+            btnT4.setSelected(false);
+            btnT3.setSelected(false);
+            btnT2.setSelected(false);
+            btnT1.setSelected(false);
 
             chart.setData(allData);
+            chart.invalidate();
+            chart.getData().notifyDataChanged();
+            chart.notifyDataSetChanged();
             chart.animateX(1500);
             chart.resetZoom();
             chart.fitScreen();
@@ -389,13 +461,4 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             chart.setScaleYEnabled(true);
         }
     }
-
-//
-//    public class MyFormatter extends ValueFormatter {
-//        private final String[] xLabels;
-//
-//        public MyFormatter(String[] horariosX) {
-//            this.xLabels = horariosX;
-//        }
-//    }
 }

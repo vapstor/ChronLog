@@ -77,10 +77,10 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.MyView
         //After that display progressbar at the below
         if (!adapterApenasString) {
             holder.name.setText(mDataset.get(position).getName());
-            holder.peso.setText("(" + mDataset.get(position).getPeso().trim() + " kb)");
+            holder.peso.setText("(" + mDataset.get(position).getPeso().trim() + " bytes)");
         } else {
             holder.name.setText(mDatasetAsString.get(position)[0]);
-            holder.peso.setText("(" + mDatasetAsString.get(position)[1].trim() + " kb)");
+            holder.peso.setText("(" + mDatasetAsString.get(position)[1].trim() + " bytes)");
         }
         if(progressBarContainer != null && progressBarContainer.getVisibility() == View.VISIBLE) {
             progressBarContainer.setVisibility(View.GONE);

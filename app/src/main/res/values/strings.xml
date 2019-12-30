@@ -60,7 +60,7 @@
     <string name="ajustes">ajustes</string>
     <string name="log_title">log title</string>
     <string name="arquivos_do_sd">Arquivos do SD</string>
-    <string name="arquivos_do_termopar">Arquivos do Termopar</string>
+    <string name="arquivos_do_dispositivo">Arquivos do Dispositivo</string>
     <string name="refreshicon">refreshIcon</string>
     <string name="peso">peso</string>
     <string name="calendar_icon">calendar icon</string>
@@ -69,6 +69,9 @@
     <string name="aguarde_estamos_abrindo_seu_arquivo">Aguarde, estamos abrindo seu arquivo…</string>
     <string name="deseja_salvar_ou_compartilhar_o_log">deseja salvar ou compartilhar o log?</string>
     <string name="deletar">deletar</string>
+    <string name="tempo_de_aquisi_o">Tempo de Aquisição</string>
+    <string name="hor_rio">Horário</string>
+    <string name="data">Data</string>
     <string-array name="modosTermopar">
         <item>K</item>
         <item>J</item>

@@ -28,7 +28,7 @@
                 android:text="@string/deletar"
                 android:textAlignment="center"
                 android:textAllCaps="true"
-                android:textColor="@color/white"
+                android:textColor="@color/branco"
                 android:textSize="12sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/deleteIcon"
@@ -64,7 +64,7 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/white">
+            android:background="@color/branco">
 
             <TextView
                 android:id="@+id/logTitle"
@@ -72,7 +72,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="15dp"
                 android:layout_weight="1"
-                android:shadowColor="@color/colorPrimaryDark"
+                android:shadowColor="@color/colorSecondaryDark"
                 android:text="@string/log_title"
                 android:textAlignment="viewStart"
                 android:textAllCaps="false"
@@ -91,7 +91,7 @@
                 android:layout_weight="1"
                 android:text="@string/peso"
                 android:textAlignment="center"
-                android:textColor="@color/colorPrimaryDark"
+                android:textColor="@color/colorSecondaryDark"
                 app:layout_constraintBottom_toBottomOf="@+id/progressBarItem"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/progressBarItem"

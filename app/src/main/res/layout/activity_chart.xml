@@ -38,7 +38,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/chart">
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/t1Button"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -46,6 +46,7 @@
             android:layout_marginTop="5dp"
             android:layout_marginEnd="5dp"
             android:layout_marginBottom="5dp"
+            android:background="@drawable/selector_device_t_button"
             android:text="@string/t1"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/t2Button"
@@ -60,6 +61,7 @@
             android:layout_marginTop="5dp"
             android:layout_marginEnd="5dp"
             android:layout_marginBottom="5dp"
+            android:background="?android:attr/selectableItemBackground"
             android:text="@string/t2"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/t3Button"
@@ -75,6 +77,7 @@
             android:layout_marginTop="5dp"
             android:layout_marginEnd="5dp"
             android:layout_marginBottom="5dp"
+            android:background="@drawable/selector_device_t_button"
             android:text="@string/t3"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/t4Button"
@@ -89,6 +92,7 @@
             android:layout_marginTop="5dp"
             android:layout_marginEnd="15dp"
             android:layout_marginBottom="5dp"
+            android:background="@drawable/selector_device_t_button"
             android:text="@string/t4"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -102,7 +106,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="25dp"
-        android:background="@color/white"
+        android:background="@color/branco"
         android:elevation="1dp"
         android:fontFamily="sans-serif-condensed-light"
         android:includeFontPadding="false"
@@ -140,7 +144,7 @@
             android:layout_alignParentTop="true"
             android:layout_marginStart="15dp"
             android:layout_marginTop="15dp"
-            android:backgroundTint="@color/colorPrimary"
+            android:background="@drawable/selector_device_t_button"
             android:onClick="blockX"
             android:text="@string/travar_eixo_x"
             app:layout_constraintEnd_toStartOf="@+id/resetZoom"
@@ -157,7 +161,7 @@
             android:layout_marginBottom="15dp"
             android:layout_toStartOf="@+id/resetZoom"
             android:layout_toEndOf="@+id/blockX"
-            android:backgroundTint="@color/colorPrimary"
+            android:background="@drawable/selector_device_t_button"
             android:onClick="blockY"
             android:text="@string/travar_eixo_y"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -173,7 +177,7 @@
             android:layout_alignParentEnd="true"
             android:layout_marginStart="10dp"
             android:layout_marginEnd="15dp"
-            android:backgroundTint="@color/colorPrimary"
+            android:background="@drawable/selector_device_t_button"
             android:onClick="resetZoom"
             android:text="@string/reset"
             app:layout_constraintBottom_toBottomOf="@+id/blockY"
@@ -188,7 +192,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="25dp"
-        android:background="@color/white"
+        android:background="@color/branco"
         android:elevation="1dp"
         android:fontFamily="sans-serif-condensed-light"
         android:includeFontPadding="false"
@@ -198,7 +202,6 @@
         android:textAllCaps="true"
         app:layout_constraintBottom_toTopOf="@+id/tControlsPanel"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/cha"
         app:textAllCaps="true" />
 
 

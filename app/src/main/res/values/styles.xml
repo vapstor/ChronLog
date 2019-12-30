@@ -5,7 +5,8 @@
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorSecondaryVariant">@color/colorSecondaryDark</item>
+        <item name="colorAccent">@color/colorPrimaryDark</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:windowActionBar">true</item>
@@ -26,12 +27,12 @@
         <item name="windowNoTitle">true</item>
         <item name="materialAlertDialogTitleTextStyle">@style/MyAlertTitleTextStyle</item>
         <item name="android:background">@color/transparent</item>
-        <item name="colorOnSurface">@color/colorPrimaryDark</item>
+        <item name="colorOnSurface">@color/colorSecondaryDark</item>
     </style>
 
     <style name="MyAlertTitleTextStyle" parent="MaterialAlertDialog.MaterialComponents.Title.Text">
         <item name="android:background">@null</item>
-        <item name="android:textColor">@color/colorPrimaryDark</item>
+        <item name="android:textColor">@color/colorSecondaryDark</item>
         <item name="android:textSize">22sp</item>
     </style>
 
@@ -55,15 +56,15 @@
 
     <style name="TextButtonOutlinedPrimary" parent="@style/Widget.MaterialComponents.Button.OutlinedButton">
         <item name="rippleColor">@color/colorPrimary</item>
-        <item name="android:textColor">@color/white</item>
+        <item name="android:textColor">@color/branco</item>
         <item name="android:layout_margin">8dp</item>
-        <item name="strokeColor">@color/white</item>
+        <item name="strokeColor">@color/branco</item>
         <item name="android:background">?android:attr/selectableItemBackground
         </item><!-- only way to change this is to change the src image -->
     </style>
 
     <style name="TextButtonOutlinedWhite" parent="@style/Widget.MaterialComponents.Button.OutlinedButton">
-        <item name="rippleColor">@color/white</item>
+        <item name="rippleColor">@color/branco</item>
         <item name="android:textColor">@color/colorPrimary</item>
         <item name="android:layout_marginTop">5dp</item>
         <item name="strokeColor">@color/colorPrimary</item>
@@ -72,7 +73,7 @@
     </style>
 
     <style name="ProgressBar" parent="AppTheme">
-        <item name="colorAccent">@color/white</item> <!-- Whatever color you want-->
+        <item name="colorAccent">@color/branco</item> <!-- Whatever color you want-->
     </style>
 
     <style name="fullScreeDialog">
@@ -84,7 +85,7 @@
     </style>
 
     <style name="AppTheme.ProgressBarInverted">
-        <item name="colorAccent">@color/white</item>
+        <item name="colorAccent">@color/branco</item>
     </style>
 
     <style name="AlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
@@ -99,13 +100,13 @@
 
     <style name="NegativeButtonStyle" parent="Widget.MaterialComponents.Button.OutlinedButton">
         <item name="colorButtonNormal">@color/colorPrimary</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="strokeColor">@color/colorPrimaryDark</item>
+        <item name="android:textColor">@color/branco</item>
+        <item name="strokeColor">@color/colorSecondaryDark</item>
         <item name="elevation">0dp</item>
     </style>
 
     <style name="PositiveButtonStyle" parent="Widget.MaterialComponents.Button.OutlinedButton">
-        <item name="colorButtonNormal">@color/white</item>
+        <item name="colorButtonNormal">@color/branco</item>
         <item name="android:textColor">@color/colorPrimary</item>
         <item name="strokeColor">@color/colorPrimary</item>
         <item name="elevation">0dp</item>
@@ -134,7 +135,7 @@
         <item name="buttonBarPositiveButtonStyle">@style/PositiveButtonStyle</item>
         <item name="colorAccent">@color/colorPrimary</item>
         <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorSecondary">@color/white</item>
+        <item name="colorSecondary">@color/branco</item>
         <item name="android:progressBackgroundTint">@color/colorPrimary</item>
     </style>
 

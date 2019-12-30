@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -35,6 +36,7 @@ import app.br.chronlog.utils.TermoparLogEntry;
 
 import static androidx.recyclerview.widget.RecyclerView.VERTICAL;
 import static app.br.chronlog.utils.Utils.TAG_LOG;
+import static app.br.chronlog.utils.Utils.getFileContents;
 
 public class ReadSdDataActivity extends AppCompatActivity implements RecyclerItemTouchHelper.RecyclerItemTouchHelperListener {
 
@@ -79,40 +81,63 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
         new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(logsRecyclerView);
 
         ItemClickSupport.addTo(logsRecyclerView).setOnItemClickListener((recyclerView, position, v) -> {
-            File file = read(logFilesList.get(position)[0]);
-            selectedLog = configFile(file, logFilesList.get(position)[0], logFilesList.get(position)[1]);
+            if (isFilePresent(logFilesList.get(position)[0] + logFilesList.get(position)[1])) {
+                File file = read(logFilesList.get(position)[0] + logFilesList.get(position)[1]);
+                selectedLog = configFile(file, logFilesList.get(position)[0], logFilesList.get(position)[1]);
 
-            builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
-            builder.setView(R.layout.open_log_dialog);
+                if (selectedLog != null) {
+                    if (selectedLog.getEntries().size() > 1) {
+                        runOnUiThread(() -> Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show());
 
-            /**TODO
-             * Enviar para o CHART
-             * */
-            //readFile(selectedLog, false);
+                        ArrayList<TermoparLog> termoparLog = new ArrayList<>();
+                        termoparLog.add(selectedLog);
+
+                        Intent intent = new Intent(this, ChartViewActivity.class);
+                        intent.putParcelableArrayListExtra("selectedLog", termoparLog);
+                        startActivity(intent);
+
+                    } else if (selectedLog.getEntries().size() == 1) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
+                        builder.setMessage("Só existe apenas um registro no Log: "
+                                + "\n" + "\n" +
+                                "Data: " + selectedLog.getEntries().get(0).getData() + "\n" +
+                                "Horário: " + selectedLog.getEntries().get(0).getHora() + "\n" +
+                                "T1: " + selectedLog.getEntries().get(0).getT1() + "\n" +
+                                "T2: " + selectedLog.getEntries().get(0).getT2() + "\n" +
+                                "T3: " + selectedLog.getEntries().get(0).getT3() + "\n" +
+                                "T4: " + selectedLog.getEntries().get(0).getT4()
+                        );
+                        builder.setPositiveButton("OK", (dialog, which) -> {
+                        });
+                        builder.setTitle("Log Único!");
+                        runOnUiThread(() -> builder.create().show());
+                    } else {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
+                        builder.setMessage("Não existem registros no Log!");
+                        builder.setTitle("Log Inválido!");
+                        builder.setPositiveButton("OK", (dialog, which) -> {
+                        });
+                        runOnUiThread(() -> builder.create().show());
+                    }
+                } else {
+                    Toast.makeText(this, "Falhou ao recuperar informações do arquivo!", Toast.LENGTH_SHORT).show();
+                }
+            }
+
         });
         ItemClickSupport.addTo(logsRecyclerView).setOnItemLongClickListener((RecyclerView recyclerView, int position, View v) -> {
-            builder = new AlertDialog.Builder(ReadSdDataActivity.this, R.style.DialogOpenLogStyle);
-            builder.setView(R.layout.share_save_item_dialog);
-
-            AlertDialog alertDialog = builder.create();
-            alertDialog.show();
-
-            //TODO COMPARTILHAR
-//            buttonShare = alertDialog.findViewById(R.id.btnShareLog);
-//            if (buttonShare != null) {
-//                buttonShare.setOnClickListener(v1 -> {
-//                    Intent sharingIntent = new Intent(
-//                            android.content.Intent.ACTION_SEND);
-//                    sharingIntent.setType("text/plain");
-//
-//                    String shareBody = receivedData.replace("@05", "");
-//                    sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
-//                            "Log: " + logsList.get(position).getName());
-//                    sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
-//                    startActivity(Intent.createChooser(sharingIntent, "Compartilhar Via"));
-//                });
-//            }
-
+            if (isFilePresent(logFilesList.get(position)[0] + logFilesList.get(position)[1])) {
+                try {
+                    String allData = getFileContents(read(logFilesList.get(position)[0] + logFilesList.get(position)[1]));
+                    Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+                    sharingIntent.setType("text/plain");
+                    sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Log: " + logFilesList.get(position)[0]);
+                    sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, allData);
+                    startActivity(Intent.createChooser(sharingIntent, "Compartilhar Via"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
             return true;
         });
 
@@ -135,14 +160,20 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
     }
 
     private TermoparLog configFile(File file, String nome, String peso) {
-        String allData = file.toString();
+        String allData;
+        try {
+            allData = getFileContents(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
         String[] allValues = allData.split("(\\r?\\n|\\r)");
         String lineValue;
 
         ArrayList<TermoparLogEntry> entries = new ArrayList<>();
 
         for (int i = 0; i < allValues.length; i++) {
-            if (i >= 2) { // 2 = 3ª linha [valores a partir da 2 linha[0 - @ 05, 1 - Data / Hora /...]
+            if (i > 2) { // 2 = 3ª linha [valores a partir da 2 linha[0 - @ 05, 1 - Data / Hora /...]
                 lineValue = allValues[i];
 
                 String[] colunas = lineValue.split(" ");
@@ -211,6 +242,7 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
         }
     }
 
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -236,19 +268,20 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
                 if (isFilePresent(myLogName + myLogPeso)) {
                     /** deletar o arquivo sd*/
                     if (deleteLogFile(myLogName + myLogPeso)) {
+                        logFilesList.remove(myPosition);
+                        adapter.notifyItemRemoved(myPosition);
                         Toast.makeText(this, "Excluído com sucesso!", Toast.LENGTH_SHORT).show();
-                        try {
-                            adapter.notifyItemRemoved(myPosition);
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                        if (logFilesList.size() < 1) {
+                            finish();
+                            Toast.makeText(this, "Sem arquivos salvos!", Toast.LENGTH_SHORT).show();
                         }
                     } else {
-                        Toast.makeText(this, "Falhou ao excluir!", Toast.LENGTH_SHORT).show();
                         adapter.notifyItemChanged(myPosition);
+                        Toast.makeText(this, "Falhou ao excluir!", Toast.LENGTH_SHORT).show();
                     }
                 } else {
-                    Toast.makeText(this, "Arquivo não encontrado!", Toast.LENGTH_SHORT).show();
                     adapter.notifyItemChanged(myPosition);
+                    Toast.makeText(this, "Arquivo não encontrado!", Toast.LENGTH_SHORT).show();
                 }
             });
             builder.setNegativeButton("Cancelar", (dialog, which) -> adapter.notifyItemChanged(viewHolder.getAdapterPosition()));

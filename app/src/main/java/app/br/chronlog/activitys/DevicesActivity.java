@@ -130,6 +130,11 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
 
     @Override
     protected void onStart() {
+        if (myBluetoothController == null) {
+            myBluetoothController = new BluetoothController(this);
+        } else {
+            myBluetoothController.setActivity(this);
+        }
         refreshReferencesToAppBarView();
         if (service != null) {
             service.attach(this);

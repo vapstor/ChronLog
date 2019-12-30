@@ -10,6 +10,7 @@ import android.content.IntentFilter;
 import android.os.CountDownTimer;
 import android.os.Looper;
 import android.util.Log;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -111,8 +112,9 @@ public class BluetoothController {
                                 if (activity instanceof DevicesActivity) {
                                     ((DevicesActivity) activity).setEmptyText("");
                                     devicesList.clear();
+                                    ((DevicesActivity) activity).setEmptyText("Habilite o Bluetooth, Por Favor.");
                                     listAdapter.notifyDataSetChanged();
-                                    ((DevicesActivity) activity).setEmptyText("Nenhum dispositivo encontrado. :(" + "\n" + " Tente novamente");
+                                    ((ImageButton) activity.findViewById(R.id.iconBar)).setImageDrawable(activity.getDrawable(R.drawable.baseline_bluetooth_disabled_black_18dp));
 
                                 } else {
                                     activity.startActivity(new Intent(activity, MainActivity.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
@@ -126,28 +128,30 @@ public class BluetoothController {
                             }
                         case BluetoothAdapter.STATE_ON:
                             Toast.makeText(context, "Bluetooth Ativado!", Toast.LENGTH_SHORT).show();
-                            break;
-                        case BluetoothAdapter.STATE_CONNECTED:
-                            Toast.makeText(context, "Bluetooth Conectado!", Toast.LENGTH_SHORT).show();
-                            hideProgressBar(activity);
                             if (activity != null) {
                                 if (activity instanceof DevicesActivity) {
                                     ((DevicesActivity) activity).setEmptyText("");
+                                    ((ImageButton) activity.findViewById(R.id.iconBar)).setImageDrawable(activity.getDrawable(R.drawable.baseline_bluetooth_searching_white_18dp));
                                     devicesList.clear();
-                                    listAdapter.notifyDataSetChanged();
                                     ((DevicesActivity) activity).setEmptyText("Nenhum dispositivo encontrado. :(" + "\n" + " Tente novamente");
+                                    listAdapter.notifyDataSetChanged();
                                 } else {
                                     activity.startActivity(new Intent(activity, MainActivity.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
                                 }
                             }
+                            break;
+                        case BluetoothAdapter.STATE_CONNECTED:
+                            Toast.makeText(context, "Bluetooth Conectado!", Toast.LENGTH_SHORT).show();
+                            hideProgressBar(activity);
                             break;
                         case BluetoothAdapter.STATE_DISCONNECTED:
                             Toast.makeText(context, "Bluetooth Desconectado!", Toast.LENGTH_LONG).show();
                             if (activity != null) {
                                 if (activity instanceof DevicesActivity) {
                                     devicesList.clear();
-                                    listAdapter.notifyDataSetChanged();
                                     ((DevicesActivity) activity).setEmptyText("Habilite o Bluetooth, Por Favor.");
+                                    ((ImageButton) activity.findViewById(R.id.iconBar)).setImageDrawable(activity.getDrawable(R.drawable.baseline_bluetooth_disabled_black_18dp));
+                                    listAdapter.notifyDataSetChanged();
                                 } else {
                                     activity.startActivity(new Intent(activity, MainActivity.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
                                 }

@@ -9,6 +9,6 @@
     android:textAlignment="center"
     android:textAllCaps="true"
     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-    android:textColor="@color/white"
+    android:textColor="@color/branco"
     android:textColorHighlight="@color/colorPrimary" />
 
