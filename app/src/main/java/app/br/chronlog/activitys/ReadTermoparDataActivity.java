@@ -26,7 +26,6 @@ import com.google.android.material.button.MaterialButton;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
@@ -200,7 +199,7 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
     }
 
     private void saveFile(String fileName, String peso, String value) throws IOException {
-        BufferedWriter file = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + fileName + peso, true), StandardCharsets.UTF_8)); //ja salva com ".LOG"
+        BufferedWriter file = new BufferedWriter(new OutputStreamWriter(new FleOutputStream(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + fileName + peso, true), StandardCharsets.UTF_8)); //ja salva com ".LOG"
         String[] lines = value.split("\\r?\\n|\\r");
         for (String line : lines) {
             Log.d(TAG_LOG, "VALOR DA LINHA: " + line);
