@@ -230,7 +230,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         });
         builder.setCancelable(false);
         builder.create().show();
-        super.onBackPressed();
     }
 
     @Override

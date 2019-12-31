@@ -650,7 +650,6 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                 builder.setNegativeButton("Cancelar", (dialog, which) -> adapter.notifyItemChanged(viewHolder.getAdapterPosition()));
                 builder.setCancelable(false);
                 builder.create().show();
-
             }
         }
     }
