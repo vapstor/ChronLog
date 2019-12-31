@@ -217,17 +217,20 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
-        //seta botao positivo
-        DialogInterface.OnClickListener positiveListener = (dialog, which) -> finishAffinity();
-        DialogInterface.OnClickListener negativeListener = (dialog, which) -> {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.DialogOpenLogStyle);
+        builder.setTitle(getResources().getString(R.string.atencao_));
+        builder.setMessage("Deseja se manter logado?");
+        builder.setPositiveButton("Sim", (dialog, which) -> {
+            getSharedPreferences(CONFIG_FILE, Context.MODE_PRIVATE).edit().putBoolean("aparelho_verificado", true).apply();
+            finishAffinity();
+        });
+        builder.setNegativeButton("Não", (dialog, which) -> {
             getSharedPreferences(CONFIG_FILE, Context.MODE_PRIVATE).edit().putBoolean("aparelho_verificado", false).apply();
             finishAffinity();
-        };
-        //cria dialogo
-        AlertDialog alert = createDialog(this, "Alerta!", "Deseja salvar device para acesso mais rapidamente?", "SALVAR", "NÃO AGORA", true, true, negativeListener, positiveListener, dialog -> {
         });
-        alert.show();
+        builder.setCancelable(false);
+        builder.create().show();
+        super.onBackPressed();
     }
 
     @Override

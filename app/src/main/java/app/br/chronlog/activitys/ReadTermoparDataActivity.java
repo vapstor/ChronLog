@@ -645,7 +645,7 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                 builder.setPositiveButton("Excluir", (dialog, which) -> {
                     deleteLogFile(logsList.get(viewHolder.getAdapterPosition()).getName());
                     logsList.remove(viewHolder.getAdapterPosition());
-                    adapter.notifyItemChanged(viewHolder.getAdapterPosition());
+                    adapter.notifyItemRemoved(viewHolder.getAdapterPosition());
                 });
                 builder.setNegativeButton("Cancelar", (dialog, which) -> adapter.notifyItemChanged(viewHolder.getAdapterPosition()));
                 builder.setCancelable(false);
