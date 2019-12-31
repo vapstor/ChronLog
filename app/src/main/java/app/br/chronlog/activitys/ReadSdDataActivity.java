@@ -135,8 +135,11 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
                     sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, allData);
                     startActivity(Intent.createChooser(sharingIntent, "Compartilhar Via"));
                 } catch (IOException e) {
+                    Toast.makeText(this, "Erro ao compartilhar!", Toast.LENGTH_SHORT).show();
                     e.printStackTrace();
                 }
+            } else {
+                Toast.makeText(this, "Arquivo não encontrado!", Toast.LENGTH_SHORT).show();
             }
             return true;
         });
@@ -153,8 +156,8 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
         }
     }
 
-    private boolean deleteLogFile(String filename) {
-        File file = read(filename);
+    private boolean deleteLogFile(String myLogName, String myLogPeso) {
+        File file = read(myLogName + myLogPeso);
         return file.delete();
 
     }
@@ -167,25 +170,31 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
             e.printStackTrace();
             return null;
         }
-        String[] allValues = allData.split("(\\r?\\n|\\r)");
-        String lineValue;
+        allData = allData.replace("Data Hora T1 T2 T3 ", "").substring(2);
+        ArrayList<String> allValuesList = new ArrayList<>();
+        String[] dataArray = allData.split(" ");
+        for (int i = 0; i < dataArray.length; i++) {
+            if (i % 5 == 0) {
+                allValuesList.add(dataArray[i]);
+            }
+        }
+        String[] allValues = new String[allValuesList.size()];
+
+        for (int i = 0; i < allValuesList.size(); i++) {
+            allValues[i] = allValuesList.get(i);
+        }
 
         ArrayList<TermoparLogEntry> entries = new ArrayList<>();
 
-        for (int i = 0; i < allValues.length; i++) {
-            if (i > 2) { // 2 = 3ª linha [valores a partir da 2 linha[0 - @ 05, 1 - Data / Hora /...]
-                lineValue = allValues[i];
-
-                String[] colunas = lineValue.split(" ");
-                colunas = Arrays.copyOf(colunas, 6);
-
-                for (int j = 0; j < colunas.length; j++) {
-                    if (colunas[i] == null || colunas[i].contains("�") || colunas[i].contains("OVUV")) {
-                        colunas[i] = "OPEN";
-                    }
+        for (String lineValue : allValues) {
+            String[] colunas = lineValue.split(" ");
+            colunas = Arrays.copyOf(colunas, 6);
+            for (int j = 0; j < colunas.length; j++) {
+                if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
+                    colunas[j] = "OPEN";
                 }
-                entries.add(new TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5]));
             }
+            entries.add(new TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5]));
         }
         return new TermoparLog(nome, peso, entries);
     }
@@ -213,22 +222,24 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
             //Get the logFiles
             File[] filesInFolder = folder.listFiles();
             if (filesInFolder != null) {
-                for (File file : filesInFolder) {
-                    String fileName = file.getName();
-                    if (fileName.contains(".LOG")) {
-                        if (fileName.contains(" ")) {
-                            int index = fileName.indexOf(" ");
-                            String nome = fileName.substring(0, index);
-                            String peso = fileName.substring(index);
+                if (logFilesList != null && logFilesList.size() == 0) {
+                    for (File file : filesInFolder) {
+                        String fileName = file.getName();
+                        if (fileName.contains(".LOG")) {
+                            if (fileName.contains(" ")) {
+                                int index = fileName.indexOf(" ");
+                                String nome = fileName.substring(0, index);
+                                String peso = fileName.substring(index);
 
-                            Log.d(TAG_LOG, "TermoparLog on SD Nome: " + nome);
-                            Log.d(TAG_LOG, "TermoparLog on SD Peso: " + peso);
+                                Log.d(TAG_LOG, "TermoparLog on SD Nome: " + nome);
+                                Log.d(TAG_LOG, "TermoparLog on SD Peso: " + peso);
 
-                            logFilesList.add(new String[]{nome, peso});
-                            adapter.notifyItemInserted(logFilesList.size());
-                        } else {
-                            logFilesList.add(new String[]{fileName, "?"});
-                            adapter.notifyItemInserted(logFilesList.size());
+                                logFilesList.add(new String[]{nome, peso});
+                                adapter.notifyItemInserted(logFilesList.size());
+                            } else {
+                                logFilesList.add(new String[]{fileName, "?"});
+                                adapter.notifyItemInserted(logFilesList.size());
+                            }
                         }
                     }
                 }
@@ -267,9 +278,10 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
                 String myLogPeso = logFilesList.get(myPosition)[1];
                 if (isFilePresent(myLogName + myLogPeso)) {
                     /** deletar o arquivo sd*/
-                    if (deleteLogFile(myLogName + myLogPeso)) {
+                    if (deleteLogFile(myLogName, myLogPeso)) {
+                        adapter.notifyDataSetChanged();
+                        adapter.notifyItemChanged(myPosition);
                         logFilesList.remove(myPosition);
-                        adapter.notifyItemRemoved(myPosition);
                         Toast.makeText(this, "Excluído com sucesso!", Toast.LENGTH_SHORT).show();
                         if (logFilesList.size() < 1) {
                             finish();

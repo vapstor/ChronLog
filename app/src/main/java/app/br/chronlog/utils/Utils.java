@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -146,9 +147,13 @@ public class Utils {
     }
 
     public static void startActivityWithExplosion(Context context, Intent intent) {
-        final ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation((Activity) context);
-        ((Activity) context).overridePendingTransition(0, 0);
-        context.startActivity(intent, options.toBundle());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            final ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation((Activity) context);
+            ((Activity) context).overridePendingTransition(0, 0);
+            context.startActivity(intent, options.toBundle());
+        } else {
+            context.startActivity(intent);
+        }
     }
 
     public static void destroyDialog(AlertDialog alert) {
@@ -181,7 +186,6 @@ public class Utils {
         }
 
     }
-
 
 
     public static String getFileContents(final File file) throws IOException {

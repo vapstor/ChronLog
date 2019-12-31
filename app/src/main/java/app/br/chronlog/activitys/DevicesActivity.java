@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.View;
@@ -32,7 +33,6 @@ import app.br.chronlog.utils.bluetooth.SerialListener;
 import app.br.chronlog.utils.bluetooth.SerialService;
 import app.br.chronlog.utils.bluetooth.SerialSocket;
 
-import static android.view.View.GONE;
 import static app.br.chronlog.utils.Utils.bluetoothDeviceSelected;
 import static app.br.chronlog.utils.Utils.hideProgressBar;
 import static app.br.chronlog.utils.Utils.isDeviceConnected;
@@ -115,17 +115,19 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
         progressBar = activity.findViewById(R.id.progressBarAppBar);
         statusView = activity.findViewById(R.id.status);
         refreshButton = activity.findViewById(R.id.iconBar);
-
-        progressBar.setOnSystemUiVisibilityChangeListener(visibility -> {
-            if (visibility == GONE) {
-                refreshButton.setEnabled(true);
-                refreshButton.setImageDrawable(this.getDrawable(R.drawable.baseline_sync_white_18dp));
-            } else {
-                refreshButton.setEnabled(false);
-                refreshButton.setImageDrawable(this.getDrawable(R.drawable.baseline_sync_black_18));
-            }
-        });
-
+        boolean visivel;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            visivel = progressBar.isAnimating();
+        } else {
+            visivel = progressBar.getVisibility() == View.VISIBLE;
+        }
+        if (visivel) {
+            refreshButton.setEnabled(true);
+            refreshButton.setImageDrawable(this.getDrawable(R.drawable.baseline_sync_white_18dp));
+        } else {
+            refreshButton.setEnabled(false);
+            refreshButton.setImageDrawable(this.getDrawable(R.drawable.baseline_sync_black_18));
+        }
     }
 
     @Override
@@ -179,8 +181,13 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        if (devicesList.size() < 1) {
-            setEmptyText("Nenhum Dispositivo Encontrado. :( " + "\n" + "Tente Novamente.");
+
+        if (myBluetoothController != null && !myBluetoothController.getBluetoothAdapter().isDiscovering()) {
+            if (devicesList.size() < 1) {
+                setEmptyText("Nenhum Dispositivo Encontrado. :( " + "\n" + "Tente Novamente.");
+            } else {
+                setEmptyText("");
+            }
         } else {
             setEmptyText("");
         }
@@ -212,6 +219,7 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
             setEmptyText("Bluetooh Não Suportado!");
         } else {
             myBluetoothController.setActivity(this);
+            refreshReferencesToAppBarView();
             setIconToRefreshBluetooth();
             if (!myBluetoothController.getBluetoothAdapter().isEnabled()) {
                 btOff();
@@ -254,7 +262,7 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
                             setStatus(CONECTANDO_, this);
                             isDeviceConnected = Connected.Pending;
                         }
-                        service.connect(this, "Connected to " + deviceName);
+                        service.connect(this, "Conectado a " + deviceName);
                         serialSocket.connect(this, service, bluetoothDeviceSelected);
                     }
                 } else {

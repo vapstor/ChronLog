@@ -24,7 +24,6 @@
         <activity
             android:name=".activitys.ReadSdDataActivity"
             android:launchMode="singleTask"
-            android:screenOrientation="portrait"
             android:theme="@style/MyAlertDialogStyle"
             android:windowSoftInputMode="adjustResize" />
 
@@ -45,7 +44,6 @@
         <activity
             android:name=".activitys.ReadTermoparDataActivity"
             android:launchMode="singleTask"
-            android:screenOrientation="portrait"
             android:theme="@style/MyAlertDialogStyle"
             android:windowSoftInputMode="adjustResize" />
         <activity

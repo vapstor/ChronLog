@@ -50,7 +50,6 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
     private Button btnT1, btnT2, btnT3, btnT4;
     private LineData allData;
     private ArrayList<ILineDataSet> allDataSets;
-    private static ArrayList<ILineDataSet> myNewDataSets;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -156,34 +155,33 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
 
             dataset.setVisible(!dataset.isVisible());
 
-            float minAxysYValueT1 = -1500, maxAxysYValueT1 = 1500;
-            float minAxysYValueT2 = -1500, maxAxysYValueT2 = 1500;
-            float minAxysYValueT3 = -1500, maxAxysYValueT3 = 1500;
-            float minAxysYValueT4 = -1500, maxAxysYValueT4 = 1500;
+            float minAxysYValueT1 = 994, maxAxysYValueT1 = 1004;
+            float minAxysYValueT2 = 994, maxAxysYValueT2 = 1004;
+            float minAxysYValueT3 = 994, maxAxysYValueT3 = 1004;
+            float minAxysYValueT4 = 994, maxAxysYValueT4 = 1004;
 
             for (int i = 0; i < sets.size(); i++) {
                 LineDataSet set = (LineDataSet) sets.get(i);
                 if (set.isVisible()) {
                     float setYmin = Float.parseFloat(String.valueOf(set.getYMin()));
                     float setYmax = Float.parseFloat(String.valueOf(set.getYMax()));
-                    if (i != idx) {
-                        if (i == 0) {
-                            minAxysYValueT1 = setYmin;
-                            maxAxysYValueT1 = setYmax;
-                        }
-                        if (i == 1) {
-                            minAxysYValueT2 = setYmin;
-                            maxAxysYValueT2 = setYmax;
-                        }
-                        if (i == 2) {
-                            minAxysYValueT3 = setYmin;
-                            maxAxysYValueT3 = setYmax;
-                        }
-                        if (i == 3) {
-                            minAxysYValueT4 = setYmin;
-                            maxAxysYValueT4 = setYmax;
-                        }
+                    if (i == 0) {
+                        minAxysYValueT1 = setYmin;
+                        maxAxysYValueT1 = setYmax;
                     }
+                    if (i == 1) {
+                        minAxysYValueT2 = setYmin;
+                        maxAxysYValueT2 = setYmax;
+                    }
+                    if (i == 2) {
+                        minAxysYValueT3 = setYmin;
+                        maxAxysYValueT3 = setYmax;
+                    }
+                    if (i == 3) {
+                        minAxysYValueT4 = setYmin;
+                        maxAxysYValueT4 = setYmax;
+                    }
+
                 }
             }
 
@@ -192,12 +190,29 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             Arrays.sort(myArrayMin);
             Arrays.sort(myArrayMax);
 
-            chart.getAxisLeft().setAxisMinimum(myArrayMin[0]);
-            chart.getAxisLeft().setAxisMaximum(myArrayMax[myArrayMax.length - 1]);
+            if (myArrayMin[0] != 999)
+                chart.getAxisLeft().setAxisMinimum(myArrayMin[0] - 5);
+            else if (myArrayMin[1] != 999)
+                chart.getAxisLeft().setAxisMinimum(myArrayMin[1] - 5);
+            else if (myArrayMin[2] != 999)
+                chart.getAxisLeft().setAxisMinimum(myArrayMin[2] - 5);
+            else if (myArrayMin[3] != 999)
+                chart.getAxisLeft().setAxisMinimum(myArrayMin[3] - 5);
+            else
+                chart.getAxisLeft().setAxisMinimum(994);
 
-//            chart.getAxisLeft().resetAxisMinimum();
-//            chart.getAxisLeft().resetAxisMaximum();
-            chart.offsetTopAndBottom(15);  //'padding top'
+            if (myArrayMax[myArrayMax.length - 4] != 999)
+                chart.getAxisLeft().setAxisMaximum(myArrayMax[0] + 5);
+            else if (myArrayMax[myArrayMax.length - 3] != 999)
+                chart.getAxisLeft().setAxisMaximum(myArrayMax[1] + 5);
+            else if (myArrayMax[myArrayMax.length - 2] != 999)
+                chart.getAxisLeft().setAxisMaximum(myArrayMax[2] + 5);
+            else if (myArrayMax[myArrayMax.length - 1] != 999)
+                chart.getAxisLeft().setAxisMaximum(myArrayMax[3] + 5);
+            else
+                chart.getAxisLeft().setAxisMaximum(1004);
+
+
             chart.invalidate();
             chart.getData().notifyDataChanged();
             chart.notifyDataSetChanged();

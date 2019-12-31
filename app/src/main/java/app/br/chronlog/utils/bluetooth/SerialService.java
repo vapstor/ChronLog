@@ -34,6 +34,13 @@ public class SerialService extends Service implements SerialListener {
         }
     }
 
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        //android 8
+        createNotification();
+    }
+
     private enum QueueType {Connect, ConnectError, Read, IoError}
 
     private class QueueItem {
@@ -65,6 +72,7 @@ public class SerialService extends Service implements SerialListener {
         queue1 = new LinkedList<>();
         queue2 = new LinkedList<>();
     }
+
 
     @Override
     public void onDestroy() {

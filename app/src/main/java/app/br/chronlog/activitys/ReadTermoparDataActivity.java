@@ -26,8 +26,10 @@ import com.google.android.material.button.MaterialButton;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
@@ -142,51 +144,27 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                     try {
                         String name = logsList.get(position).getName();
                         String peso = logsList.get(position).getPeso();
-
-                        if (peso == null) {
-                            if (isFilePresent(name)) {
-                                AlertDialog.Builder builder = new AlertDialog.Builder(ReadTermoparDataActivity.this);
-                                builder.setTitle("Arquivo já existe!");
-                                builder.setMessage("Arquivo já existe no aparelho, deseja sobreescrever?");
-                                builder.setPositiveButton("Salvar", (dialog, which) -> {
-                                    try {
-                                        saveFileToLocalSD(logsList.get(position).getName(), null);
-                                        adapter.notifyItemChanged(position);
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                        Toast.makeText(ReadTermoparDataActivity.this, "Falhou ao salvar o arquivo!", Toast.LENGTH_SHORT).show();
-                                        adapter.notifyItemChanged(position);
-                                    }
-                                });
-                                builder.setNegativeButton("Cancelar", (dialog, which) -> adapter.notifyItemChanged(position));
-                                builder.setCancelable(false);
-                                builder.create().show();
-                            } else {
-                                saveFileToLocalSD(logsList.get(position).getName(), logsList.get(position).getPeso());
-                                Toast.makeText(ReadTermoparDataActivity.this, "Arquivo salvo com sucesso!", Toast.LENGTH_SHORT).show();
-                            }
+                        if (isFilePresent(name, peso)) {
+                            AlertDialog.Builder builder = new AlertDialog.Builder(ReadTermoparDataActivity.this, R.style.DialogOpenLogStyle);
+                            builder.setTitle("Arquivo já existe!");
+                            builder.setMessage("Arquivo já existe no aparelho, deseja sobreescrever?");
+                            builder.setPositiveButton("Sobreescrever", (dialog, which) -> {
+                                try {
+                                    saveFileToLocalSD(logsList.get(position).getName(), logsList.get(position).getPeso());
+                                    adapter.notifyItemChanged(position);
+                                    Toast.makeText(ReadTermoparDataActivity.this, "Arquivo sobreescrito com sucesso!", Toast.LENGTH_SHORT).show();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                    Toast.makeText(ReadTermoparDataActivity.this, "Falhou ao sobreescrever o arquivo!", Toast.LENGTH_SHORT).show();
+                                    adapter.notifyItemChanged(position);
+                                }
+                            });
+                            builder.setNegativeButton("Cancelar", (dialog, which) -> adapter.notifyItemChanged(position));
+                            builder.setCancelable(false);
+                            builder.create().show();
                         } else {
-                            if (isFilePresent(name + peso)) {
-                                AlertDialog.Builder builder = new AlertDialog.Builder(ReadTermoparDataActivity.this);
-                                builder.setTitle("Arquivo já existe!");
-                                builder.setMessage("Arquivo já existe no aparelho, deseja sobreescrever?");
-                                builder.setPositiveButton("Salvar", (dialog, which) -> {
-                                    try {
-                                        saveFileToLocalSD(logsList.get(position).getName(), logsList.get(position).getPeso());
-                                        adapter.notifyItemChanged(position);
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                        Toast.makeText(ReadTermoparDataActivity.this, "Falhou ao salvar o arquivo!", Toast.LENGTH_SHORT).show();
-                                        adapter.notifyItemChanged(position);
-                                    }
-                                });
-                                builder.setNegativeButton("Cancelar", (dialog, which) -> adapter.notifyItemChanged(position));
-                                builder.setCancelable(false);
-                                builder.create().show();
-                            } else {
-                                saveFileToLocalSD(logsList.get(position).getName(), logsList.get(position).getPeso());
-                                Toast.makeText(ReadTermoparDataActivity.this, "Arquivo salvo com sucesso!", Toast.LENGTH_SHORT).show();
-                            }
+                            saveFileToLocalSD(logsList.get(position).getName(), logsList.get(position).getPeso());
+                            Toast.makeText(ReadTermoparDataActivity.this, "Arquivo salvo com sucesso!", Toast.LENGTH_SHORT).show();
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -202,10 +180,11 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
         setFinishOnTouchOutside(true);
     }
 
-    public boolean isFilePresent(String fileName) {
-        String path = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + fileName;
+    public boolean isFilePresent(String fileName, String peso) {
+        String path = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + fileName + peso;
         File file = new File(path);
-        return file.exists();
+        boolean a = file.exists();
+        return a;
     }
 
     private void saveFileToLocalSD(String fileName, String peso) throws IOException {
@@ -221,13 +200,13 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
     }
 
     private void saveFile(String fileName, String peso, String value) throws IOException {
-        BufferedWriter file;
-        if (peso != null) {
-            file = new BufferedWriter(new FileWriter(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + fileName + " " + peso)); //ja salva com ".LOG"
-        } else {
-            file = new BufferedWriter(new FileWriter(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + fileName + "_")); //ja salva com ".LOG"
+        BufferedWriter file = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + fileName + peso, true), StandardCharsets.UTF_8)); //ja salva com ".LOG"
+        String[] lines = value.split("\\r?\\n|\\r");
+        for (String line : lines) {
+            Log.d(TAG_LOG, "VALOR DA LINHA: " + line);
+            file.append(line);
+            file.newLine();
         }
-        file.write(value);
         file.flush();
         file.close();
     }
@@ -645,7 +624,7 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                 builder.setPositiveButton("Excluir", (dialog, which) -> {
                     deleteLogFile(logsList.get(viewHolder.getAdapterPosition()).getName());
                     logsList.remove(viewHolder.getAdapterPosition());
-                    adapter.notifyItemRemoved(viewHolder.getAdapterPosition());
+                    adapter.notifyDataSetChanged();
                 });
                 builder.setNegativeButton("Cancelar", (dialog, which) -> adapter.notifyItemChanged(viewHolder.getAdapterPosition()));
                 builder.setCancelable(false);

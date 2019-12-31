@@ -109,6 +109,7 @@ public class BluetoothController {
                             Toast.makeText(context, "Bluetooth Desativado!", Toast.LENGTH_SHORT).show();
                             setStatus("Não Conectado", activity);
                             if (activity != null) {
+                                isDeviceConnected = Utils.Connected.False;
                                 if (activity instanceof DevicesActivity) {
                                     ((DevicesActivity) activity).setEmptyText("");
                                     devicesList.clear();
@@ -116,13 +117,10 @@ public class BluetoothController {
                                     listAdapter.notifyDataSetChanged();
                                     ((ImageButton) activity.findViewById(R.id.iconBar)).setImageDrawable(activity.getDrawable(R.drawable.baseline_bluetooth_disabled_black_18dp));
 
+                                } else if (activity instanceof MainActivity) {
+                                    ((MainActivity) activity).setButtonsEnabledDisabled();
                                 } else {
                                     activity.startActivity(new Intent(activity, MainActivity.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
-                                }
-
-                                if (activity instanceof MainActivity) {
-                                    isDeviceConnected = Utils.Connected.False;
-                                    ((MainActivity) activity).setButtonsEnabledDisabled();
                                 }
                                 break;
                             }
@@ -164,6 +162,7 @@ public class BluetoothController {
                     if (activity != null && activity instanceof DevicesActivity) {
                         ((DevicesActivity) activity).setEmptyText("");
                     }
+
                     actionDiscoverStarted();
                     break;
                 case BluetoothAdapter.ACTION_DISCOVERY_FINISHED:
@@ -174,9 +173,14 @@ public class BluetoothController {
                         }
                     }
                     if (statusView.getText().toString().equals("conectando...")) {
-
+                        if (isDeviceConnected == Utils.Connected.True) {
+                            if (deviceName != null)
+                                setStatus(deviceName, activity);
+                        }
                     } else if (deviceName != null) {
-                        statusView.getText().toString().equals(deviceName);
+                        if (isDeviceConnected == Utils.Connected.True) {
+                            setStatus(deviceName, activity);
+                        }
                     } else {
                         setStatus("", activity);
                     }
@@ -184,7 +188,6 @@ public class BluetoothController {
                 case BluetoothAdapter.ACTION_SCAN_MODE_CHANGED:
                     setStatus("", activity);
                     break;
-
             }
         }
     };

@@ -2,7 +2,6 @@ package app.br.chronlog.activitys;
 
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Build;
@@ -32,7 +31,6 @@ import app.br.chronlog.utils.bluetooth.SerialService;
 
 import static app.br.chronlog.activitys.DevicesActivity.deviceName;
 import static app.br.chronlog.utils.Utils.CONFIG_FILE;
-import static app.br.chronlog.utils.Utils.createDialog;
 import static app.br.chronlog.utils.Utils.isDeviceConnected;
 import static app.br.chronlog.utils.Utils.myBluetoothController;
 import static app.br.chronlog.utils.Utils.serialSocket;
