@@ -13,7 +13,6 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -45,7 +44,7 @@ import static android.view.View.GONE;
 public class Utils {
     public final static String CONFIG_FILE = "0";
     public final static String TAG_LOG = "CHRONLOG";
-    public static long passedTime = 0;
+    public static long mLastClickTime = 0;
 
     public static SerialSocket serialSocket;
     public static Connected isDeviceConnected;
@@ -201,20 +200,16 @@ public class Utils {
             done = (line == null);
 
             if (line != null) {
-                stringBuilder.append(line);
+                stringBuilder.append(line).append("\r\n");
             }
         }
 
         reader.close();
         inputStream.close();
 
-        return stringBuilder.toString();
+        String fileAsString = stringBuilder.toString();
+        return fileAsString;
     }
-
-    public static void addSmoothEffectActivit(Activity activity) {
-        activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
-    }
-
 
     /**
      * Send And Receive data dinamicamente

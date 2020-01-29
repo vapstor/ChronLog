@@ -10,6 +10,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -50,6 +51,8 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
     private Button btnT1, btnT2, btnT3, btnT4;
     private LineData allData;
     private ArrayList<ILineDataSet> allDataSets;
+    private float VALOR_DISCREPANTE = 999;
+    private boolean existeValorDiscrepante;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +67,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             selectedLog = getIntent().getParcelableArrayListExtra("selectedLog");
             List entriesList;
             if (selectedLog != null) {
+                ((TextView) findViewById(R.id.logTitleTxtView)).setText(extras.getString("logName"));
                 TermoparLog termoparLog = (TermoparLog) selectedLog.get(0);
                 entriesList = termoparLog.getEntries();
                 acessaDadosDoArquivo(entriesList);
@@ -80,146 +84,84 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
 
         btnT1.setOnClickListener((v) -> {
             toogleBtnPressed(v);
-            toggleDataSetVisibility("T1");
+            toggleDataSetVisibility(0);
         });
         btnT2.setOnClickListener((v) -> {
             toogleBtnPressed(v);
-            toggleDataSetVisibility("T2");
+            toggleDataSetVisibility(1);
         });
         btnT3.setOnClickListener((v) -> {
             toogleBtnPressed(v);
-            toggleDataSetVisibility("T3");
+            toggleDataSetVisibility(2);
         });
         btnT4.setOnClickListener((v -> {
             toogleBtnPressed(v);
-            toggleDataSetVisibility("T4");
+            toggleDataSetVisibility(3);
         }));
     }
 
     private void toogleBtnPressed(View v) {
-        if (v.getId() == btnT1.getId()) {
-            if (btnT1.isSelected()) {
-                btnT1.setSelected(false);
-            } else {
-                btnT1.setSelected(true);
-            }
-        }
-        if (v.getId() == btnT2.getId()) {
-            if (btnT2.isSelected()) {
-                btnT2.setSelected(false);
-            } else {
-                btnT2.setSelected(true);
-            }
-        }
-
-        if (v.getId() == btnT3.getId()) {
-            if (btnT3.isSelected()) {
-                btnT3.setSelected(false);
-            } else {
-                btnT3.setSelected(true);
-            }
-        }
-
-        if (v.getId() == btnT4.getId()) {
-            if (btnT4.isSelected()) {
-                btnT4.setSelected(false);
-            } else {
-                btnT4.setSelected(true);
-            }
+        if (v.isSelected()) {
+            v.setSelected(false);
+            v.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+            ((Button) v).setTextColor(getResources().getColor(R.color.branco));
+        } else {
+            v.setSelected(true);
+            v.setBackgroundColor(getResources().getColor(R.color.cinzaClaro));
+            ((Button) v).setTextColor(getResources().getColor(R.color.cinzaEscuro));
         }
     }
 
-    private void toggleDataSetVisibility(String label) {
-        int idx;
-        switch (label) {
-            case "T1":
-                idx = 0;
-                break;
-            case "T2":
-                idx = 1;
-                break;
-            case "T3":
-                idx = 2;
-                break;
-            case "T4":
-                idx = 3;
-                break;
-            default:
-                idx = -1;
-                break;
+    private void toggleDataSetVisibility(int datasetIdx) {
+        List<ILineDataSet> sets = chart.getData().getDataSets();
+        List<ILineDataSet> visibleSets = new ArrayList<>();
+        ILineDataSet dataset = sets.get(datasetIdx);
+
+        dataset.setVisible(!dataset.isVisible());
+
+        /**Rápida checagem para ver o tamanho do array que irá ser sorteado.
+         * Possibilidade de conflito com temperatura "0.0" ao colocar um valor 'nulo (0.0)' no array.
+         *
+         * Resgata sets visiveis para evitar processamento desnecessário.
+         * */
+
+        for (ILineDataSet mySet : sets) {
+            if (mySet.isVisible())
+                visibleSets.add(mySet);
         }
 
-        if (idx != -1) {
-            List<ILineDataSet> sets = chart.getData().getDataSets();
-            ILineDataSet dataset = sets.get(idx);
-
-            dataset.setVisible(!dataset.isVisible());
-
-            float minAxysYValueT1 = 994, maxAxysYValueT1 = 1004;
-            float minAxysYValueT2 = 994, maxAxysYValueT2 = 1004;
-            float minAxysYValueT3 = 994, maxAxysYValueT3 = 1004;
-            float minAxysYValueT4 = 994, maxAxysYValueT4 = 1004;
-
-            for (int i = 0; i < sets.size(); i++) {
-                LineDataSet set = (LineDataSet) sets.get(i);
-                if (set.isVisible()) {
-                    float setYmin = Float.parseFloat(String.valueOf(set.getYMin()));
-                    float setYmax = Float.parseFloat(String.valueOf(set.getYMax()));
-                    if (i == 0) {
-                        minAxysYValueT1 = setYmin;
-                        maxAxysYValueT1 = setYmax;
-                    }
-                    if (i == 1) {
-                        minAxysYValueT2 = setYmin;
-                        maxAxysYValueT2 = setYmax;
-                    }
-                    if (i == 2) {
-                        minAxysYValueT3 = setYmin;
-                        maxAxysYValueT3 = setYmax;
-                    }
-                    if (i == 3) {
-                        minAxysYValueT4 = setYmin;
-                        maxAxysYValueT4 = setYmax;
-                    }
-
-                }
+        float[] myArrayMin = new float[visibleSets.size()];
+        float[] myArrayMax = new float[visibleSets.size()];
+        int lengthVisible = visibleSets.size();
+        if (lengthVisible != 0) {
+            for (int i = 0; i < visibleSets.size(); i++) {
+                LineDataSet set = (LineDataSet) visibleSets.get(i);
+                float setYmin = Float.parseFloat(String.valueOf(set.getYMin()));
+                float setYmax = Float.parseFloat(String.valueOf(set.getYMax()));
+                /**
+                 * (-5) Ajuste necessário para uma posição algumas casas menor/maior
+                 * para que se obtenha uma boa visualização e ele não fique grudado no fundo/topo do chart
+                 * */
+//                if (existeValorDiscrepante) {
+                myArrayMin[i] = setYmin - 5;
+                myArrayMax[i] = setYmax + 5;
+//                } else {
+//                    myArrayMin[i] = setYmin - 10;
+//                    myArrayMax[i] = setYmax + 10;
+//                }
             }
 
-            float[] myArrayMin = new float[]{minAxysYValueT1, minAxysYValueT2, minAxysYValueT3, minAxysYValueT4};
-            float[] myArrayMax = new float[]{maxAxysYValueT1, maxAxysYValueT2, maxAxysYValueT3, maxAxysYValueT4};
             Arrays.sort(myArrayMin);
             Arrays.sort(myArrayMax);
-
-            if (myArrayMin[0] != 999)
-                chart.getAxisLeft().setAxisMinimum(myArrayMin[0] - 5);
-            else if (myArrayMin[1] != 999)
-                chart.getAxisLeft().setAxisMinimum(myArrayMin[1] - 5);
-            else if (myArrayMin[2] != 999)
-                chart.getAxisLeft().setAxisMinimum(myArrayMin[2] - 5);
-            else if (myArrayMin[3] != 999)
-                chart.getAxisLeft().setAxisMinimum(myArrayMin[3] - 5);
-            else
-                chart.getAxisLeft().setAxisMinimum(994);
-
-            if (myArrayMax[myArrayMax.length - 4] != 999)
-                chart.getAxisLeft().setAxisMaximum(myArrayMax[0] + 5);
-            else if (myArrayMax[myArrayMax.length - 3] != 999)
-                chart.getAxisLeft().setAxisMaximum(myArrayMax[1] + 5);
-            else if (myArrayMax[myArrayMax.length - 2] != 999)
-                chart.getAxisLeft().setAxisMaximum(myArrayMax[2] + 5);
-            else if (myArrayMax[myArrayMax.length - 1] != 999)
-                chart.getAxisLeft().setAxisMaximum(myArrayMax[3] + 5);
-            else
-                chart.getAxisLeft().setAxisMaximum(1004);
-
-
-            chart.invalidate();
-            chart.getData().notifyDataChanged();
-            chart.notifyDataSetChanged();
-            chart.animateX(1500);
+            chart.getAxisLeft().setAxisMinimum(myArrayMin[0]);
+            chart.getAxisLeft().setAxisMaximum(myArrayMax[myArrayMax.length - 1]);
         } else {
-            Toast.makeText(this, "DataSet não encontrado!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Sem dados habilitados!", Toast.LENGTH_SHORT).show();
         }
+        chart.invalidate();
+        chart.getData().notifyDataChanged();
+        chart.notifyDataSetChanged();
+        chart.animateX(1500);
     }
 
     private void acessaDadosDoArquivo(List entriesList) {
@@ -240,19 +182,14 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             chart.setBorderColor(Color.BLACK);
             chart.setGridBackgroundColor(getResources().getColor(R.color.cinzaClaro));
 
+            chart.setElevation(2);
+
             // enable touch gestures
             chart.setTouchEnabled(true);
 
             // set listeners
             chart.setOnChartValueSelectedListener(this);
             chart.setDrawGridBackground(false);
-
-            // create marker to display box when values are selected
-            MyMarkerView mv = new MyMarkerView(this, R.layout.custom_marker_view);
-
-            // Set the marker to the chart
-            mv.setChartView(chart);
-            chart.setMarker(mv);
 
             // enable scaling and dragging
             chart.setDragEnabled(true);
@@ -309,6 +246,24 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
         }
 
         setData(entriesList);
+
+        // create marker to display box when values are selected
+        MyMarkerView mv = new MyMarkerView(this, R.layout.custom_marker_view, horariosX);
+
+        // Set the marker to the chart
+        mv.setChartView(chart);
+        chart.setMarker(mv);
+
+        chart.getData().setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                String a = super.getFormattedValue(value);
+                return a + "º";
+            }
+        });
+
+        chart.setPadding(10, 10, 10, 10);
+
         // draw points over time
         chart.animateX(1500);
 
@@ -337,12 +292,12 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
                         float entryTAsFloat;
                         if (entryT != null) {
                             if (entryT.contains("OVUV") || entryT.contains("OPEN")) {
-                                entryTAsFloat = 999f;
+                                entryTAsFloat = VALOR_DISCREPANTE;
                             } else {
                                 entryTAsFloat = Float.parseFloat(entryT);
                             }
                         } else {
-                            entryTAsFloat = 999f;
+                            entryTAsFloat = VALOR_DISCREPANTE;
                         }
                         values.add(new Entry(i, entryTAsFloat));
                     }
@@ -378,9 +333,9 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             // customize legend entry
             d.setFormLineWidth(1f);
             d.setFormLineDashEffect(new DashPathEffect(new float[]{10f, 5f}, 0f));
-            d.setFormSize(15.f);
+            d.setFormSize(40.f);
             // text size of values
-            d.setValueTextSize(8f);
+            d.setValueTextSize(10f);
             // draw selection line as dashed
             d.enableDashedHighlightLine(10f, 5f, 0f);
             // set the filled area
@@ -441,39 +396,37 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
     }
 
     public void resetZoom(View view) {
-        if (chart != null) {
-            btnT4.setSelected(false);
-            btnT3.setSelected(false);
-            btnT2.setSelected(false);
-            btnT1.setSelected(false);
-
-            chart.setData(allData);
-            chart.invalidate();
-            chart.getData().notifyDataChanged();
-            chart.notifyDataSetChanged();
-            chart.animateX(1500);
-            chart.resetZoom();
-            chart.fitScreen();
-        }
+        finish();
+        overridePendingTransition(0, 0);
+        startActivity(getIntent());
     }
 
     public void blockX(View v) {
         if (chart.isScaleXEnabled()) {
             ((Button) v).setText(R.string.destravar_x);
             chart.setScaleXEnabled(false);
+            v.setBackgroundColor(getResources().getColor(R.color.cinzaClaro));
+            ((Button) v).setTextColor(getResources().getColor(R.color.cinzaEscuro));
         } else {
             ((Button) v).setText(R.string.travar_eixo_x);
             chart.setScaleXEnabled(true);
+            v.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+            ((Button) v).setTextColor(getResources().getColor(R.color.branco));
         }
+
     }
 
     public void blockY(View v) {
         if (chart.isScaleYEnabled()) {
             ((Button) v).setText(R.string.destravar_y);
             chart.setScaleYEnabled(false);
+            v.setBackgroundColor(getResources().getColor(R.color.cinzaClaro));
+            ((Button) v).setTextColor(getResources().getColor(R.color.cinzaEscuro));
         } else {
             ((Button) v).setText(R.string.travar_eixo_y);
             chart.setScaleYEnabled(true);
+            v.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+            ((Button) v).setTextColor(getResources().getColor(R.color.branco));
         }
     }
 }

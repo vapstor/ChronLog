@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
@@ -17,6 +18,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -70,6 +72,7 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
     private AlertDialog.Builder builder;
     private ProgressBar progressBarSaveShareLog;
     private MaterialButton buttonSave, buttonShare;
+    private File fileInCache;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -128,14 +131,29 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
             buttonShare = alertDialog[0].findViewById(R.id.btnShareLog);
             if (buttonShare != null) {
                 buttonShare.setOnClickListener(v1 -> {
-                    Intent sharingIntent = new Intent(
-                            android.content.Intent.ACTION_SEND);
+                    //antes de compartilhar limpar o cache
+                    deleteCacheFiles();
+
+                    String filename = logsList.get(position).getName();
+
+                    try {
+                        saveCacheFile(filename, retiraCabecalho());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
                     sharingIntent.setType("text/plain");
-                    String shareBody = receivedData.replace("@05", "");
-                    sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
-                            "Log: " + logsList.get(position).getName());
-                    sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
-                    startActivity(Intent.createChooser(sharingIntent, "Compartilhar Via"));
+                    sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, logsList.get(position).getName());
+
+                    fileInCache = readCacheFile(filename);
+                    if (fileInCache != null) {
+                        Uri logFileURI = FileProvider.getUriForFile(this, this.getApplicationContext().getPackageName() + ".provider", fileInCache);
+                        sharingIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                        sharingIntent.putExtra(Intent.EXTRA_STREAM, logFileURI);
+                        startActivity(Intent.createChooser(sharingIntent, "Compartilhar Via"));
+                    }
                 });
             }
             buttonSave = alertDialog[0].findViewById(R.id.btnSaveLog);
@@ -143,14 +161,14 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                 buttonSave.setOnClickListener(v1 -> {
                     try {
                         String name = logsList.get(position).getName();
-                        String peso = logsList.get(position).getPeso();
-                        if (isFilePresent(name, peso)) {
+//                        String peso = logsList.get(position).getPeso();
+                        if (isFilePresent(name)) {
                             AlertDialog.Builder builder = new AlertDialog.Builder(ReadTermoparDataActivity.this, R.style.DialogOpenLogStyle);
                             builder.setTitle("Arquivo já existe!");
                             builder.setMessage("Arquivo já existe no aparelho, deseja sobreescrever?");
                             builder.setPositiveButton("Sobreescrever", (dialog, which) -> {
                                 try {
-                                    saveFileToLocalSD(logsList.get(position).getName(), logsList.get(position).getPeso());
+                                    saveFileToLocalSD(logsList.get(position).getName());
                                     adapter.notifyItemChanged(position);
                                     Toast.makeText(ReadTermoparDataActivity.this, "Arquivo sobreescrito com sucesso!", Toast.LENGTH_SHORT).show();
                                 } catch (IOException e) {
@@ -163,7 +181,7 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                             builder.setCancelable(false);
                             builder.create().show();
                         } else {
-                            saveFileToLocalSD(logsList.get(position).getName(), logsList.get(position).getPeso());
+                            saveFileToLocalSD(logsList.get(position).getName());
                             Toast.makeText(ReadTermoparDataActivity.this, "Arquivo salvo com sucesso!", Toast.LENGTH_SHORT).show();
                         }
                     } catch (IOException e) {
@@ -180,35 +198,85 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
         setFinishOnTouchOutside(true);
     }
 
-    public boolean isFilePresent(String fileName, String peso) {
-        String path = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + fileName + peso;
+    public boolean isFilePresent(String fileName) {
+        String path = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + fileName; // + peso
         File file = new File(path);
-        boolean a = file.exists();
-        return a;
+        return file.exists();
     }
 
-    private void saveFileToLocalSD(String fileName, String peso) throws IOException {
+    private void saveFileToLocalSD(String fileName) throws IOException {
         if (receivedData != null) {
-            String logRecebido;
-            if (receivedData.startsWith("@05")) {
-                logRecebido = receivedData.substring(3);
-            } else {
-                logRecebido = receivedData;
-            }
-            saveFile(fileName, peso, logRecebido);
+            String logRecebido = retiraCabecalho();
+            saveFile(fileName, logRecebido);
         }
     }
 
-    private void saveFile(String fileName, String peso, String value) throws IOException {
-        BufferedWriter file = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + fileName + peso, true), StandardCharsets.UTF_8)); //ja salva com ".LOG"
+    private String retiraCabecalho() {
+        if (receivedData.startsWith("@05")) {
+            return receivedData.substring(3);
+        } else {
+            return receivedData;
+        }
+    }
+
+    private void saveFile(String fileName, String value) throws IOException {
+        BufferedWriter file = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + fileName), StandardCharsets.UTF_8)); //ja salva com ".LOG" (sem o peso)
         String[] lines = value.split("\\r?\\n|\\r");
         for (String line : lines) {
-            Log.d(TAG_LOG, "VALOR DA LINHA: " + line);
-            file.append(line);
-            file.newLine();
+            if (!line.equals("")) {
+                Log.d(TAG_LOG, "VALOR DA LINHA: " + line);
+                file.append(line).append("\r\n");
+            }
+            //file.newLine(); nao funciona no windows
         }
         file.flush();
         file.close();
+    }
+
+    private void saveCacheFile(String fileName, String content) throws IOException {
+        BufferedWriter file = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/cache/" + fileName), StandardCharsets.UTF_8)); //ja salva com ".LOG" (sem o peso)
+        String[] lines = content.split("\\r?\\n|\\r");
+        for (String line : lines) {
+            if (!line.equals("")) {
+                Log.d(TAG_LOG, "VALOR DA LINHA: " + line);
+                file.append(line).append("\r\n");
+            }
+            //file.newLine(); nao funciona no windows
+        }
+        file.flush();
+        file.close();
+    }
+
+    private void deleteCacheFiles() {
+        File folder = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS + "/cache/");
+        File[] cacheFiles = folder != null ? folder.listFiles() : new File[0];
+        if (cacheFiles != null) {
+            for (File file : cacheFiles) {
+                if (file.delete()) {
+                    Log.i(TAG_LOG, "Cache Deletado!");
+                } else {
+                    Toast.makeText(this, "Cache não deletado!", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+    }
+
+    private File readCacheFile(String fileName) {
+        File folder = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS + "/cache/");
+        if (folder != null) {
+            //Get the logFiles
+            File[] filesInFolder = folder.listFiles();
+            if (filesInFolder != null) {
+                for (File file : filesInFolder) {
+                    if (file.getName().equals(fileName)) {
+                        return file;
+                    }
+                }
+                Toast.makeText(this, "Não encontrou Arquivo em Cache!", Toast.LENGTH_SHORT).show();
+            }
+        }
+        Toast.makeText(this, "Cache Nulo!", Toast.LENGTH_SHORT).show();
+        return null;
     }
 
     //Resgata 01 Arquivo
@@ -283,8 +351,6 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                         if (!saveToSD) {
                             if (!aberturaCancelada) {
                                 configFileReceived(selectedLog);
-//                            } else {
-//                                runOnUiThread(() -> Toast.makeText(this, "Cancelado!", Toast.LENGTH_SHORT).show());
                             }
                         } else {
                             runOnUiThread(() -> {
@@ -313,11 +379,21 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
 
                 String[] colunas = lineValue.split(" ");
                 colunas = Arrays.copyOf(colunas, 6);
-
+                if (i == 199) {
+                    Log.d(TAG_LOG, "Linha é: " + lineValue);
+                }
                 for (int j = 0; j < colunas.length; j++) {
                     if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
                         colunas[j] = "OPEN";
                     }
+                }
+                if (i == 199) {
+                    Log.d(TAG_LOG, "Coluna 1 é: " + colunas[0]);
+                    Log.d(TAG_LOG, "Coluna 2 é: " + colunas[1]);
+                    Log.d(TAG_LOG, "Coluna 3 é: " + colunas[2]);
+                    Log.d(TAG_LOG, "Coluna 4 é: " + colunas[3]);
+                    Log.d(TAG_LOG, "Coluna 5 é: " + colunas[4]);
+                    Log.d(TAG_LOG, "Coluna 6 é: " + colunas[5]);
                 }
                 entries.add(new TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5]));
             }
@@ -332,6 +408,7 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
 
             Intent intent = new Intent(this, ChartViewActivity.class);
             intent.putParcelableArrayListExtra("selectedLog", termoparLog);
+            intent.putExtra("logName", selectedLog.getName());
             startActivity(intent);
 
         } else if (entries.size() == 1) {
@@ -387,11 +464,6 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
         }
         if (receivedData.equals("")) {
             getFilesNameByProtocol();
-//            runOnUiThread(() -> {
-//                Toast.makeText(this, "Tente Novamente!", Toast.LENGTH_SHORT).show();
-//                progressBarContainerView.setVisibility(View.GONE);
-//                iconRefresh.setVisibility(View.VISIBLE);
-//            });
         } else {
             runOnUiThread(() -> {
                 Toast.makeText(this, "Logs Resgatados com Sucesso!", Toast.LENGTH_SHORT).show();
@@ -612,8 +684,6 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
 
 
     //SWIPE
-
-
     @Override
     public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction, int position) {
         if (viewHolder instanceof RecyclerAdapter.MyViewHolder) {

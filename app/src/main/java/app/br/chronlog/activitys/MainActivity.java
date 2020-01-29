@@ -7,6 +7,7 @@ import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -14,7 +15,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.File;
@@ -29,9 +29,10 @@ import app.br.chronlog.utils.bluetooth.BluetoothController;
 import app.br.chronlog.utils.bluetooth.SerialListener;
 import app.br.chronlog.utils.bluetooth.SerialService;
 
+import static app.br.chronlog.BuildConfig.VERSION_NAME;
 import static app.br.chronlog.activitys.DevicesActivity.deviceName;
-import static app.br.chronlog.utils.Utils.CONFIG_FILE;
 import static app.br.chronlog.utils.Utils.isDeviceConnected;
+import static app.br.chronlog.utils.Utils.mLastClickTime;
 import static app.br.chronlog.utils.Utils.myBluetoothController;
 import static app.br.chronlog.utils.Utils.serialSocket;
 import static app.br.chronlog.utils.Utils.setStatus;
@@ -40,11 +41,10 @@ import static app.br.chronlog.utils.bluetooth.Constants.CONEXAO_FALHOU;
 import static app.br.chronlog.utils.bluetooth.Constants.CONEXAO_PERDIDA;
 import static app.br.chronlog.utils.bluetooth.Constants.JA_CONECTADO;
 
-
 public class MainActivity extends AppCompatActivity implements ServiceConnection, SerialListener, View.OnClickListener {
     private ProgressBar progressBar;
     private ImageButton syncButton;
-    private Button configuraDeviceBtn, analisaDadosBtn, eepromBtn, gerenciarDadosBtn;
+    private Button configuraDeviceBtn, analisaDadosBtn, gerenciarDadosBtn;
     private TextView statusView;
 
     private SerialService service;
@@ -66,6 +66,8 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
         overridePendingTransition(android.R.animator.fade_in, android.R.animator.fade_out);
 
+        findViewById(R.id.titleBar).setOnClickListener(v -> Toast.makeText(service, "Chronlog v" + VERSION_NAME, Toast.LENGTH_SHORT).show());
+
     }
 
     public void setButtonsEnabledDisabled() {
@@ -81,29 +83,22 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
             progressBar.setVisibility(View.GONE);
             configuraDeviceBtn.setEnabled(false);
             gerenciarDadosBtn.setEnabled(false);
-            eepromBtn.setEnabled(false);
             configuraDeviceBtn.setText(R.string.configurar);
             gerenciarDadosBtn.setText(R.string.gerenciar_dados);
-            eepromBtn.setText(R.string.eeprom);
         } else if (isDeviceConnected == Connected.Pending) {
             statusView.setText(CONECTANDO_);
             progressBar.setVisibility(View.VISIBLE);
-
             configuraDeviceBtn.setEnabled(false);
             gerenciarDadosBtn.setEnabled(false);
-            eepromBtn.setEnabled(false);
             configuraDeviceBtn.setText(R.string.aguarde);
             gerenciarDadosBtn.setText(R.string.aguarde);
-            eepromBtn.setText(R.string.aguarde);
         } else {
             statusView.setText(deviceName);
             progressBar.setVisibility(View.GONE);
             configuraDeviceBtn.setText(R.string.configurar);
             gerenciarDadosBtn.setText(R.string.gerenciar_dados);
-            eepromBtn.setText(R.string.eeprom);
             configuraDeviceBtn.setEnabled(true);
             gerenciarDadosBtn.setEnabled(true);
-            eepromBtn.setEnabled(true);
         }
     }
 
@@ -128,9 +123,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
             case R.id.analiseDeDadosBtn:
                 startActivity(new Intent(this, ReadSdDataActivity.class));
 //                startActivityWithExplosion(this, new Intent(this, ChartViewActivity.class));
-                break;
-            case R.id.eeppromBtn:
-                Toast.makeText(this, "EEPROM [?]", Toast.LENGTH_SHORT).show();
                 break;
             default:
                 Toast.makeText(this, "erro", Toast.LENGTH_SHORT).show();
@@ -192,15 +184,12 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         configuraDeviceBtn = findViewById(R.id.configDeviceBtn);
         gerenciarDadosBtn = findViewById(R.id.gerenciarDadosBtn);
         analisaDadosBtn = findViewById(R.id.analiseDeDadosBtn);
-        eepromBtn = findViewById(R.id.eeppromBtn);
 
         syncButton.setOnClickListener(this);
         configuraDeviceBtn.setOnClickListener(this);
         gerenciarDadosBtn.setOnClickListener(this);
         analisaDadosBtn.setOnClickListener(this);
-        eepromBtn.setOnClickListener(this);
     }
-
 
     @Override
     public void onStop() {
@@ -215,29 +204,22 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
     @Override
     public void onBackPressed() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.DialogOpenLogStyle);
-        builder.setTitle(getResources().getString(R.string.atencao_));
-        builder.setMessage("Deseja se manter logado?");
-        builder.setPositiveButton("Sim", (dialog, which) -> {
-            getSharedPreferences(CONFIG_FILE, Context.MODE_PRIVATE).edit().putBoolean("aparelho_verificado", true).apply();
-            finishAffinity();
-        });
-        builder.setNegativeButton("Não", (dialog, which) -> {
-            getSharedPreferences(CONFIG_FILE, Context.MODE_PRIVATE).edit().putBoolean("aparelho_verificado", false).apply();
-            finishAffinity();
-        });
-        builder.setCancelable(false);
-        builder.create().show();
+        if (SystemClock.elapsedRealtime() - mLastClickTime < 1500) {
+            finishInstances();
+        } else {
+            Toast.makeText(this, "Toque mais uma vez para sair", Toast.LENGTH_SHORT).show();
+        }
+        mLastClickTime = SystemClock.elapsedRealtime();
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    private void finishInstances() {
         if (isDeviceConnected != Connected.False)
             if (serialSocket != null) {
                 serialSocket.disconnect();
             }
         this.stopService(new Intent(this, SerialService.class));
+        finishAffinity();
+        System.exit(0);
     }
 
     /*

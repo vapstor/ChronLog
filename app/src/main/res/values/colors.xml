@@ -6,7 +6,8 @@
     <color name="colorAccent">@color/azulClaro</color>
     <color name="azulEscuro">#FF2A67CF</color>
     <color name="azulClaro">#2ab3cf</color>
-    <color name="cinzaClaro">#d1d2d4</color>
+    <color name="cinzaClaro">#F7CFCFCF</color>
+    <color name="cinzaEscuro">#E9A5A4A4</color>
     <color name="branco">#FFFFFF</color>
     <color name="transparent">@android:color/transparent</color>
 </resources>

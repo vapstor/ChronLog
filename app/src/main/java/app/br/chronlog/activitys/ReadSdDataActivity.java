@@ -3,10 +3,10 @@ package app.br.chronlog.activitys;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -15,12 +15,11 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.google.android.material.button.MaterialButton;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +34,6 @@ import app.br.chronlog.utils.TermoparLog;
 import app.br.chronlog.utils.TermoparLogEntry;
 
 import static androidx.recyclerview.widget.RecyclerView.VERTICAL;
-import static app.br.chronlog.utils.Utils.TAG_LOG;
 import static app.br.chronlog.utils.Utils.getFileContents;
 
 public class ReadSdDataActivity extends AppCompatActivity implements RecyclerItemTouchHelper.RecyclerItemTouchHelperListener {
@@ -43,8 +41,6 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
     private TermoparLog selectedLog;
     private RecyclerView logsRecyclerView;
     private RecyclerAdapter adapter;
-    private AlertDialog.Builder builder;
-    private MaterialButton buttonShare;
     private final int REQUISICAO_ACESSO_EXTERNO = 0;
     private ArrayList<String[]> logFilesList;
     private ProgressBar progressBarContainer;
@@ -81,8 +77,8 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
         new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(logsRecyclerView);
 
         ItemClickSupport.addTo(logsRecyclerView).setOnItemClickListener((recyclerView, position, v) -> {
-            if (isFilePresent(logFilesList.get(position)[0] + logFilesList.get(position)[1])) {
-                File file = read(logFilesList.get(position)[0] + logFilesList.get(position)[1]);
+            if (isFilePresent(logFilesList.get(position)[0])) { // + logFilesList.get(position)[1]
+                File file = read(logFilesList.get(position)[0]); // + logFilesList.get(position)[1]
                 selectedLog = configFile(file, logFilesList.get(position)[0], logFilesList.get(position)[1]);
 
                 if (selectedLog != null) {
@@ -94,6 +90,7 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
 
                         Intent intent = new Intent(this, ChartViewActivity.class);
                         intent.putParcelableArrayListExtra("selectedLog", termoparLog);
+                        intent.putExtra("logName", selectedLog.getName());
                         startActivity(intent);
 
                     } else if (selectedLog.getEntries().size() == 1) {
@@ -126,18 +123,20 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
 
         });
         ItemClickSupport.addTo(logsRecyclerView).setOnItemLongClickListener((RecyclerView recyclerView, int position, View v) -> {
-            if (isFilePresent(logFilesList.get(position)[0] + logFilesList.get(position)[1])) {
-                try {
-                    String allData = getFileContents(read(logFilesList.get(position)[0] + logFilesList.get(position)[1]));
-                    Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
-                    sharingIntent.setType("text/plain");
-                    sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Log: " + logFilesList.get(position)[0]);
-                    sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, allData);
-                    startActivity(Intent.createChooser(sharingIntent, "Compartilhar Via"));
-                } catch (IOException e) {
-                    Toast.makeText(this, "Erro ao compartilhar!", Toast.LENGTH_SHORT).show();
-                    e.printStackTrace();
-                }
+            String fileName = logFilesList.get(position)[0];
+            if (isFilePresent(fileName)) {
+                String path = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + fileName;
+                File file = new File(path);
+
+                Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+                sharingIntent.setType("text/plain");
+                sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, logFilesList.get(position)[0]);
+
+                Uri logFileURI = FileProvider.getUriForFile(this, this.getApplicationContext().getPackageName() + ".provider", file);
+                sharingIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                sharingIntent.putExtra(Intent.EXTRA_STREAM, logFileURI);
+                startActivity(Intent.createChooser(sharingIntent, "Compartilhar Via"));
             } else {
                 Toast.makeText(this, "Arquivo não encontrado!", Toast.LENGTH_SHORT).show();
             }
@@ -156,10 +155,9 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
         }
     }
 
-    private boolean deleteLogFile(String myLogName, String myLogPeso) {
-        File file = read(myLogName + myLogPeso);
+    private boolean deleteLogFile(String myLogName) {
+        File file = read(myLogName);
         return file.delete();
-
     }
 
     private TermoparLog configFile(File file, String nome, String peso) {
@@ -170,32 +168,62 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
             e.printStackTrace();
             return null;
         }
-        allData = allData.replace("Data Hora T1 T2 T3 ", "").substring(2);
-        ArrayList<String> allValuesList = new ArrayList<>();
-        String[] dataArray = allData.split(" ");
-        for (int i = 0; i < dataArray.length; i++) {
-            if (i % 5 == 0) {
-                allValuesList.add(dataArray[i]);
-            }
-        }
-        String[] allValues = new String[allValuesList.size()];
+        return otherConfigFile(nome, peso, allData);
+//
+//        allData = allData.replace("Data Hora T1 T2 T3 T4\r\n", "");
+//
+//        String[] line = new String[6];
+//        ArrayList<TermoparLogEntry> entries = new ArrayList<>();
+//
+//        String[] linesList = allData.split("\r\n");
+//
+//        try {
+//            for (String s : linesList) {
+//                String[] colunas = s.split(" ");
+//                colunas = Arrays.copyOf(colunas, 6);
+//                for (int j = 0; j < colunas.length; j++) {
+//                    if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
+//                        colunas[j] = "OPEN";
+//                    }
+//                    line[0] = colunas[j];
+//                    line[1] = colunas[++j];
+//                    line[2] = colunas[++j];
+//                    line[3] = colunas[++j];
+//                    line[4] = colunas[++j];
+//                    line[5] = colunas[++j];
+//
+//                    entries.add(new TermoparLogEntry(line[0], line[1], line[2], line[3], line[4], line[5]));
+//                }
+//            }
+//        } catch (IndexOutOfBoundsException e) {
+//            e.printStackTrace();
+//            Log.e(TAG_LOG, "Erro ao configurar logs salvos!");
+//        }
+//
 
-        for (int i = 0; i < allValuesList.size(); i++) {
-            allValues[i] = allValuesList.get(i);
-        }
+    }
 
+    private TermoparLog otherConfigFile(String nome, String peso, String dataFromFile) {
+        //Configura o arquivo PARCELABLE para enviar ao chart
+
+        String[] receivedStrArray = dataFromFile.split("(\\r?\\n|\\r)");
+        String lineValue;
         ArrayList<TermoparLogEntry> entries = new ArrayList<>();
+        for (int i = 0; i < receivedStrArray.length; i++) {
+            if (i >= 2) { // 2 = 3ª linha [valores a partir da 2 linha[0 - @ 05, 1 - Data / Hora /...]
+                lineValue = receivedStrArray[i];
 
-        for (String lineValue : allValues) {
-            String[] colunas = lineValue.split(" ");
-            colunas = Arrays.copyOf(colunas, 6);
-            for (int j = 0; j < colunas.length; j++) {
-                if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
-                    colunas[j] = "OPEN";
+                String[] colunas = lineValue.split(" ");
+                colunas = Arrays.copyOf(colunas, 6);
+                for (int j = 0; j < colunas.length; j++) {
+                    if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
+                        colunas[j] = "OPEN";
+                    }
                 }
+                entries.add(new TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5]));
             }
-            entries.add(new TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5]));
         }
+
         return new TermoparLog(nome, peso, entries);
     }
 
@@ -226,20 +254,9 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
                     for (File file : filesInFolder) {
                         String fileName = file.getName();
                         if (fileName.contains(".LOG")) {
-                            if (fileName.contains(" ")) {
-                                int index = fileName.indexOf(" ");
-                                String nome = fileName.substring(0, index);
-                                String peso = fileName.substring(index);
-
-                                Log.d(TAG_LOG, "TermoparLog on SD Nome: " + nome);
-                                Log.d(TAG_LOG, "TermoparLog on SD Peso: " + peso);
-
-                                logFilesList.add(new String[]{nome, peso});
-                                adapter.notifyItemInserted(logFilesList.size());
-                            } else {
-                                logFilesList.add(new String[]{fileName, "?"});
-                                adapter.notifyItemInserted(logFilesList.size());
-                            }
+                            String peso = String.valueOf(file.length());
+                            logFilesList.add(new String[]{fileName, peso});
+                            adapter.notifyItemInserted(logFilesList.size());
                         }
                     }
                 }
@@ -275,12 +292,12 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
 
                 int myPosition = viewHolder.getAdapterPosition();
                 String myLogName = logFilesList.get(myPosition)[0];
-                String myLogPeso = logFilesList.get(myPosition)[1];
-                if (isFilePresent(myLogName + myLogPeso)) {
+//                String myLogPeso = logFilesList.get(myPosition)[1];
+                if (isFilePresent(myLogName)) {
                     /** deletar o arquivo sd*/
-                    if (deleteLogFile(myLogName, myLogPeso)) {
-                        adapter.notifyDataSetChanged();
+                    if (deleteLogFile(myLogName)) {
                         adapter.notifyItemChanged(myPosition);
+                        adapter.notifyDataSetChanged();
                         logFilesList.remove(myPosition);
                         Toast.makeText(this, "Excluído com sucesso!", Toast.LENGTH_SHORT).show();
                         if (logFilesList.size() < 1) {

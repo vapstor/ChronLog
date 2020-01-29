@@ -23,10 +23,17 @@ import app.br.chronlog.R;
 public class MyMarkerView extends MarkerView {
 
     private final TextView tvContent;
+    private String[] XValuesFormatted;
 
     public MyMarkerView(Context context, int layoutResource) {
         super(context, layoutResource);
 
+        tvContent = findViewById(R.id.tvContent);
+    }
+
+    public MyMarkerView(Context context, int layoutResource, String[] XValuesFormatted) {
+        super(context, layoutResource);
+        this.XValuesFormatted = XValuesFormatted;
         tvContent = findViewById(R.id.tvContent);
     }
 
@@ -39,10 +46,13 @@ public class MyMarkerView extends MarkerView {
 
             CandleEntry ce = (CandleEntry) e;
 
-            tvContent.setText(Utils.formatNumber(ce.getHigh(), 0, true));
+            tvContent.setText(Utils.formatNumber(ce.getHigh(), 2, true));
         } else {
-
-            tvContent.setText(Utils.formatNumber(e.getY(), 0, true));
+            try {
+                tvContent.setText(XValuesFormatted[(int) e.getX()]);
+            } catch (IndexOutOfBoundsException a) {
+                a.printStackTrace();
+            }
         }
 
         super.refreshContent(e, highlight);
