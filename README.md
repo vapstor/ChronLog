@@ -5,9 +5,9 @@
 <p align="center">
   <strong>Repositório para centralizar o Ambiente de Desenvolvimento</strong>
   <p align="center">
-    <!--<img src="https://ci.appveyor.com/api/projects/status/g8d58ipi3auqdtrk/branch/master?svg=true" alt="Current Appveyor build status." />-->
-     <img src="https://ci.appveyor.com/api/projects/status/216h1g17b8ir009t?svg=true" alt="Config. Device Activity Crashing." /> 
-    <img src="https://img.shields.io/badge/version-2.17.1-blue.svg" alt="Current APP version." />  
+    <img src="https://ci.appveyor.com/api/projects/status/g8d58ipi3auqdtrk/branch/master?svg=true" alt="Config. Device Activity Passing." />
+     <!--<img src="https://ci.appveyor.com/api/projects/status/216h1g17b8ir009t?svg=true" alt="Config. Device Activity Crashing." /> -->
+    <img src="https://img.shields.io/badge/version-final-blue.svg" alt="Current APP version." />  
   </p>
 </p>
 
@@ -38,7 +38,7 @@
 - [x] Desenvolver Tela Serial (check User Active)
 
 * Desenvolver Tela de Serial ["Login"]
-  - [ ] Lógica Própria para Device
+  ~- [ ] Lógica Própria para Device~
   
 * Desenvolver Tela de Conexão Bluetooth
   - [x] Interface Bluetooth serial (modo SSP)
@@ -58,7 +58,7 @@
   - [x] Chart com filtro de Termopares
   
 * Desenvolver tela Termostato
-  - [ ] Salvar arquivo
+  - [x] Salvar arquivo
   - [x] Listar Arquivos
   - [x] Deletar Arquivos
   - [x] Conexão com Termostato
