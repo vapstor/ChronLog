@@ -296,20 +296,23 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
                 if (isFilePresent(myLogName)) {
                     /** deletar o arquivo sd*/
                     if (deleteLogFile(myLogName)) {
-                        adapter.notifyItemChanged(myPosition);
+//                        adapter.notifyItemChanged(myPosition);
                         adapter.notifyDataSetChanged();
                         logFilesList.remove(myPosition);
+                        adapter.notifyDataSetChanged();
                         Toast.makeText(this, "Excluído com sucesso!", Toast.LENGTH_SHORT).show();
                         if (logFilesList.size() < 1) {
                             finish();
                             Toast.makeText(this, "Sem arquivos salvos!", Toast.LENGTH_SHORT).show();
                         }
                     } else {
-                        adapter.notifyItemChanged(myPosition);
+                        adapter.notifyDataSetChanged();
+//                        adapter.notifyItemChanged(myPosition);
                         Toast.makeText(this, "Falhou ao excluir!", Toast.LENGTH_SHORT).show();
                     }
                 } else {
-                    adapter.notifyItemChanged(myPosition);
+                    adapter.notifyDataSetChanged();
+//                    adapter.notifyItemChanged(myPosition);
                     Toast.makeText(this, "Arquivo não encontrado!", Toast.LENGTH_SHORT).show();
                 }
             });
