@@ -5,27 +5,38 @@
 <p align="center">
   <strong>Repositório para centralizar o Ambiente de Desenvolvimento</strong>
   <p align="center">
-    <!--<img src="https://ci.appveyor.com/api/projects/status/g8d58ipi3auqdtrk/branch/master?svg=true" alt="Current Appveyor build status." />-->
-     <img src="https://ci.appveyor.com/api/projects/status/216h1g17b8ir009t?svg=true" alt="Config. Device Activity Crashing." /> 
-    <img src="https://img.shields.io/badge/version-2.17.1-blue.svg" alt="Current APP version." />  
+    <img src="https://ci.appveyor.com/api/projects/status/g8d58ipi3auqdtrk/branch/master?svg=true" alt="Config. Device Activity Passing." />
+     <!--<img src="https://ci.appveyor.com/api/projects/status/216h1g17b8ir009t?svg=true" alt="Config. Device Activity Crashing." /> -->
+    <img src="https://img.shields.io/badge/version-final-blue.svg" alt="Current APP version." />  
   </p>
 </p>
 
 ## 📋 Briefing
 
+  Aplicativo para controle e ajustes no aparelho de termopar ChronTeck.
+
+
 ## 📖 Requirements
 ```
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     implementation 'androidx.annotation:annotation:1.1.0'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.1.0'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
-    implementation 'com.google.android.material:material:1.2.0-alpha02'
-    implementation 'com.android.support:support-v4:29.0.0'
+    implementation 'androidx.core:core-ktx:1.2.0-rc01'
+
+    implementation "com.google.android.material:material:1.2.0-alpha02"
+    implementation 'com.android.support:support-v4:29.0.0-alpha1'
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+    implementation 'com.google.code.gson:gson:2.8.6'
+    //implementation 'br.com.simplepass:loading-button-android:2.2.0'
+
+    implementation("com.google.guava:guava:28.1-android")
 
 ```
 
@@ -37,8 +48,9 @@
 - [x] Criar SplashScreen (Android)
 - [x] Desenvolver Tela Serial (check User Active)
 
-* Desenvolver Tela de Serial ["Login"]
-  - [ ] Lógica Própria para Device
+* ~Desenvolver Tela de Serial ["Login"]~
+
+  ~- [ ] Lógica Própria para Device~
   
 * Desenvolver Tela de Conexão Bluetooth
   - [x] Interface Bluetooth serial (modo SSP)
@@ -58,7 +70,7 @@
   - [x] Chart com filtro de Termopares
   
 * Desenvolver tela Termostato
-  - [ ] Salvar arquivo
+  - [x] Salvar arquivo
   - [x] Listar Arquivos
   - [x] Deletar Arquivos
   - [x] Conexão com Termostato
