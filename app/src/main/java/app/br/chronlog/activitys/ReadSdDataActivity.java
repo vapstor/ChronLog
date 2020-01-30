@@ -56,22 +56,22 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
             }
         }
 
+        progressBarContainer = findViewById(R.id.progressBar);
+
         logsRecyclerView = findViewById(R.id.logsListView);
         DividerItemDecoration decoration = new DividerItemDecoration(getApplicationContext(), VERTICAL);
         logsRecyclerView.addItemDecoration(decoration);
 
-        progressBarContainer = findViewById(R.id.progressBar);
-
         logFilesList = new ArrayList<>();
-        adapter = new RecyclerAdapter(null, logFilesList, progressBarContainer);
-        adapter.setHasStableIds(true);
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         logsRecyclerView.setLayoutManager(linearLayoutManager);
 
-        logsRecyclerView.setAdapter(adapter);
+        adapter = new RecyclerAdapter(null, logFilesList, progressBarContainer);
+        adapter.setHasStableIds(true);
 
+        logsRecyclerView.setAdapter(adapter);
 
         ItemTouchHelper.SimpleCallback itemTouchHelperCallback = new RecyclerItemTouchHelper(0, ItemTouchHelper.LEFT, this);
         new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(logsRecyclerView);
@@ -169,38 +169,6 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
             return null;
         }
         return otherConfigFile(nome, peso, allData);
-//
-//        allData = allData.replace("Data Hora T1 T2 T3 T4\r\n", "");
-//
-//        String[] line = new String[6];
-//        ArrayList<TermoparLogEntry> entries = new ArrayList<>();
-//
-//        String[] linesList = allData.split("\r\n");
-//
-//        try {
-//            for (String s : linesList) {
-//                String[] colunas = s.split(" ");
-//                colunas = Arrays.copyOf(colunas, 6);
-//                for (int j = 0; j < colunas.length; j++) {
-//                    if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
-//                        colunas[j] = "OPEN";
-//                    }
-//                    line[0] = colunas[j];
-//                    line[1] = colunas[++j];
-//                    line[2] = colunas[++j];
-//                    line[3] = colunas[++j];
-//                    line[4] = colunas[++j];
-//                    line[5] = colunas[++j];
-//
-//                    entries.add(new TermoparLogEntry(line[0], line[1], line[2], line[3], line[4], line[5]));
-//                }
-//            }
-//        } catch (IndexOutOfBoundsException e) {
-//            e.printStackTrace();
-//            Log.e(TAG_LOG, "Erro ao configurar logs salvos!");
-//        }
-//
-
     }
 
     private TermoparLog otherConfigFile(String nome, String peso, String dataFromFile) {
@@ -282,24 +250,27 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
         }
     }
 
+
+    //SWIPE
     @Override
     public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction, int position) {
-        if (direction == ItemTouchHelper.LEFT) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(ReadSdDataActivity.this, R.style.DialogOpenLogStyle);
-            builder.setTitle(getResources().getString(R.string.atencao_));
-            builder.setMessage("Deseja realmente excluir o log: " + "\n" + logFilesList.get(viewHolder.getAdapterPosition())[0] + "?");
-            builder.setPositiveButton("Excluir", (dialog, which) -> {
-
-                int myPosition = viewHolder.getAdapterPosition();
-                String myLogName = logFilesList.get(myPosition)[0];
-//                String myLogPeso = logFilesList.get(myPosition)[1];
-                if (isFilePresent(myLogName)) {
-                    /** deletar o arquivo sd*/
-                    if (deleteLogFile(myLogName)) {
-//                        adapter.notifyItemChanged(myPosition);
-                        adapter.notifyDataSetChanged();
+        if (viewHolder instanceof RecyclerAdapter.MyViewHolder) {
+            if (direction == ItemTouchHelper.LEFT) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(ReadSdDataActivity.this, R.style.DialogOpenLogStyle);
+                builder.setTitle(getResources().getString(R.string.atencao_));
+                builder.setMessage("Deseja realmente excluir o log: " + "\n" + logFilesList.get(viewHolder.getAdapterPosition())[0] + "?");
+                builder.setPositiveButton("Excluir", (dialog, which) -> {
+                    int myPosition = viewHolder.getAdapterPosition();
+                    String myLogName = logFilesList.get(myPosition)[0];
+                    if (isFilePresent(myLogName)) {
+                        // deletar o arquivo sd
+                        deleteLogFile(myLogName);
                         logFilesList.remove(myPosition);
-                        adapter.notifyDataSetChanged();
+                        runOnUiThread(() -> {
+                            logsRecyclerView.setAdapter(null);
+                            logsRecyclerView.setAdapter(adapter);
+                            adapter.notifyItemRemoved(myPosition);
+                        });
                         Toast.makeText(this, "Excluído com sucesso!", Toast.LENGTH_SHORT).show();
                         if (logFilesList.size() < 1) {
                             finish();
@@ -307,18 +278,13 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
                         }
                     } else {
                         adapter.notifyDataSetChanged();
-//                        adapter.notifyItemChanged(myPosition);
-                        Toast.makeText(this, "Falhou ao excluir!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Arquivo não encontrado!", Toast.LENGTH_SHORT).show();
                     }
-                } else {
-                    adapter.notifyDataSetChanged();
-//                    adapter.notifyItemChanged(myPosition);
-                    Toast.makeText(this, "Arquivo não encontrado!", Toast.LENGTH_SHORT).show();
-                }
-            });
-            builder.setNegativeButton("Cancelar", (dialog, which) -> adapter.notifyItemChanged(viewHolder.getAdapterPosition()));
-            builder.setCancelable(false);
-            builder.create().show();
+                });
+                builder.setNegativeButton("Cancelar", (dialog, which) -> adapter.notifyItemChanged(viewHolder.getAdapterPosition()));
+                builder.setCancelable(false);
+                builder.create().show();
+            }
         }
     }
 }

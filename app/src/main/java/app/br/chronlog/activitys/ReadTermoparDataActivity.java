@@ -89,6 +89,7 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
         logsRecyclerView = findViewById(R.id.logsListView);
         DividerItemDecoration decoration = new DividerItemDecoration(getApplicationContext(), VERTICAL);
         logsRecyclerView.addItemDecoration(decoration);
+
         adapter = new RecyclerAdapter(logsList, null, progressBarContainerView);
         adapter.setHasStableIds(true);
 
@@ -692,6 +693,7 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                 builder.setTitle(getResources().getString(R.string.atencao_));
                 builder.setMessage("Deseja realmente excluir o log: " + "\n" + logsList.get(viewHolder.getAdapterPosition()).getName() + "?");
                 builder.setPositiveButton("Excluir", (dialog, which) -> {
+                    //deletar arquivo termopar
                     deleteLogFile(logsList.get(viewHolder.getAdapterPosition()).getName());
                     logsList.remove(viewHolder.getAdapterPosition());
                     adapter.notifyDataSetChanged();
