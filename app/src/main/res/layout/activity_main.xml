@@ -53,7 +53,6 @@
             android:layout_marginEnd="8dp"
             android:layout_marginBottom="8dp"
             android:drawableLeft="@drawable/baseline_folder_white_18dp"
-            android:gravity="left|center_vertical"
             android:text="@string/gerenciar_dados"
             android:textAlignment="center"
             android:textSize="16sp"
@@ -70,13 +69,26 @@
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
             android:drawableLeft="@drawable/baseline_multiline_chart_white_18dp"
-            android:gravity="left|center_vertical"
             android:text="@string/analise_de_dados"
             android:textAlignment="center"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/gerenciarDadosBtn" />
+
+        <Button
+            android:id="@+id/sobreBtn"
+            android:layout_width="300dp"
+            android:layout_height="60dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:drawableLeft="@drawable/ic_info_white_24dp"
+            android:text="@string/sobre"
+            android:textAlignment="center"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/analiseDeDadosBtn" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

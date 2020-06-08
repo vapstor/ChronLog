@@ -24,9 +24,12 @@
     <string name="salvar">salvar</string>
     <string name="zoom">Zoom</string>
     <string name="t1">T1</string>
-    <string name="t2">t2</string>
-    <string name="t3">t3</string>
-    <string name="t4">t4</string>
+    <string name="t2">T2</string>
+    <string name="t3">T3</string>
+    <string name="t4">T4</string>
+    <string name="m5">M5</string>
+    <string name="m6">M6</string>
+    <string name="m7">M7</string>
     <string name="grafico">gráfico</string>
     <string name="dispositivos">dispositivos</string>
     <string name="title">title</string>
@@ -48,7 +51,7 @@
     <string name="gerenciar_dados">Gerenciar Dados</string>
     <string name="sincronizar_data">Sincronizar\nData</string>
     <string name="_10_10_2019">10/10/2019</string>
-    <string name="sincronizar_hor_rio">Sincronizar\\nHorário</string>
+    <string name="sincronizar_hor_rio">Sincronizar\nHorário</string>
     <string name="_10_23_35">10:23:35</string>
     <string name="enviar">ENVIAR</string>
     <string name="segundos">segundos</string>
@@ -73,6 +76,12 @@
     <string name="hor_rio">Horário</string>
     <string name="data">Data</string>
     <string name="log_x">LOG X</string>
+    <string name="sobre">Sobre</string>
+    <string name="app_version">Chronlog Ver 2.0.0</string>
+    <string name="sobre_message">
+            Aplicativo desenvolvido para utilização em conjunto com os registradores de dados Chronteck.\n
+            \nConsulte produtos compatíveis no site
+            \nwww.chronteck.com"</string>
     <string-array name="modosTermopar">
         <item>K</item>
         <item>J</item>

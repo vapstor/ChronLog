@@ -15,6 +15,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.File;
@@ -29,6 +30,9 @@ import app.br.chronlog.utils.bluetooth.BluetoothController;
 import app.br.chronlog.utils.bluetooth.SerialListener;
 import app.br.chronlog.utils.bluetooth.SerialService;
 
+import static android.view.View.GONE;
+import static android.view.View.OnClickListener;
+import static android.view.View.VISIBLE;
 import static app.br.chronlog.BuildConfig.VERSION_NAME;
 import static app.br.chronlog.activitys.DevicesActivity.deviceName;
 import static app.br.chronlog.utils.Utils.isDeviceConnected;
@@ -41,13 +45,13 @@ import static app.br.chronlog.utils.bluetooth.Constants.CONEXAO_FALHOU;
 import static app.br.chronlog.utils.bluetooth.Constants.CONEXAO_PERDIDA;
 import static app.br.chronlog.utils.bluetooth.Constants.JA_CONECTADO;
 
-public class MainActivity extends AppCompatActivity implements ServiceConnection, SerialListener, View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements ServiceConnection, SerialListener, OnClickListener {
     private ProgressBar progressBar;
     private ImageButton syncButton;
     private Button configuraDeviceBtn, analisaDadosBtn, gerenciarDadosBtn;
     private TextView statusView;
-
     private SerialService service;
+    private Button sobreBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,33 +72,41 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
         findViewById(R.id.titleBar).setOnClickListener(v -> Toast.makeText(service, "Chronlog v" + VERSION_NAME, Toast.LENGTH_SHORT).show());
 
+        sobreBtn = findViewById(R.id.sobreBtn);
+        sobreBtn.setOnClickListener(v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.Theme_AppCompat_Dialog_Alert)
+                    .setView(R.layout.dialog_sobre)
+                    .setPositiveButton("Fechar", (dialog, which) -> {
+                    });
+            builder.create().show();
+        });
     }
 
     public void setButtonsEnabledDisabled() {
         getWindow().getDecorView().findViewById(android.R.id.content).invalidate();
         syncButton.setEnabled(true);
-        progressBar.setVisibility(View.GONE);
+        progressBar.setVisibility(GONE);
 
         if (isDeviceConnected == null) isDeviceConnected = Connected.False;
 
         if (isDeviceConnected == Connected.False) {
             if (!statusView.getText().equals(CONEXAO_FALHOU) && !statusView.getText().equals(CONEXAO_PERDIDA))
                 statusView.setText("");
-            progressBar.setVisibility(View.GONE);
+            progressBar.setVisibility(GONE);
             configuraDeviceBtn.setEnabled(false);
             gerenciarDadosBtn.setEnabled(false);
             configuraDeviceBtn.setText(R.string.configurar);
             gerenciarDadosBtn.setText(R.string.gerenciar_dados);
         } else if (isDeviceConnected == Connected.Pending) {
             statusView.setText(CONECTANDO_);
-            progressBar.setVisibility(View.VISIBLE);
+            progressBar.setVisibility(VISIBLE);
             configuraDeviceBtn.setEnabled(false);
             gerenciarDadosBtn.setEnabled(false);
             configuraDeviceBtn.setText(R.string.aguarde);
             gerenciarDadosBtn.setText(R.string.aguarde);
         } else {
             statusView.setText(deviceName);
-            progressBar.setVisibility(View.GONE);
+            progressBar.setVisibility(GONE);
             configuraDeviceBtn.setText(R.string.configurar);
             gerenciarDadosBtn.setText(R.string.gerenciar_dados);
             configuraDeviceBtn.setEnabled(true);
@@ -121,8 +133,15 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                 startActivity(new Intent(this, ReadTermoparDataActivity.class));
                 break;
             case R.id.analiseDeDadosBtn:
-                startActivity(new Intent(this, ReadSdDataActivity.class));
-//                startActivityWithExplosion(this, new Intent(this, ChartViewActivity.class));
+                final CharSequence[] items = {"CTL0104A", "CTL0104B", "CVL0101A", "CVL0102A"};
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Selecione o modelo");
+                builder.setItems(items, (dialog, item) -> {
+                    startActivity(new Intent(this, ReadSdDataActivity.class).putExtra("modelo", items[item]));
+                });
+                AlertDialog alert = builder.create();
+                alert.show();
                 break;
             default:
                 Toast.makeText(this, "erro", Toast.LENGTH_SHORT).show();

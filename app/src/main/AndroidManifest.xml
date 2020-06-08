@@ -31,7 +31,6 @@
                 android:resource="@xml/provider_paths"/>
         </provider>
 
-
         <activity
             android:name=".activitys.ReadSdDataActivity"
             android:launchMode="singleTask"

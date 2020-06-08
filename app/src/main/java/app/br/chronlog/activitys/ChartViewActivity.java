@@ -34,13 +34,19 @@ import java.util.Arrays;
 import java.util.List;
 
 import app.br.chronlog.R;
+import app.br.chronlog.activitys.models.CTL0104A.CTL0104A_TermoparLog;
+import app.br.chronlog.activitys.models.CTL0104A.CTL0104A_TermoparLogEntry;
+import app.br.chronlog.activitys.models.CTL0104B.CTL0104B_TermoparLog;
+import app.br.chronlog.activitys.models.CTL0104B.CTL0104B_TermoparLogEntry;
 import app.br.chronlog.utils.MyMarkerView;
-import app.br.chronlog.utils.TermoparLog;
-import app.br.chronlog.utils.TermoparLogEntry;
 
+import static android.graphics.Color.CYAN;
+import static android.graphics.Color.GRAY;
 import static android.graphics.Color.GREEN;
+import static android.graphics.Color.MAGENTA;
 import static android.graphics.Color.RED;
 import static android.graphics.Color.YELLOW;
+import static app.br.chronlog.activitys.DevicesActivity.modelo;
 import static app.br.chronlog.utils.Utils.TAG_LOG;
 
 public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSeekBarChangeListener,
@@ -48,7 +54,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
 
     private LineChart chart;
     private ArrayList<Parcelable> selectedLog;
-    private Button btnT1, btnT2, btnT3, btnT4;
+    private Button btnT1, btnT2, btnT3, btnT4, btnM5, btnM6, btnM7;
     private LineData allData;
     private ArrayList<ILineDataSet> allDataSets;
     private float VALOR_DISCREPANTE = 999;
@@ -68,36 +74,72 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             List entriesList;
             if (selectedLog != null) {
                 ((TextView) findViewById(R.id.logTitleTxtView)).setText(extras.getString("logName"));
-                TermoparLog termoparLog = (TermoparLog) selectedLog.get(0);
-                entriesList = termoparLog.getEntries();
-                acessaDadosDoArquivo(entriesList);
+                switch (modelo) {
+                    case "CTL0104B":
+                        CTL0104B_TermoparLog CTL0104BTermoparLog = (CTL0104B_TermoparLog) selectedLog.get(0);
+                        entriesList = CTL0104BTermoparLog.getEntries();
+                        acessaDadosDoArquivo(entriesList);
+                        break;
+                    case "CTL0104A":
+                    default:
+                        CTL0104A_TermoparLog CTL0104ATermoparLog = (CTL0104A_TermoparLog) selectedLog.get(0);
+                        entriesList = CTL0104ATermoparLog.getEntries();
+                        acessaDadosDoArquivo(entriesList);
+                        break;
+                }
             } else {
                 Toast.makeText(this, "Falhou ao resgatar os dados!", Toast.LENGTH_SHORT).show();
                 finish();
             }
         }
 
-        btnT1 = findViewById(R.id.t1Button);
-        btnT2 = findViewById(R.id.t2Button);
-        btnT3 = findViewById(R.id.t3Button);
-        btnT4 = findViewById(R.id.t4Button);
+        switch (modelo) {
+            case "CTL0104B":
+                btnM5 = findViewById(R.id.m5Button);
+                btnM5.setVisibility(View.VISIBLE);
 
-        btnT1.setOnClickListener((v) -> {
-            toogleBtnPressed(v);
-            toggleDataSetVisibility(0);
-        });
-        btnT2.setOnClickListener((v) -> {
-            toogleBtnPressed(v);
-            toggleDataSetVisibility(1);
-        });
-        btnT3.setOnClickListener((v) -> {
-            toogleBtnPressed(v);
-            toggleDataSetVisibility(2);
-        });
-        btnT4.setOnClickListener((v -> {
-            toogleBtnPressed(v);
-            toggleDataSetVisibility(3);
-        }));
+                btnM6 = findViewById(R.id.m6Button);
+                btnM6.setVisibility(View.VISIBLE);
+
+                btnM7 = findViewById(R.id.m7Button);
+                btnM7.setVisibility(View.VISIBLE);
+
+                btnM5.setOnClickListener((v -> {
+                    toogleBtnPressed(v);
+                    toggleDataSetVisibility(4);
+                }));
+                btnM6.setOnClickListener((v -> {
+                    toogleBtnPressed(v);
+                    toggleDataSetVisibility(5);
+                }));
+                btnM7.setOnClickListener((v -> {
+                    toogleBtnPressed(v);
+                    toggleDataSetVisibility(6);
+                }));
+            case "CTL0104A":
+            default:
+                btnT1 = findViewById(R.id.t1Button);
+                btnT2 = findViewById(R.id.t2Button);
+                btnT3 = findViewById(R.id.t3Button);
+                btnT4 = findViewById(R.id.t4Button);
+                btnT1.setOnClickListener((v) -> {
+                    toogleBtnPressed(v);
+                    toggleDataSetVisibility(0);
+                });
+                btnT2.setOnClickListener((v) -> {
+                    toogleBtnPressed(v);
+                    toggleDataSetVisibility(1);
+                });
+                btnT3.setOnClickListener((v) -> {
+                    toogleBtnPressed(v);
+                    toggleDataSetVisibility(2);
+                });
+                btnT4.setOnClickListener((v -> {
+                    toogleBtnPressed(v);
+                    toggleDataSetVisibility(3);
+                }));
+                break;
+        }
     }
 
     private void toogleBtnPressed(View v) {
@@ -206,9 +248,20 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             xAxis = chart.getXAxis();
             horariosX = new String[entriesList.size()];
             // the labels that should be drawn on the XAxis
-            for (int i = 0; i < entriesList.size(); i++) {
-                horariosX[i] = ((TermoparLogEntry) entriesList.get(i)).getHora();
+            switch (modelo) {
+                case "CTL0104B":
+                    for (int i = 0; i < entriesList.size(); i++) {
+                        horariosX[i] = ((CTL0104B_TermoparLogEntry) entriesList.get(i)).getHora();
+                    }
+                    break;
+                case "CTL0104A":
+                default:
+                    for (int i = 0; i < entriesList.size(); i++) {
+                        horariosX[i] = ((CTL0104A_TermoparLogEntry) entriesList.get(i)).getHora();
+                    }
+                    break;
             }
+
             ValueFormatter formatter = new ValueFormatter() {
                 @Override
                 public String getAxisLabel(float value, AxisBase axis) {
@@ -271,24 +324,150 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
         Legend l = chart.getLegend();
         l.setTextColor(getResources().getColor(R.color.colorPrimary));
         // draw legend entries as lines
+        l.setWordWrapEnabled(true);
         l.setForm(Legend.LegendForm.LINE);
     }
 
     private void setData(List entriesList) {
-        TermoparLogEntry termoparLogEntry;
         allDataSets = new ArrayList<>();
+        switch (modelo) {
+            case "CTL0104B":
+                setCTL0104BData(entriesList);
+                break;
+            case "CTL0104A":
+            default:
+                setCTL0104AData(entriesList);
+                break;
+        }
+    }
 
+    private void setCTL0104BData(List entriesList) {
+        CTL0104B_TermoparLogEntry CTL0104BTermoparLogEntry;
+        for (int z = 0; z < 7; z++) {
+            ArrayList<Entry> values = new ArrayList<>();
+
+            for (int i = 0; i < entriesList.size(); i++) {
+                CTL0104BTermoparLogEntry = (CTL0104B_TermoparLogEntry) entriesList.get(i);
+                String entryHour = CTL0104BTermoparLogEntry.getHora();
+                String entryData = CTL0104BTermoparLogEntry.getData();
+                try {
+                    if (!entryHour.contains("OVUV") && !entryData.contains("OPEN")) {
+                        int posicaoTermopar = z + 1;
+                        if (posicaoTermopar < 5) {
+                            String entryT = (String) CTL0104BTermoparLogEntry.getClass().getMethod("getT" + posicaoTermopar).invoke(CTL0104BTermoparLogEntry);
+                            float entryTAsFloat;
+                            if (entryT != null) {
+                                if (entryT.contains("OVUV") || entryT.contains("OPEN")) {
+                                    entryTAsFloat = VALOR_DISCREPANTE;
+                                } else {
+                                    entryTAsFloat = Float.parseFloat(entryT);
+                                }
+                                values.add(new Entry(i, entryTAsFloat));
+                            }
+                        } else {
+                            float entryMAsFloat;
+                            String entryM = (String) CTL0104BTermoparLogEntry.getClass().getMethod("getM" + posicaoTermopar).invoke(CTL0104BTermoparLogEntry);
+                            if (entryM != null) {
+                                if (entryM.contains("OVUV") || entryM.contains("OPEN")) {
+                                    entryMAsFloat = VALOR_DISCREPANTE;
+                                } else {
+                                    entryMAsFloat = Float.parseFloat(entryM);
+                                }
+                            } else {
+                                entryMAsFloat = VALOR_DISCREPANTE;
+                            }
+                            values.add(new Entry(i, entryMAsFloat));
+                        }
+                    }
+                } catch (NumberFormatException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+            }
+//            , getResources().getDrawable(R.drawable.star)));
+            LineDataSet d;
+            switch (z) {
+                case 0:
+                    d = new LineDataSet(values, "T1");
+                    d.setColor(getResources().getColor(R.color.colorPrimary));
+                    break;
+                case 1:
+                    d = new LineDataSet(values, "T2");
+                    d.setColor(YELLOW);
+                    break;
+                case 2:
+                    d = new LineDataSet(values, "T3");
+                    d.setColor(RED);
+                    break;
+                case 3:
+                    d = new LineDataSet(values, "T4");
+                    d.setColor(GREEN);
+                    break;
+                case 4:
+                    d = new LineDataSet(values, "M5");
+                    d.setColor(MAGENTA);
+                    break;
+                case 5:
+                    d = new LineDataSet(values, "M6");
+                    d.setColor(CYAN);
+                    break;
+                case 6:
+                    d = new LineDataSet(values, "M7");
+                    d.setColor(GRAY);
+                    break;
+                default:
+                    Log.e(TAG_LOG, "Z não cadastrado");
+                    Toast.makeText(this, "Ocorreu um erro ao recuperar a medição!", Toast.LENGTH_SHORT).show();
+                    d = new LineDataSet(values, "M7");
+                    d.setColor(GRAY);
+                    finish();
+                    break;
+            }
+
+            d.enableDashedLine(10, 10, 0);
+            d.setDrawIcons(false);
+            // draw dashed line
+            d.enableDashedLine(15f, 0f, 1f);
+
+            d.setCircleColor(RED);
+            // line thickness and point size
+            d.setLineWidth(2f);
+            d.setCircleRadius(3f);
+            // draw points as solid circles
+            d.setDrawCircleHole(true);
+            // customize legend entry
+            d.setFormLineWidth(1f);
+            d.setFormLineDashEffect(new DashPathEffect(new float[]{10f, 5f}, 0f));
+            d.setFormSize(40.f);
+            // text size of values
+            d.setValueTextSize(10f);
+            // draw selection line as dashed
+            d.enableDashedHighlightLine(10f, 5f, 0f);
+            // set the filled area
+            d.setDrawFilled(false);
+            d.setFillFormatter((dataSet, dataProvider) -> chart.getAxisLeft().getAxisMinimum());
+            allDataSets.add(d);
+        }
+        allData = new LineData(allDataSets);
+        chart.setData(allData);
+        chart.setAutoScaleMinMaxEnabled(true);
+        chart.invalidate();
+        chart.getData().notifyDataChanged();
+        chart.notifyDataSetChanged();
+    }
+
+    private void setCTL0104AData(List entriesList) {
+        CTL0104A_TermoparLogEntry CTL0104ATermoparLogEntry;
         for (int z = 0; z < 4; z++) {
             ArrayList<Entry> values = new ArrayList<>();
 
             for (int i = 0; i < entriesList.size(); i++) {
-                termoparLogEntry = (TermoparLogEntry) entriesList.get(i);
-                String entryHour = termoparLogEntry.getHora();
-                String entryData = termoparLogEntry.getData();
+                CTL0104ATermoparLogEntry = (CTL0104A_TermoparLogEntry) entriesList.get(i);
+                String entryHour = CTL0104ATermoparLogEntry.getHora();
+                String entryData = CTL0104ATermoparLogEntry.getData();
                 try {
                     if (!entryHour.contains("OVUV") && !entryData.contains("OPEN")) {
                         int posicaoTermopar = z + 1;
-                        String entryT = (String) termoparLogEntry.getClass().getMethod("getT" + posicaoTermopar).invoke(termoparLogEntry);
+                        String entryT = (String) CTL0104ATermoparLogEntry.getClass().getMethod("getT" + posicaoTermopar).invoke(CTL0104ATermoparLogEntry);
                         float entryTAsFloat;
                         if (entryT != null) {
                             if (entryT.contains("OVUV") || entryT.contains("OPEN")) {
@@ -349,7 +528,6 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
         chart.invalidate();
         chart.getData().notifyDataChanged();
         chart.notifyDataSetChanged();
-
     }
 
     @Override

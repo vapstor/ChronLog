@@ -62,7 +62,6 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
 
     private final Object lock = new Object();
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

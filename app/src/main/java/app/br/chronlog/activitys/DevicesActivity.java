@@ -8,6 +8,7 @@ import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -33,10 +34,12 @@ import app.br.chronlog.utils.bluetooth.SerialListener;
 import app.br.chronlog.utils.bluetooth.SerialService;
 import app.br.chronlog.utils.bluetooth.SerialSocket;
 
+import static app.br.chronlog.utils.Utils.TAG_LOG;
 import static app.br.chronlog.utils.Utils.bluetoothDeviceSelected;
 import static app.br.chronlog.utils.Utils.hideProgressBar;
 import static app.br.chronlog.utils.Utils.isDeviceConnected;
 import static app.br.chronlog.utils.Utils.myBluetoothController;
+import static app.br.chronlog.utils.Utils.send;
 import static app.br.chronlog.utils.Utils.serialSocket;
 import static app.br.chronlog.utils.Utils.setStatus;
 import static app.br.chronlog.utils.Utils.showProgressBar;
@@ -60,6 +63,11 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
     private TextView listEmptyView;
 
     private SerialService service;
+    private static String receivedData;
+    private final Object lock = new Object();
+    private Thread sendCommandThread;
+    public static String modelo;
+    private Thread executeCommandThread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -264,6 +272,7 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
                         }
                         service.connect(this, "Conectado a " + deviceName);
                         serialSocket.connect(this, service, bluetoothDeviceSelected);
+
                     }
                 } else {
                     Toast.makeText(this, "Bluetooth Desabilitado!", Toast.LENGTH_SHORT).show();
@@ -316,7 +325,7 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (myBluetoothController.getBluetoothAdapter().isDiscovering()) {
+        if (myBluetoothController.getBluetoothAdapter() != null && myBluetoothController.getBluetoothAdapter().isDiscovering()) {
             myBluetoothController.getBluetoothAdapter().cancelDiscovery();
         }
 //        if (isDeviceConnected != Connected.False)
@@ -342,7 +351,7 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
             setStatus(deviceName, this);
             Toast.makeText(this, "Conectado com Sucesso!", Toast.LENGTH_SHORT).show();
         });
-        super.onBackPressed();
+        readDeviceModel();
     }
 
     @Override
@@ -363,6 +372,61 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
 
     @Override
     public void onSerialRead(byte[] data) {
+        synchronized (lock) {
+            String receveidStr = new String(data);
+            Log.d(TAG_LOG, "recebeu: " + receveidStr);
+            receivedData = receivedData.concat(receveidStr);
+            if (receveidStr.contains("@")) {
+                lock.notify();
+            }
+            Log.d(TAG_LOG, "VALOR RECEBIDO : " + receveidStr);
+            Log.d(TAG_LOG, "RECEIVED DATA : " + receivedData);
+            //returns model like: "@0DEEEEEEEE"
+            modelo = receivedData.replace("@0D", "").replace("\r\n", "").trim();
+        }
+    }
+
+    private void readDeviceModel() {
+        receivedData = "";
+
+        String protocolReadDeviceModel = "@0DRRRRRRRRCRLF";
+        if (sendCommandThread != null) {
+            if (sendCommandThread.isAlive()) {
+                sendCommandThread.interrupt();
+            }
+            sendCommandThread = null;
+        }
+
+
+        if (executeCommandThread != null) {
+            if (executeCommandThread.isAlive()) {
+                executeCommandThread.interrupt();
+            }
+            executeCommandThread = null;
+        }
+
+
+        sendCommandThread = new Thread(() -> send(protocolReadDeviceModel, this, this));
+        sendCommandThread.start();
+
+        executeCommandThread = new Thread(() -> {
+            synchronized (lock) {
+                try {
+                    lock.wait(300);
+                    if (receivedData.equals("")) {
+                        readDeviceModel();
+                    } else {
+                        runOnUiThread(() -> {
+                            Toast.makeText(getApplicationContext(), "Modelo configurado com sucesso!", Toast.LENGTH_SHORT).show();
+                            super.onBackPressed();
+                        });
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        executeCommandThread.start();
     }
 
     @Override
@@ -383,4 +447,12 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
     }
 
 
+    @Override
+    public void onBackPressed() {
+        if (isDeviceConnected == Connected.Pending) {
+            Toast.makeText(this, "Aguarde...", Toast.LENGTH_SHORT).show();
+        } else {
+            super.onBackPressed();
+        }
+    }
 }

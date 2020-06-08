@@ -1,25 +1,25 @@
-package app.br.chronlog.utils;
+package app.br.chronlog.activitys.models.CTL0104A;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.util.ArrayList;
 
-public class TermoparLog implements Parcelable {
+public class CTL0104A_TermoparLog implements Parcelable {
     private String name, peso;
-    private ArrayList<TermoparLogEntry> entries;
+    private ArrayList<CTL0104A_TermoparLogEntry> entries;
 
-    public TermoparLog(String name, String peso, ArrayList<TermoparLogEntry> entries) {
+    public CTL0104A_TermoparLog(String name, String peso, ArrayList<CTL0104A_TermoparLogEntry> entries) {
         this.name = name;
         this.peso = peso;
         this.entries = entries;
     }
 
-    public TermoparLog(Parcel parcelable) {
+    public CTL0104A_TermoparLog(Parcel parcelable) {
         this.name = parcelable.readString();
         this.peso = parcelable.readString();
         this.entries = new ArrayList<>();
-        parcelable.readList(this.entries, TermoparLogEntry.class.getClassLoader());
+        parcelable.readList(this.entries, CTL0104A_TermoparLogEntry.class.getClassLoader());
     }
 
     public String getName() {
@@ -38,11 +38,11 @@ public class TermoparLog implements Parcelable {
         this.peso = peso;
     }
 
-    public ArrayList<TermoparLogEntry> getEntries() {
+    public ArrayList<CTL0104A_TermoparLogEntry> getEntries() {
         return entries;
     }
 
-    public void setEntries(ArrayList<TermoparLogEntry> entries) {
+    public void setEntries(ArrayList<CTL0104A_TermoparLogEntry> entries) {
         this.entries = entries;
     }
 
@@ -62,16 +62,16 @@ public class TermoparLog implements Parcelable {
         dest.writeList(entries);
     }
 
-    public static final Parcelable.Creator<TermoparLog> CREATOR = new Parcelable.Creator<TermoparLog>() {
+    public static final Parcelable.Creator<CTL0104A_TermoparLog> CREATOR = new Parcelable.Creator<CTL0104A_TermoparLog>() {
 
         @Override
-        public TermoparLog createFromParcel(Parcel source) {
-            return new TermoparLog(source);
+        public CTL0104A_TermoparLog createFromParcel(Parcel source) {
+            return new CTL0104A_TermoparLog(source);
         }
 
         @Override
-        public TermoparLog[] newArray(int size) {
-            return new TermoparLog[size];
+        public CTL0104A_TermoparLog[] newArray(int size) {
+            return new CTL0104A_TermoparLog[size];
         }
     };
 }

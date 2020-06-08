@@ -2,7 +2,6 @@
 
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/chart_activity_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -11,7 +10,9 @@
         android:id="@+id/chart"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_marginStart="10dp"
         android:layout_marginTop="20dp"
+        android:layout_marginEnd="10dp"
         android:layout_marginBottom="20dp"
         android:background="@drawable/shape_border_gray"
         android:foregroundGravity="center"
@@ -36,65 +37,95 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/t1Button"
             android:layout_width="0dp"
-            android:layout_height="50dp"
+            android:layout_height="wrap_content"
             android:layout_marginStart="15dp"
             android:layout_marginTop="10dp"
             android:layout_marginEnd="5dp"
-            android:layout_marginBottom="10dp"
-            android:background="?android:attr/selectableItemBackground"
             android:text="@string/t1"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/t2Button"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/t2Button"
             android:layout_width="0dp"
-            android:layout_height="50dp"
+            android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="10dp"
             android:layout_marginEnd="5dp"
-            android:layout_marginBottom="10dp"
-            android:background="?android:attr/selectableItemBackground"
             android:text="@string/t2"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toBottomOf="@+id/t1Button"
             app:layout_constraintEnd_toStartOf="@+id/t3Button"
             app:layout_constraintStart_toEndOf="@+id/t1Button"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="@+id/t1Button" />
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/t3Button"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_marginStart="5dp"
-            android:layout_marginTop="10dp"
             android:layout_marginEnd="5dp"
-            android:layout_marginBottom="10dp"
-            android:background="@drawable/selector_device_t_button"
             android:text="@string/t3"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toBottomOf="@+id/t2Button"
             app:layout_constraintEnd_toStartOf="@+id/t4Button"
             app:layout_constraintStart_toEndOf="@+id/t2Button"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="@+id/t2Button" />
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/t4Button"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
-            android:layout_marginTop="10dp"
             android:layout_marginEnd="15dp"
-            android:layout_marginBottom="10dp"
-            android:background="@drawable/selector_device_t_button"
             android:text="@string/t4"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toBottomOf="@+id/t3Button"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/t3Button"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="@+id/t3Button" />
+
+        <Button
+            android:id="@+id/m5Button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="15dp"
+            android:layout_marginEnd="15dp"
+            android:layout_marginBottom="5dp"
+            android:text="@string/m5"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/m6Button"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/t1Button" />
+
+        <Button
+            android:id="@+id/m6Button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="15dp"
+            android:layout_marginEnd="15dp"
+            android:text="@string/m6"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@+id/m5Button"
+            app:layout_constraintEnd_toStartOf="@+id/m7Button"
+            app:layout_constraintStart_toEndOf="@+id/m5Button"
+            app:layout_constraintTop_toTopOf="@+id/m5Button"
+            app:layout_constraintVertical_bias="1.0" />
+
+        <Button
+            android:id="@+id/m7Button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="15dp"
+            android:layout_marginEnd="15dp"
+            android:text="@string/m7"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@+id/m6Button"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/m6Button"
+            app:layout_constraintTop_toTopOf="@+id/m6Button"
+            app:layout_constraintVertical_bias="1.0" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -134,7 +165,7 @@
         app:layout_constraintStart_toStartOf="parent">
 
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/blockX"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -142,14 +173,13 @@
             android:layout_alignParentTop="true"
             android:layout_marginStart="15dp"
             android:layout_marginTop="15dp"
-            android:background="@drawable/selector_device_t_button"
             android:onClick="blockX"
             android:text="@string/travar_eixo_x"
             app:layout_constraintEnd_toStartOf="@+id/resetZoom"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/blockY"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -159,7 +189,6 @@
             android:layout_marginBottom="15dp"
             android:layout_toStartOf="@+id/resetZoom"
             android:layout_toEndOf="@+id/blockX"
-            android:background="@drawable/selector_device_t_button"
             android:onClick="blockY"
             android:text="@string/travar_eixo_y"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -167,7 +196,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/blockX" />
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/resetZoom"
             android:layout_width="150dp"
             android:layout_height="0dp"
@@ -175,7 +204,6 @@
             android:layout_alignParentEnd="true"
             android:layout_marginStart="10dp"
             android:layout_marginEnd="15dp"
-            android:background="@drawable/selector_device_t_button"
             android:onClick="resetZoom"
             android:text="@string/reset"
             app:layout_constraintBottom_toBottomOf="@+id/blockY"

@@ -24,8 +24,6 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.button.MaterialButton;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -37,16 +35,19 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import app.br.chronlog.R;
+import app.br.chronlog.activitys.models.CTL0104A.CTL0104A_TermoparLog;
+import app.br.chronlog.activitys.models.CTL0104A.CTL0104A_TermoparLogEntry;
+import app.br.chronlog.activitys.models.CTL0104B.CTL0104B_TermoparLog;
+import app.br.chronlog.activitys.models.CTL0104B.CTL0104B_TermoparLogEntry;
 import app.br.chronlog.utils.ItemClickSupport;
 import app.br.chronlog.utils.RecyclerAdapter;
 import app.br.chronlog.utils.RecyclerItemTouchHelper;
-import app.br.chronlog.utils.TermoparLog;
-import app.br.chronlog.utils.TermoparLogEntry;
 import app.br.chronlog.utils.Utils;
 import app.br.chronlog.utils.bluetooth.SerialListener;
 import app.br.chronlog.utils.bluetooth.SerialService;
 
 import static androidx.recyclerview.widget.RecyclerView.VERTICAL;
+import static app.br.chronlog.activitys.DevicesActivity.modelo;
 import static app.br.chronlog.utils.Utils.TAG_LOG;
 import static app.br.chronlog.utils.Utils.isDeviceConnected;
 import static app.br.chronlog.utils.Utils.myBluetoothController;
@@ -56,10 +57,10 @@ import static java.lang.Thread.sleep;
 public class ReadTermoparDataActivity extends AppCompatActivity implements ServiceConnection, SerialListener, RecyclerItemTouchHelper.RecyclerItemTouchHelperListener {
     private SerialService service;
     public RecyclerView logsRecyclerView;
-    public static ArrayList<TermoparLog> logsList = new ArrayList<>();
+    public static ArrayList<Object> logsList = new ArrayList<>();
     final String protocolReadSdData = "@04000000000000";
     private static String receivedData = "";
-    private TermoparLog selectedLog;
+    private Object selectedLog;
     private String[] receivedStrArray;
     private ProgressBar progressBarContainerView, progressBarItem, progressBarOpenLogDialog;
     private int receivedSize = 0;
@@ -71,7 +72,7 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
     AlertDialog[] alertDialog = new AlertDialog[2];
     private AlertDialog.Builder builder;
     private ProgressBar progressBarSaveShareLog;
-    private MaterialButton buttonSave, buttonShare;
+    private Button buttonSave, buttonShare;
     private File fileInCache;
 
     @Override
@@ -106,13 +107,13 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
             progressBarItem = v.findViewById(R.id.progressBarItem);
 
             builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
-            builder.setView(R.layout.open_log_dialog);
+            builder.setView(R.layout.dialog_open_log);
 
             readFile(selectedLog, false);
         });
         ItemClickSupport.addTo(logsRecyclerView).setOnItemLongClickListener((RecyclerView recyclerView, int position, View v) -> {
             builder = new AlertDialog.Builder(ReadTermoparDataActivity.this, R.style.DialogOpenLogStyle);
-            builder.setView(R.layout.share_save_item_dialog);
+            builder.setView(R.layout.dialog_share_save_log);
 
             selectedLog = logsList.get(position);
 
@@ -127,15 +128,31 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
             alertDialog[0].show();
 
             progressBarSaveShareLog = alertDialog[0].findViewById(R.id.progressBarSaveShareLog);
-            ((TextView) Objects.requireNonNull(alertDialog[0].findViewById(R.id.logId))).setText(selectedLog.getName() + " (" + selectedLog.getPeso().trim() + " bytes)");
+            switch (modelo) {
+                case "CTL0104B":
+                    ((TextView) Objects.requireNonNull(alertDialog[0].findViewById(R.id.logId))).setText(((CTL0104B_TermoparLog) selectedLog).getName() + " (" + ((CTL0104B_TermoparLog) selectedLog).getPeso().trim() + " bytes)");
+                    break;
+                case "CTL0104A":
+                default:
+                    ((TextView) Objects.requireNonNull(alertDialog[0].findViewById(R.id.logId))).setText(((CTL0104A_TermoparLog) selectedLog).getName() + " (" + ((CTL0104A_TermoparLog) selectedLog).getPeso().trim() + " bytes)");
+                    break;
+            }
 
             buttonShare = alertDialog[0].findViewById(R.id.btnShareLog);
             if (buttonShare != null) {
                 buttonShare.setOnClickListener(v1 -> {
                     //antes de compartilhar limpar o cache
                     deleteCacheFiles();
-
-                    String filename = logsList.get(position).getName();
+                    String filename;
+                    switch (modelo) {
+                        case "CTL0104B":
+                            filename = ((CTL0104B_TermoparLog) logsList.get(position)).getName();
+                            break;
+                        case "CTL0104A":
+                        default:
+                            filename = ((CTL0104A_TermoparLog) logsList.get(position)).getName();
+                            break;
+                    }
 
                     try {
                         saveCacheFile(filename, retiraCabecalho());
@@ -145,7 +162,16 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
 
                     Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
                     sharingIntent.setType("text/plain");
-                    sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, logsList.get(position).getName());
+
+                    switch (modelo) {
+                        case "CTL0104B":
+                            sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, ((CTL0104B_TermoparLog) logsList.get(position)).getName());
+                            break;
+                        case "CTL0104A":
+                        default:
+                            sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, ((CTL0104A_TermoparLog) logsList.get(position)).getName());
+                            break;
+                    }
 
                     fileInCache = readCacheFile(filename);
                     if (fileInCache != null) {
@@ -161,29 +187,51 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
             if (buttonSave != null) {
                 buttonSave.setOnClickListener(v1 -> {
                     try {
-                        String name = logsList.get(position).getName();
+                        String name;
+                        switch (modelo) {
+                            case "CTL0104B":
+                                name = ((CTL0104B_TermoparLog) logsList.get(position)).getName();
+                                break;
+                            case "CTL0104A":
+                            default:
+                                name = ((CTL0104A_TermoparLog) logsList.get(position)).getName();
+                                break;
+                        }
 //                        String peso = logsList.get(position).getPeso();
-                        if (isFilePresent(name)) {
-                            AlertDialog.Builder builder = new AlertDialog.Builder(ReadTermoparDataActivity.this, R.style.DialogOpenLogStyle);
-                            builder.setTitle("Arquivo já existe!");
-                            builder.setMessage("Arquivo já existe no aparelho, deseja sobreescrever?");
-                            builder.setPositiveButton("Sobreescrever", (dialog, which) -> {
-                                try {
-                                    saveFileToLocalSD(logsList.get(position).getName());
-                                    adapter.notifyItemChanged(position);
-                                    Toast.makeText(ReadTermoparDataActivity.this, "Arquivo sobreescrito com sucesso!", Toast.LENGTH_SHORT).show();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                    Toast.makeText(ReadTermoparDataActivity.this, "Falhou ao sobreescrever o arquivo!", Toast.LENGTH_SHORT).show();
-                                    adapter.notifyItemChanged(position);
-                                }
-                            });
-                            builder.setNegativeButton("Cancelar", (dialog, which) -> adapter.notifyItemChanged(position));
-                            builder.setCancelable(false);
-                            builder.create().show();
+                        if (isModelFolderPresent()) {
+                            if (isFilePresent(name)) {
+                                AlertDialog.Builder builder = new AlertDialog.Builder(ReadTermoparDataActivity.this, R.style.DialogOpenLogStyle);
+                                builder.setTitle("Arquivo já existe!");
+                                builder.setMessage("Arquivo já existe no aparelho, deseja sobreescrever?");
+                                builder.setPositiveButton("Sobreescrever", (dialog, which) -> {
+                                    try {
+                                        saveFileToLocalSD(name);
+                                        adapter.notifyItemChanged(position);
+                                        Toast.makeText(ReadTermoparDataActivity.this, "Arquivo sobreescrito com sucesso!", Toast.LENGTH_SHORT).show();
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                        Toast.makeText(ReadTermoparDataActivity.this, "Falhou ao sobreescrever o arquivo!", Toast.LENGTH_SHORT).show();
+                                        adapter.notifyItemChanged(position);
+                                    }
+                                });
+                                builder.setNegativeButton("Cancelar", (dialog, which) -> adapter.notifyItemChanged(position));
+                                builder.setCancelable(false);
+                                builder.create().show();
+                            } else {
+                                saveFileToLocalSD(name);
+                                Toast.makeText(ReadTermoparDataActivity.this, "Arquivo salvo com sucesso!", Toast.LENGTH_SHORT).show();
+                            }
                         } else {
-                            saveFileToLocalSD(logsList.get(position).getName());
-                            Toast.makeText(ReadTermoparDataActivity.this, "Arquivo salvo com sucesso!", Toast.LENGTH_SHORT).show();
+                            boolean success;
+                            String pathFolder = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) +"/"+ modelo + File.separator;
+                            File folder = new File(pathFolder);
+                            success = folder.mkdirs();
+                            if (!success) {
+                                Toast.makeText(this, "Falhou ao criar pasta do modelo!", Toast.LENGTH_SHORT).show();
+                            } else {
+                                saveFileToLocalSD(name);
+                                Toast.makeText(ReadTermoparDataActivity.this, "Arquivo salvo com sucesso!", Toast.LENGTH_SHORT).show();
+                            }
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -199,10 +247,17 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
         setFinishOnTouchOutside(true);
     }
 
+    private boolean isModelFolderPresent() {
+        String pathFolder = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) +"/"+ modelo + File.separator;
+        File folder = new File(pathFolder);
+        return folder.exists();
+    }
+
     public boolean isFilePresent(String fileName) {
-        String path = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + fileName; // + peso
-        File file = new File(path);
+        String pathFile = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) +"/"+ modelo +"/"+ fileName; // + peso
+        File file = new File(pathFile);
         return file.exists();
+
     }
 
     private void saveFileToLocalSD(String fileName) throws IOException {
@@ -221,7 +276,7 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
     }
 
     private void saveFile(String fileName, String value) throws IOException {
-        BufferedWriter file = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + fileName), StandardCharsets.UTF_8)); //ja salva com ".LOG" (sem o peso)
+        BufferedWriter file = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) +"/"+ modelo +"/"+ fileName), StandardCharsets.UTF_8)); //ja salva com ".LOG" (sem o peso)
         String[] lines = value.split("\\r?\\n|\\r");
         for (String line : lines) {
             if (!line.equals("")) {
@@ -282,7 +337,7 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
 
     //Resgata 01 Arquivo
     //@param saveToSd = boolean para definir se é apenas para ler (salvar/compartilhar) ou seguir para tela do chart
-    private void readFile(TermoparLog selectedLog, boolean saveToSD) {
+    private void readFile(Object selectedLog, boolean saveToSD) {
         receivedData = "";
         receivedSize = 0;
 
@@ -290,8 +345,20 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
         if (!saveToSD) {
             progressBarItem.setVisibility(View.VISIBLE);
         }
+        String protocolReadFileData;
+        int max;
+        switch (modelo) {
+            case "CTL0104B":
+                protocolReadFileData = "@05" + ((CTL0104B_TermoparLog) selectedLog).getName() + "0000";
+                max = Integer.parseInt(((CTL0104B_TermoparLog) selectedLog).getPeso().trim()) * 10;
+                break;
+            case "CTL0104A":
+            default:
+                protocolReadFileData = "@05" + ((CTL0104A_TermoparLog) selectedLog).getName() + "0000";
+                max = Integer.parseInt(((CTL0104A_TermoparLog) selectedLog).getPeso().trim()) * 10;
+                break;
+        }
 
-        String protocolReadFileData = "@05" + selectedLog.getName() + "0000";
         if (myCommandThread != null) {
             if (myCommandThread.isAlive()) {
                 myCommandThread.interrupt();
@@ -305,7 +372,8 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
 
                 progressBarOpenLogDialog = alertDialog[0].findViewById(R.id.progressBarOpenLog);
                 if (progressBarOpenLogDialog != null) {
-                    progressBarOpenLogDialog.setMax(Integer.parseInt(selectedLog.getPeso().trim()) * 10);
+
+                    progressBarOpenLogDialog.setMax(max);
                 }
                 Button btnCancel = alertDialog[0].findViewById(R.id.btnCancelOpenLog);
                 if (btnCancel != null) {
@@ -318,7 +386,7 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
         } else {
             if (alertDialog[0] != null) {
                 if (progressBarSaveShareLog != null) {
-                    progressBarSaveShareLog.setMax(Integer.parseInt(selectedLog.getPeso().trim()) * 10);
+                    progressBarSaveShareLog.setMax(max);
                 }
             }
         }
@@ -348,10 +416,10 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                                 }
                             }
                         });
-                        //terminou de receber ou foi cancelado
+                        //terminou de receber e não foi cancelado
                         if (!saveToSD) {
                             if (!aberturaCancelada) {
-                                configFileReceived(selectedLog);
+                                configFileReceived();
                             }
                         } else {
                             runOnUiThread(() -> {
@@ -370,72 +438,129 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
     }
 
     //Configura o arquivo PARCELABLE para enviar ao chart
-    private void configFileReceived(TermoparLog selectedLog) {
+    private void configFileReceived() {
         receivedStrArray = receivedData.split("(\\r?\\n|\\r)");
         String lineValue;
-        ArrayList<TermoparLogEntry> entries = new ArrayList<>();
+        ArrayList<CTL0104A_TermoparLogEntry> ctl0104a_entries = new ArrayList<>();
+        ArrayList<CTL0104B_TermoparLogEntry> ctl0104b_entries = new ArrayList<>();
         for (int i = 0; i < receivedStrArray.length; i++) {
             if (i >= 2) { // 2 = 3ª linha [valores a partir da 2 linha[0 - @ 05, 1 - Data / Hora /...]
                 lineValue = receivedStrArray[i];
-
                 String[] colunas = lineValue.split(" ");
-                colunas = Arrays.copyOf(colunas, 6);
-                if (i == 199) {
-                    Log.d(TAG_LOG, "Linha é: " + lineValue);
+                switch (modelo) {
+                    case "CTL0104B":
+                        colunas = Arrays.copyOf(colunas, 9);
+                        for (int j = 0; j < colunas.length; j++) {
+                            if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
+                                colunas[j] = "OPEN";
+                            }
+                        }
+                        ctl0104b_entries.add(new CTL0104B_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5], colunas[6], colunas[7], colunas[8]));
+                        break;
+                    case "CTL0104A":
+                    default:
+                        colunas = Arrays.copyOf(colunas, 6);
+                        for (int j = 0; j < colunas.length; j++) {
+                            if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
+                                colunas[j] = "OPEN";
+                            }
+                        }
+                        ctl0104a_entries.add(new CTL0104A_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5]));
+                        break;
                 }
-                for (int j = 0; j < colunas.length; j++) {
-                    if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
-                        colunas[j] = "OPEN";
-                    }
-                }
-                if (i == 199) {
-                    Log.d(TAG_LOG, "Coluna 1 é: " + colunas[0]);
-                    Log.d(TAG_LOG, "Coluna 2 é: " + colunas[1]);
-                    Log.d(TAG_LOG, "Coluna 3 é: " + colunas[2]);
-                    Log.d(TAG_LOG, "Coluna 4 é: " + colunas[3]);
-                    Log.d(TAG_LOG, "Coluna 5 é: " + colunas[4]);
-                    Log.d(TAG_LOG, "Coluna 6 é: " + colunas[5]);
-                }
-                entries.add(new TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5]));
             }
         }
+        switch (modelo) {
+            case "CTL0104B":
+                if (ctl0104b_entries.size() > 1) {
+                    runOnUiThread(() -> Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show());
 
-        selectedLog.setEntries(entries);
-        if (entries.size() > 1) {
-            runOnUiThread(() -> Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show());
+                    ((CTL0104B_TermoparLog) this.selectedLog).setEntries(ctl0104b_entries);
 
-            ArrayList<TermoparLog> termoparLog = new ArrayList<>();
-            termoparLog.add(selectedLog);
+                    ArrayList<CTL0104B_TermoparLog> CTL0104BTermoparLog = new ArrayList<>();
+                    CTL0104BTermoparLog.add(((CTL0104B_TermoparLog) this.selectedLog));
 
-            Intent intent = new Intent(this, ChartViewActivity.class);
-            intent.putParcelableArrayListExtra("selectedLog", termoparLog);
-            intent.putExtra("logName", selectedLog.getName());
-            startActivity(intent);
+                    Intent intent = new Intent(this, ChartViewActivity.class);
+                    intent.putParcelableArrayListExtra("selectedLog", CTL0104BTermoparLog);
+                    intent.putExtra("logName", ((CTL0104B_TermoparLog) this.selectedLog).getName());
+                    startActivity(intent);
 
-        } else if (entries.size() == 1) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
-            builder.setMessage("Só existe apenas um registro no Log: "
-                    + "\n" + "\n" +
-                    "Data: " + selectedLog.getEntries().get(0).getData() + "\n" +
-                    "Horário: " + selectedLog.getEntries().get(0).getHora() + "\n" +
-                    "T1: " + selectedLog.getEntries().get(0).getT1() + "\n" +
-                    "T2: " + selectedLog.getEntries().get(0).getT2() + "\n" +
-                    "T3: " + selectedLog.getEntries().get(0).getT3() + "\n" +
-                    "T4: " + selectedLog.getEntries().get(0).getT4()
-            );
-            builder.setPositiveButton("OK", (dialog, which) -> {
-            });
-            builder.setTitle("Log Único!");
-            runOnUiThread(() -> builder.create().show());
-        } else {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
-            builder.setMessage("Não existem registros no Log!");
-            builder.setTitle("Log Inválido!");
-            builder.setPositiveButton("OK", (dialog, which) -> {
-            });
-            runOnUiThread(() -> builder.create().show());
+                } else if (ctl0104b_entries.size() == 1) {
+                    createCTL0104BDialog();
+                } else {
+                    semRegistrosDialog();
+                }
+                break;
+            case "CTL0104A":
+            default:
+                if (ctl0104a_entries.size() > 1) {
+                    runOnUiThread(() -> Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show());
+
+                    ((CTL0104A_TermoparLog) this.selectedLog).setEntries(ctl0104a_entries);
+
+                    ArrayList<CTL0104A_TermoparLog> CTL0104ATermoparLog = new ArrayList<>();
+                    CTL0104ATermoparLog.add(((CTL0104A_TermoparLog) this.selectedLog));
+
+                    Intent intent = new Intent(this, ChartViewActivity.class);
+                    intent.putParcelableArrayListExtra("selectedLog", CTL0104ATermoparLog);
+                    intent.putExtra("logName", ((CTL0104A_TermoparLog) this.selectedLog).getName());
+                    startActivity(intent);
+
+                } else if (ctl0104a_entries.size() == 1) {
+                    createCTL0104ADialog();
+                } else {
+                    semRegistrosDialog();
+                }
+                break;
         }
 
+
+    }
+
+    private void semRegistrosDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
+        builder.setMessage("Não existem registros no Log!");
+        builder.setTitle("Log Inválido!");
+        builder.setPositiveButton("OK", (dialog, which) -> {
+        });
+        runOnUiThread(() -> builder.create().show());
+    }
+
+    private void createCTL0104ADialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
+        builder.setMessage("Só existe apenas um registro no Log: "
+                + "\n" + "\n" +
+                "Data: " + ((CTL0104A_TermoparLog) selectedLog).getEntries().get(0).getData() + "\n" +
+                "Horário: " + ((CTL0104A_TermoparLog) selectedLog).getEntries().get(0).getHora() + "\n" +
+                "T1: " + ((CTL0104A_TermoparLog) selectedLog).getEntries().get(0).getT1() + "\n" +
+                "T2: " + ((CTL0104A_TermoparLog) selectedLog).getEntries().get(0).getT2() + "\n" +
+                "T3: " + ((CTL0104A_TermoparLog) selectedLog).getEntries().get(0).getT3() + "\n" +
+                "T4: " + ((CTL0104A_TermoparLog) selectedLog).getEntries().get(0).getT4()
+        );
+        builder.setPositiveButton("OK", (dialog, which) -> {
+        });
+        builder.setTitle("Log Único!");
+        runOnUiThread(() -> builder.create().show());
+    }
+
+    private void createCTL0104BDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
+        builder.setMessage("Só existe apenas um registro no Log: "
+                + "\n" + "\n" +
+                "Data: " + ((CTL0104B_TermoparLog) selectedLog).getEntries().get(0).getData() + "\n" +
+                "Horário: " + ((CTL0104B_TermoparLog) selectedLog).getEntries().get(0).getHora() + "\n" +
+                "T1: " + ((CTL0104B_TermoparLog) selectedLog).getEntries().get(0).getT1() + "\n" +
+                "T2: " + ((CTL0104B_TermoparLog) selectedLog).getEntries().get(0).getT2() + "\n" +
+                "T3: " + ((CTL0104B_TermoparLog) selectedLog).getEntries().get(0).getT3() + "\n" +
+                "T4: " + ((CTL0104B_TermoparLog) selectedLog).getEntries().get(0).getT4() + "\n" +
+                "M5: " + ((CTL0104B_TermoparLog) selectedLog).getEntries().get(0).getM5() + "\n" +
+                "M6: " + ((CTL0104B_TermoparLog) selectedLog).getEntries().get(0).getM6() + "\n" +
+                "M7: " + ((CTL0104B_TermoparLog) selectedLog).getEntries().get(0).getM7()
+        );
+        builder.setPositiveButton("OK", (dialog, which) -> {
+        });
+        builder.setTitle("Log Único!");
+        runOnUiThread(() -> builder.create().show());
     }
 
     //Resgata Todos os Arquivos
@@ -489,7 +614,15 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                     String finalNome = nome;
                     String finalPeso = peso;
                     runOnUiThread(() -> {
-                        logsList.add(new TermoparLog(finalNome, finalPeso, null)); //recebeu um log
+                        switch (modelo) {
+                            case "CTL0104B":
+                                logsList.add(new CTL0104B_TermoparLog(finalNome, finalPeso, null)); //recebeu um log
+                                break;
+                            case "CTL0104A":
+                            default:
+                                logsList.add(new CTL0104A_TermoparLog(finalNome, finalPeso, null)); //recebeu um log
+                                break;
+                        }
                         swapItems(logsList);
                     });
                 }
@@ -523,7 +656,7 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
         }).start();
     }
 
-    public void swapItems(ArrayList<TermoparLog> items) {
+    public void swapItems(ArrayList<Object> items) {
         logsList = items;
         adapter.notifyDataSetChanged();
     }
@@ -595,8 +728,16 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
         Log.d(TAG_LOG, "VALOR RECEBIDO : " + valorRecebido);
         if (selectedLog != null) {
             synchronized (lock) {
-                int pesoTodosAsEntradas = Integer.parseInt(selectedLog.getPeso().trim());
-
+                int pesoTodosAsEntradas;
+                switch (modelo) {
+                    case "CTL0104B":
+                        pesoTodosAsEntradas = Integer.parseInt(((CTL0104B_TermoparLog) selectedLog).getPeso().trim());
+                        break;
+                    case "CTL0104A":
+                    default:
+                        pesoTodosAsEntradas = Integer.parseInt(((CTL0104A_TermoparLog) selectedLog).getPeso().trim());
+                        break;
+                }
                 /**
                  * 1:
                  * FFFD � REPLACEMENT CHARACTER
@@ -689,12 +830,23 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
     public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction, int position) {
         if (viewHolder instanceof RecyclerAdapter.MyViewHolder) {
             if (direction == ItemTouchHelper.LEFT) {
+                String name;
+                switch (modelo) {
+                    case "CTL0104B":
+                        name = ((CTL0104B_TermoparLog) logsList.get(viewHolder.getAdapterPosition())).getName();
+                        break;
+                    case "CTL0104A":
+                    default:
+                        name = ((CTL0104A_TermoparLog) logsList.get(viewHolder.getAdapterPosition())).getName();
+                        break;
+                }
+
                 AlertDialog.Builder builder = new AlertDialog.Builder(ReadTermoparDataActivity.this, R.style.DialogOpenLogStyle);
                 builder.setTitle(getResources().getString(R.string.atencao_));
-                builder.setMessage("Deseja realmente excluir o log: " + "\n" + logsList.get(viewHolder.getAdapterPosition()).getName() + "?");
+                builder.setMessage("Deseja realmente excluir o log: " + "\n" + name + "?");
                 builder.setPositiveButton("Excluir", (dialog, which) -> {
                     //deletar arquivo termopar
-                    deleteLogFile(logsList.get(viewHolder.getAdapterPosition()).getName());
+                    deleteLogFile(name);
                     logsList.remove(viewHolder.getAdapterPosition());
                     adapter.notifyDataSetChanged();
                 });

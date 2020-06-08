@@ -11,11 +11,16 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 
 import app.br.chronlog.R;
+import app.br.chronlog.activitys.models.CTL0104A.CTL0104A_TermoparLog;
+import app.br.chronlog.activitys.models.CTL0104B.CTL0104B_TermoparLog;
+
+import static app.br.chronlog.activitys.DevicesActivity.modelo;
 
 public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.MyViewHolder> {
     private final ProgressBar progressBarContainer;
     private boolean adapterApenasString = false;
-    private ArrayList<TermoparLog> mDataset;
+    private ArrayList<CTL0104A_TermoparLog> mDatasetCTL0104A;
+    private ArrayList<CTL0104B_TermoparLog> mDatasetCTL0104B;
     private ArrayList<String[]> mDatasetAsString;
 
     // Provide a reference to the views for each data item
@@ -38,12 +43,20 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.MyView
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public RecyclerAdapter(ArrayList<TermoparLog> termoparLogList, ArrayList<String[]> termoparLogListString, ProgressBar progressBarContainer) {
+    public RecyclerAdapter(ArrayList<?> termoparLogList, ArrayList<String[]> termoparLogListString, ProgressBar progressBarContainer) {
         if (termoparLogList == null) {
             mDatasetAsString = termoparLogListString;
             adapterApenasString = true;
         } else {
-            mDataset = termoparLogList;
+            switch (modelo) {
+                case "CTL0104B":
+                    mDatasetCTL0104B = (ArrayList<CTL0104B_TermoparLog>) termoparLogList;
+                    break;
+                case "CTL0104A":
+                default:
+                    mDatasetCTL0104A = (ArrayList<CTL0104A_TermoparLog>) termoparLogList;
+                    break;
+            }
         }
         this.progressBarContainer = progressBarContainer;
         setHasStableIds(true);
@@ -76,13 +89,23 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.MyView
         // - replace the contents of the view with that element
         //After that display progressbar at the below
         if (!adapterApenasString) {
-            holder.name.setText(mDataset.get(position).getName());
-            holder.peso.setText("(" + mDataset.get(position).getPeso().trim() + " bytes)");
+            switch (modelo) {
+                case "CTL0104B":
+                    holder.name.setText(mDatasetCTL0104B.get(position).getName());
+                    holder.peso.setText("(" + mDatasetCTL0104B.get(position).getPeso().trim() + " bytes)");
+                    break;
+                case "CTL0104A":
+                default:
+                    holder.name.setText(mDatasetCTL0104A.get(position).getName());
+                    holder.peso.setText("(" + mDatasetCTL0104A.get(position).getPeso().trim() + " bytes)");
+                    break;
+            }
+
         } else {
             holder.name.setText(mDatasetAsString.get(position)[0]);
             holder.peso.setText("(" + mDatasetAsString.get(position)[1].trim() + " bytes)");
         }
-        if(progressBarContainer != null && progressBarContainer.getVisibility() == View.VISIBLE) {
+        if (progressBarContainer != null && progressBarContainer.getVisibility() == View.VISIBLE) {
             progressBarContainer.setVisibility(View.GONE);
         }
     }
@@ -92,30 +115,45 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.MyView
     @Override
     public int getItemCount() {
         if (!adapterApenasString) {
-            return mDataset.size();
+            switch (modelo) {
+                case "CTL0104B":
+                    return mDatasetCTL0104B.size();
+                case "CTL0104A":
+                default:
+                    return mDatasetCTL0104A.size();
+            }
         } else {
             return mDatasetAsString.size();
         }
     }
 
     public void removeItem(int position) {
-        if (!adapterApenasString)
-            mDataset.remove(position);
-        else
+        if (!adapterApenasString) {
+            switch (modelo) {
+                case "CTL0104B":
+                    mDatasetCTL0104B.remove(position);
+                    break;
+                case "CTL0104A":
+                default:
+                    mDatasetCTL0104A.remove(position);
+                    break;
+            }
+        } else {
             mDatasetAsString.remove(position);
+        }
         // notify the item removed by position
         // to perform recycler view delete animations
         // NOTE: don't call notifyDataSetChanged()
         notifyItemRemoved(position);
     }
 
-    public void restoreItem(TermoparLog item, int position) {
-        if (!adapterApenasString)
-            mDataset.add(position, item);
-        else
-            mDatasetAsString.add(position, new String[]{item.getName(), item.getPeso()});
-        // notify item added by position
-        notifyItemInserted(position);
+    public void restoreItem(CTL0104A_TermoparLog item, int position) {
+//        if (!adapterApenasString)
+//            mDataset.add(position, item);
+//        else
+//            mDatasetAsString.add(position, new String[]{item.getName(), item.getPeso()});
+//        // notify item added by position
+//        notifyItemInserted(position);
     }
 
 }

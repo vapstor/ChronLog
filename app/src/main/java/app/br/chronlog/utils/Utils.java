@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.app.ActivityOptions;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -23,7 +22,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.github.mikephil.charting.charts.Chart;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.BufferedReader;
@@ -53,35 +51,6 @@ public class Utils {
 
     public static BluetoothController myBluetoothController;
     public static BluetoothDevice bluetoothDeviceSelected;
-
-    public static AlertDialog createDialog(
-            Context context,
-            String title,
-            String body,
-            String positive,
-            String negative,
-            boolean cancelableBtn,
-            boolean cancelableDismiss,
-            DialogInterface.OnClickListener negativeListener,
-            DialogInterface.OnClickListener positiveListener,
-            DialogInterface.OnDismissListener dismissListener
-    ) {
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context)
-                .setTitle(title)
-                .setMessage(body)
-                .setPositiveButton(positive, positiveListener);
-
-        if (cancelableBtn) {
-            builder.setNegativeButton(negative, negativeListener);
-        }
-        if (cancelableDismiss) {
-            builder.setOnDismissListener(dismissListener);
-        } else {
-            builder.setCancelable(false);
-        }
-        return builder.create();
-    }
-
 
     public static TextWatcher insertMask(final String mask, final EditText et) {
         return new TextWatcher() {

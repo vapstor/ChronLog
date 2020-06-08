@@ -27,23 +27,28 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import app.br.chronlog.R;
+import app.br.chronlog.activitys.models.CTL0104A.CTL0104A_TermoparLog;
+import app.br.chronlog.activitys.models.CTL0104A.CTL0104A_TermoparLogEntry;
+import app.br.chronlog.activitys.models.CTL0104B.CTL0104B_TermoparLog;
+import app.br.chronlog.activitys.models.CTL0104B.CTL0104B_TermoparLogEntry;
 import app.br.chronlog.utils.ItemClickSupport;
 import app.br.chronlog.utils.RecyclerAdapter;
 import app.br.chronlog.utils.RecyclerItemTouchHelper;
-import app.br.chronlog.utils.TermoparLog;
-import app.br.chronlog.utils.TermoparLogEntry;
 
 import static androidx.recyclerview.widget.RecyclerView.VERTICAL;
+import static app.br.chronlog.activitys.DevicesActivity.modelo;
 import static app.br.chronlog.utils.Utils.getFileContents;
 
 public class ReadSdDataActivity extends AppCompatActivity implements RecyclerItemTouchHelper.RecyclerItemTouchHelperListener {
 
-    private TermoparLog selectedLog;
+    private CTL0104A_TermoparLog ctl0104a_log;
+    private CTL0104B_TermoparLog ctl0104b_log;
     private RecyclerView logsRecyclerView;
     private RecyclerAdapter adapter;
     private final int REQUISICAO_ACESSO_EXTERNO = 0;
     private ArrayList<String[]> logFilesList;
     private ProgressBar progressBarContainer;
+    private String mModelo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +59,14 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
             if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUISICAO_ACESSO_EXTERNO);
             }
+        }
+
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            mModelo = extras.getString("modelo");
+        } else {
+            Toast.makeText(this, "Ocorreu um erro ao recuperar o modelo!", Toast.LENGTH_SHORT).show();
+            finish();
         }
 
         progressBarContainer = findViewById(R.id.progressBar);
@@ -79,45 +92,62 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
         ItemClickSupport.addTo(logsRecyclerView).setOnItemClickListener((recyclerView, position, v) -> {
             if (isFilePresent(logFilesList.get(position)[0])) { // + logFilesList.get(position)[1]
                 File file = read(logFilesList.get(position)[0]); // + logFilesList.get(position)[1]
-                selectedLog = configFile(file, logFilesList.get(position)[0], logFilesList.get(position)[1]);
+                switch (modelo) {
+                    case "CTL0104A":
+                        ctl0104a_log = (CTL0104A_TermoparLog) configFile(file, logFilesList.get(position)[0], logFilesList.get(position)[1]);
+                        if (ctl0104a_log != null) {
+                            if (ctl0104a_log.getEntries().size() > 1) {
+                                runOnUiThread(() -> Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show());
 
-                if (selectedLog != null) {
-                    if (selectedLog.getEntries().size() > 1) {
-                        runOnUiThread(() -> Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show());
+                                ArrayList<CTL0104A_TermoparLog> CTL0104ATermoparLog = new ArrayList<>();
+                                CTL0104ATermoparLog.add(ctl0104a_log);
 
-                        ArrayList<TermoparLog> termoparLog = new ArrayList<>();
-                        termoparLog.add(selectedLog);
+                                Intent intent = new Intent(this, ChartViewActivity.class);
+                                intent.putParcelableArrayListExtra("selectedLog", CTL0104ATermoparLog);
+                                intent.putExtra("logName", ctl0104a_log.getName());
+                                startActivity(intent);
 
-                        Intent intent = new Intent(this, ChartViewActivity.class);
-                        intent.putParcelableArrayListExtra("selectedLog", termoparLog);
-                        intent.putExtra("logName", selectedLog.getName());
-                        startActivity(intent);
+                            } else if (ctl0104a_log.getEntries().size() == 1) {
+                                createCTL0104ADialog();
+                            } else {
+                                AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
+                                builder.setMessage("Não existem registros no Log!");
+                                builder.setTitle("Log Inválido!");
+                                builder.setPositiveButton("OK", (dialog, which) -> {
+                                });
+                                runOnUiThread(() -> builder.create().show());
+                            }
+                        } else {
+                            Toast.makeText(this, "Falhou ao recuperar informações do arquivo!", Toast.LENGTH_SHORT).show();
+                        }
+                        break;
+                    case "CTL0104B":
+                        ctl0104b_log = (CTL0104B_TermoparLog) configFile(file, logFilesList.get(position)[0], logFilesList.get(position)[1]);
+                        if (ctl0104b_log != null) {
+                            if (ctl0104b_log.getEntries().size() > 1) {
+                                runOnUiThread(() -> Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show());
 
-                    } else if (selectedLog.getEntries().size() == 1) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
-                        builder.setMessage("Só existe apenas um registro no Log: "
-                                + "\n" + "\n" +
-                                "Data: " + selectedLog.getEntries().get(0).getData() + "\n" +
-                                "Horário: " + selectedLog.getEntries().get(0).getHora() + "\n" +
-                                "T1: " + selectedLog.getEntries().get(0).getT1() + "\n" +
-                                "T2: " + selectedLog.getEntries().get(0).getT2() + "\n" +
-                                "T3: " + selectedLog.getEntries().get(0).getT3() + "\n" +
-                                "T4: " + selectedLog.getEntries().get(0).getT4()
-                        );
-                        builder.setPositiveButton("OK", (dialog, which) -> {
-                        });
-                        builder.setTitle("Log Único!");
-                        runOnUiThread(() -> builder.create().show());
-                    } else {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
-                        builder.setMessage("Não existem registros no Log!");
-                        builder.setTitle("Log Inválido!");
-                        builder.setPositiveButton("OK", (dialog, which) -> {
-                        });
-                        runOnUiThread(() -> builder.create().show());
-                    }
-                } else {
-                    Toast.makeText(this, "Falhou ao recuperar informações do arquivo!", Toast.LENGTH_SHORT).show();
+                                ArrayList<CTL0104B_TermoparLog> CTL0104BTermoparLog = new ArrayList<>();
+                                CTL0104BTermoparLog.add(ctl0104b_log);
+
+                                Intent intent = new Intent(this, ChartViewActivity.class);
+                                intent.putParcelableArrayListExtra("selectedLog", CTL0104BTermoparLog);
+                                intent.putExtra("logName", ctl0104b_log.getName());
+                                startActivity(intent);
+                            } else if (ctl0104b_log.getEntries().size() == 1) {
+                                createCTL0104BDialog();
+                            } else {
+                                AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
+                                builder.setMessage("Não existem registros no Log!");
+                                builder.setTitle("Log Inválido!");
+                                builder.setPositiveButton("OK", (dialog, which) -> {
+                                });
+                                runOnUiThread(() -> builder.create().show());
+                            }
+                        } else {
+                            Toast.makeText(this, "Falhou ao recuperar informações do arquivo!", Toast.LENGTH_SHORT).show();
+                        }
+                        break;
                 }
             }
 
@@ -125,7 +155,7 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
         ItemClickSupport.addTo(logsRecyclerView).setOnItemLongClickListener((RecyclerView recyclerView, int position, View v) -> {
             String fileName = logFilesList.get(position)[0];
             if (isFilePresent(fileName)) {
-                String path = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + fileName;
+                String path = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + mModelo + "/" + fileName;
                 File file = new File(path);
 
                 Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
@@ -146,6 +176,43 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
         setFinishOnTouchOutside(true);
     }
 
+    private void createCTL0104ADialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
+        builder.setMessage("Só existe apenas um registro no Log: "
+                + "\n" + "\n" +
+                "Data: " + ctl0104a_log.getEntries().get(0).getData() + "\n" +
+                "Horário: " + ctl0104a_log.getEntries().get(0).getHora() + "\n" +
+                "T1: " + ctl0104a_log.getEntries().get(0).getT1() + "\n" +
+                "T2: " + ctl0104a_log.getEntries().get(0).getT2() + "\n" +
+                "T3: " + ctl0104a_log.getEntries().get(0).getT3() + "\n" +
+                "T4: " + ctl0104a_log.getEntries().get(0).getT4()
+        );
+        builder.setPositiveButton("OK", (dialog, which) -> {
+        });
+        builder.setTitle("Log Único!");
+        runOnUiThread(() -> builder.create().show());
+    }
+
+    private void createCTL0104BDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
+        builder.setMessage("Só existe apenas um registro no Log: "
+                + "\n" + "\n" +
+                "Data: " + ctl0104b_log.getEntries().get(0).getData() + "\n" +
+                "Horário: " + ctl0104b_log.getEntries().get(0).getHora() + "\n" +
+                "T1: " + ctl0104b_log.getEntries().get(0).getT1() + "\n" +
+                "T2: " + ctl0104b_log.getEntries().get(0).getT2() + "\n" +
+                "T3: " + ctl0104b_log.getEntries().get(0).getT3() + "\n" +
+                "T4: " + ctl0104b_log.getEntries().get(0).getT4() + "\n" +
+                "M5: " + ctl0104b_log.getEntries().get(0).getM5() + "\n" +
+                "M6: " + ctl0104b_log.getEntries().get(0).getM6() + "\n" +
+                "M7: " + ctl0104b_log.getEntries().get(0).getM7()
+        );
+        builder.setPositiveButton("OK", (dialog, which) -> {
+        });
+        builder.setTitle("Log Único!");
+        runOnUiThread(() -> builder.create().show());
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -160,7 +227,7 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
         return file.delete();
     }
 
-    private TermoparLog configFile(File file, String nome, String peso) {
+    private Object configFile(File file, String nome, String peso) {
         String allData;
         try {
             allData = getFileContents(file);
@@ -171,28 +238,49 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
         return otherConfigFile(nome, peso, allData);
     }
 
-    private TermoparLog otherConfigFile(String nome, String peso, String dataFromFile) {
+    private Object otherConfigFile(String nome, String peso, String dataFromFile) {
         //Configura o arquivo PARCELABLE para enviar ao chart
 
         String[] receivedStrArray = dataFromFile.split("(\\r?\\n|\\r)");
         String lineValue;
-        ArrayList<TermoparLogEntry> entries = new ArrayList<>();
+        ArrayList<CTL0104A_TermoparLogEntry> ctl0104a_entries = new ArrayList<>();
+        ArrayList<CTL0104B_TermoparLogEntry> ctl0104b_entries = new ArrayList<>();
+
         for (int i = 0; i < receivedStrArray.length; i++) {
             if (i >= 2) { // 2 = 3ª linha [valores a partir da 2 linha[0 - @ 05, 1 - Data / Hora /...]
                 lineValue = receivedStrArray[i];
 
                 String[] colunas = lineValue.split(" ");
-                colunas = Arrays.copyOf(colunas, 6);
-                for (int j = 0; j < colunas.length; j++) {
-                    if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
-                        colunas[j] = "OPEN";
-                    }
+
+                switch (mModelo) {
+                    case "CTL0104A":
+                        colunas = Arrays.copyOf(colunas, 6);
+                        for (int j = 0; j < colunas.length; j++) {
+                            if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
+                                colunas[j] = "OPEN";
+                            }
+                        }
+                        ctl0104a_entries.add(new CTL0104A_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5]));
+                        break;
+                    case "CTL0104B":
+                        colunas = Arrays.copyOf(colunas, 9);
+                        for (int j = 0; j < colunas.length; j++) {
+                            if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
+                                colunas[j] = "OPEN";
+                            }
+                        }
+                        ctl0104b_entries.add(new CTL0104B_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5], colunas[6], colunas[7], colunas[8]));
+                        break;
                 }
-                entries.add(new TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5]));
             }
         }
-
-        return new TermoparLog(nome, peso, entries);
+        switch (mModelo) {
+            case "CTL0104B":
+                return new CTL0104B_TermoparLog(nome, peso, ctl0104b_entries);
+            case "CTL0104A":
+            default:
+                return new CTL0104A_TermoparLog(nome, peso, ctl0104a_entries);
+        }
     }
 
     @Override
@@ -203,18 +291,19 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
     }
 
     private File read(String filename) {
-        return new File(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + filename); //ja contem '.LOG' no filename
+        return new File(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + mModelo + "/" + filename); //ja contem '.LOG' no filename
     }
 
     public boolean isFilePresent(String fileName) {
-        String path = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + fileName;
+        String path = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + mModelo + "/" + fileName;
         File file = new File(path);
         return file.exists();
     }
 
     private void retriveFilesSD() {
-        File folder = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
-        if (folder != null) {
+        String pathFolder = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/" + mModelo + "/";
+        File folder = new File(pathFolder);
+        if (folder.exists()) {
             //Get the logFiles
             File[] filesInFolder = folder.listFiles();
             if (filesInFolder != null) {
@@ -229,11 +318,11 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
                     }
                 }
             } else {
-                Toast.makeText(this, "Sem Arquivos Salvos!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Sem arquivos salvos!", Toast.LENGTH_SHORT).show();
                 finish();
             }
         } else {
-            Toast.makeText(this, "Falhou ao Localizar Armazenamento!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Sem arquivos salvos (armazenamento inexistente)!", Toast.LENGTH_SHORT).show();
             finish();
         }
     }

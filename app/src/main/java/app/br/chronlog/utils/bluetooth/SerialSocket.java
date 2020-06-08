@@ -105,6 +105,7 @@ public class SerialSocket implements Runnable {
                 somatorioTotalLength = somatorioTotalLength + data.length;
                 Log.d(TAG_LOG, "Dado Vindo Direto do SOCKET: " + data.length);
                 Log.d(TAG_LOG, "Dado Vindo Direto do SOCKET [SOMATORIO TOTAL]: " + somatorioTotalLength);
+                Log.d(TAG_LOG, "Dado String " + new String(data));
                 if (listener != null)
                     listener.onSerialRead(data);
             }
