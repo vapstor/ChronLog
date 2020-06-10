@@ -35,6 +35,8 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import app.br.chronlog.R;
+import app.br.chronlog.activitys.models.CEL0102A.CEL0102A_TermoparLog;
+import app.br.chronlog.activitys.models.CEL0102A.CEL0102A_TermoparLogEntry;
 import app.br.chronlog.activitys.models.CTL0104A.CTL0104A_TermoparLog;
 import app.br.chronlog.activitys.models.CTL0104A.CTL0104A_TermoparLogEntry;
 import app.br.chronlog.activitys.models.CTL0104B.CTL0104B_TermoparLog;
@@ -131,6 +133,9 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
 
             progressBarSaveShareLog = alertDialog[0].findViewById(R.id.progressBarSaveShareLog);
             switch (modelo) {
+                case "CEL0102A":
+                    ((TextView) Objects.requireNonNull(alertDialog[0].findViewById(R.id.logId))).setText(((CEL0102A_TermoparLog) selectedLog).getName() + " (" + ((CEL0102A_TermoparLog) selectedLog).getPeso().trim() + " bytes)");
+                    break;
                 case "CVL0101A":
                     ((TextView) Objects.requireNonNull(alertDialog[0].findViewById(R.id.logId))).setText(((CVL0101A_TermoparLog) selectedLog).getName() + " (" + ((CVL0101A_TermoparLog) selectedLog).getPeso().trim() + " bytes)");
                     break;
@@ -150,6 +155,9 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                     deleteCacheFiles();
                     String filename;
                     switch (modelo) {
+                        case "CEL0102A":
+                            filename = ((CEL0102A_TermoparLog) logsList.get(position)).getName();
+                            break;
                         case "CVL0101A":
                             filename = ((CVL0101A_TermoparLog) logsList.get(position)).getName();
                             break;
@@ -172,6 +180,9 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                     sharingIntent.setType("text/plain");
 
                     switch (modelo) {
+                        case "CEL0102A":
+                            sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, ((CEL0102A_TermoparLog) logsList.get(position)).getName());
+                            break;
                         case "CVL0101A":
                             sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, ((CVL0101A_TermoparLog) logsList.get(position)).getName());
                             break;
@@ -200,6 +211,9 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                     try {
                         String name;
                         switch (modelo) {
+                            case "CEL0102A":
+                                name = ((CEL0102A_TermoparLog) logsList.get(position)).getName();
+                                break;
                             case "CVL0101A":
                                 name = ((CVL0101A_TermoparLog) logsList.get(position)).getName();
                                 break;
@@ -362,6 +376,10 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
         String protocolReadFileData;
         int max;
         switch (modelo) {
+            case "CEL0102A":
+                protocolReadFileData = "@05" + ((CEL0102A_TermoparLog) selectedLog).getName() + "0000";
+                max = Integer.parseInt(((CEL0102A_TermoparLog) selectedLog).getPeso().trim()) * 10;
+                break;
             case "CVL0101A":
                 protocolReadFileData = "@05" + ((CVL0101A_TermoparLog) selectedLog).getName() + "0000";
                 max = Integer.parseInt(((CVL0101A_TermoparLog) selectedLog).getPeso().trim()) * 10;
@@ -462,19 +480,20 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
         ArrayList<CTL0104A_TermoparLogEntry> ctl0104a_entries = new ArrayList<>();
         ArrayList<CTL0104B_TermoparLogEntry> ctl0104b_entries = new ArrayList<>();
         ArrayList<CVL0101A_TermoparLogEntry> cvl0101a_entries = new ArrayList<>();
+        ArrayList<CEL0102A_TermoparLogEntry> cel0102a_entries = new ArrayList<>();
         for (int i = 0; i < receivedStrArray.length; i++) {
             if (i >= 2) { // 2 = 3ª linha [valores a partir da 2 linha[0 - @ 05, 1 - Data / Hora /...]
                 lineValue = receivedStrArray[i];
                 String[] colunas = lineValue.split(" ");
                 switch (modelo) {
-                    case "CVL0101A":
-                        colunas = Arrays.copyOf(colunas, 6);
+                    case "CEL0102A":
+                        colunas = Arrays.copyOf(colunas, 8);
                         for (int j = 0; j < colunas.length; j++) {
                             if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
                                 colunas[j] = "OPEN";
                             }
                         }
-                        cvl0101a_entries.add(new CVL0101A_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5]));
+                        cel0102a_entries.add(new CEL0102A_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5], colunas[6], colunas[7]));
                         break;
                     case "CTL0104B":
                         colunas = Arrays.copyOf(colunas, 9);
@@ -486,7 +505,6 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                         ctl0104b_entries.add(new CTL0104B_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5], colunas[6], colunas[7], colunas[8]));
                         break;
                     case "CTL0104A":
-                    default:
                         colunas = Arrays.copyOf(colunas, 6);
                         for (int j = 0; j < colunas.length; j++) {
                             if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
@@ -495,10 +513,39 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                         }
                         ctl0104a_entries.add(new CTL0104A_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5]));
                         break;
+                    case "CVL0101A":
+                        colunas = Arrays.copyOf(colunas, 6);
+                        for (int j = 0; j < colunas.length; j++) {
+                            if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
+                                colunas[j] = "OPEN";
+                            }
+                        }
+                        cvl0101a_entries.add(new CVL0101A_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5]));
+                        break;
                 }
             }
         }
         switch (modelo) {
+            case "CEL0102A":
+                if (cel0102a_entries.size() > 1) {
+                    runOnUiThread(() -> Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show());
+
+                    ((CEL0102A_TermoparLog) this.selectedLog).setEntries(cel0102a_entries);
+
+                    ArrayList<CEL0102A_TermoparLog> CEL0102A_TermoparLog = new ArrayList<>();
+                    CEL0102A_TermoparLog.add(((CEL0102A_TermoparLog) this.selectedLog));
+
+                    Intent intent = new Intent(this, ChartViewActivity.class);
+                    intent.putExtra("modelo", modelo);
+                    intent.putParcelableArrayListExtra("selectedLog", CEL0102A_TermoparLog);
+                    intent.putExtra("logName", ((CEL0102A_TermoparLog) this.selectedLog).getName());
+                    startActivity(intent);
+                } else if (cel0102a_entries.size() == 1) {
+                    createCEL0102ADialog();
+                } else {
+                    semRegistrosDialog();
+                }
+                break;
             case "CVL0101A":
                 if (cvl0101a_entries.size() > 1) {
                     runOnUiThread(() -> Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show());
@@ -567,6 +614,25 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
 
     }
 
+    private void createCEL0102ADialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
+        builder.setMessage("Só existe apenas um registro no Log: "
+                + "\n" + "\n" +
+                "Data: " + ((CEL0102A_TermoparLog) selectedLog).getEntries().get(0).getData() + "\n" +
+                "Horário: " + ((CEL0102A_TermoparLog) selectedLog).getEntries().get(0).getHora() + "\n" +
+                "V: " + ((CEL0102A_TermoparLog) selectedLog).getEntries().get(0).getV() + "\n" +
+                "I: " + ((CEL0102A_TermoparLog) selectedLog).getEntries().get(0).getI() + "\n" +
+                "P: " + ((CEL0102A_TermoparLog) selectedLog).getEntries().get(0).getP() + "\n" +
+                "E: " + ((CEL0102A_TermoparLog) selectedLog).getEntries().get(0).getE() + "\n" +
+                "FP: " + ((CEL0102A_TermoparLog) selectedLog).getEntries().get(0).getFp() + "\n" +
+                "DHT: " + ((CEL0102A_TermoparLog) selectedLog).getEntries().get(0).getDht() + "\n"
+        );
+        builder.setPositiveButton("OK", (dialog, which) -> {
+        });
+        builder.setTitle("Log Único!");
+        runOnUiThread(() -> builder.create().show());
+    }
+
     private void createCVL0101ADialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
         builder.setMessage("Só existe apenas um registro no Log: "
@@ -602,7 +668,7 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                 "T1: " + ((CTL0104A_TermoparLog) selectedLog).getEntries().get(0).getT1() + "\n" +
                 "T2: " + ((CTL0104A_TermoparLog) selectedLog).getEntries().get(0).getT2() + "\n" +
                 "T3: " + ((CTL0104A_TermoparLog) selectedLog).getEntries().get(0).getT3() + "\n" +
-                "T4: " + ((CTL0104A_TermoparLog) selectedLog).getEntries().get(0).getT4()
+                "T4: " + ((CTL0104A_TermoparLog) selectedLog).getEntries().get(0).getT4() + "\n"
         );
         builder.setPositiveButton("OK", (dialog, which) -> {
         });
@@ -622,7 +688,7 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                 "T4: " + ((CTL0104B_TermoparLog) selectedLog).getEntries().get(0).getT4() + "\n" +
                 "M5: " + ((CTL0104B_TermoparLog) selectedLog).getEntries().get(0).getM5() + "\n" +
                 "M6: " + ((CTL0104B_TermoparLog) selectedLog).getEntries().get(0).getM6() + "\n" +
-                "M7: " + ((CTL0104B_TermoparLog) selectedLog).getEntries().get(0).getM7()
+                "M7: " + ((CTL0104B_TermoparLog) selectedLog).getEntries().get(0).getM7() + "\n"
         );
         builder.setPositiveButton("OK", (dialog, which) -> {
         });
@@ -682,6 +748,9 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
                     String finalPeso = peso;
                     runOnUiThread(() -> {
                         switch (modelo) {
+                            case "CEL0102A":
+                                logsList.add(new CEL0102A_TermoparLog(finalNome, finalPeso, null)); //recebeu um log
+                                break;
                             case "CVL0101A":
                                 logsList.add(new CVL0101A_TermoparLog(finalNome, finalPeso, null)); //recebeu um log
                                 break;
@@ -800,6 +869,9 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
             synchronized (lock) {
                 int pesoTodosAsEntradas;
                 switch (modelo) {
+                    case "CEL0102A":
+                        pesoTodosAsEntradas = Integer.parseInt(((CEL0102A_TermoparLog) selectedLog).getPeso().trim());
+                        break;
                     case "CVL0101A":
                         pesoTodosAsEntradas = Integer.parseInt(((CVL0101A_TermoparLog) selectedLog).getPeso().trim());
                         break;
@@ -905,6 +977,9 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
             if (direction == ItemTouchHelper.LEFT) {
                 String name;
                 switch (modelo) {
+                    case "CEL0102A":
+                        name = ((CEL0102A_TermoparLog) logsList.get(viewHolder.getAdapterPosition())).getName();
+                        break;
                     case "CVL0101A":
                         name = ((CVL0101A_TermoparLog) logsList.get(viewHolder.getAdapterPosition())).getName();
                         break;

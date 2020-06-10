@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -27,6 +28,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import app.br.chronlog.R;
+import app.br.chronlog.activitys.models.CEL0102A.CEL0102A_TermoparLog;
+import app.br.chronlog.activitys.models.CEL0102A.CEL0102A_TermoparLogEntry;
 import app.br.chronlog.activitys.models.CTL0104A.CTL0104A_TermoparLog;
 import app.br.chronlog.activitys.models.CTL0104A.CTL0104A_TermoparLogEntry;
 import app.br.chronlog.activitys.models.CTL0104B.CTL0104B_TermoparLog;
@@ -38,7 +41,6 @@ import app.br.chronlog.utils.RecyclerAdapter;
 import app.br.chronlog.utils.RecyclerItemTouchHelper;
 
 import static androidx.recyclerview.widget.RecyclerView.VERTICAL;
-import static app.br.chronlog.activitys.DevicesActivity.modelo;
 import static app.br.chronlog.utils.Utils.getFileContents;
 
 public class ReadSdDataActivity extends AppCompatActivity implements RecyclerItemTouchHelper.RecyclerItemTouchHelperListener {
@@ -46,12 +48,14 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
     private CVL0101A_TermoparLog cvl0101a_log;
     private CTL0104A_TermoparLog ctl0104a_log;
     private CTL0104B_TermoparLog ctl0104b_log;
+    private CEL0102A_TermoparLog cel0102a_log;
     private RecyclerView logsRecyclerView;
     private RecyclerAdapter adapter;
     private final int REQUISICAO_ACESSO_EXTERNO = 0;
     private ArrayList<String[]> logFilesList;
     private ProgressBar progressBarContainer;
     private String mModelo;
+    private TextView titleDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +71,8 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             mModelo = extras.getString("modelo");
+            titleDialog = findViewById(R.id.title);
+            titleDialog.setText("Arquivos do SD" +"\n(" + mModelo + ")");
         } else {
             Toast.makeText(this, "Ocorreu um erro ao recuperar o modelo!", Toast.LENGTH_SHORT).show();
             finish();
@@ -95,7 +101,36 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
         ItemClickSupport.addTo(logsRecyclerView).setOnItemClickListener((recyclerView, position, v) -> {
             if (isFilePresent(logFilesList.get(position)[0])) { // + logFilesList.get(position)[1]
                 File file = read(logFilesList.get(position)[0]); // + logFilesList.get(position)[1]
-                switch (modelo) {
+                switch (mModelo) {
+                    case "CEL0102A":
+                        cel0102a_log = (CEL0102A_TermoparLog) configFile(file, logFilesList.get(position)[0], logFilesList.get(position)[1]);
+                        if (cel0102a_log != null) {
+                            if (cel0102a_log.getEntries().size() > 1) {
+                                runOnUiThread(() -> Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show());
+
+                                ArrayList<CEL0102A_TermoparLog> CEL0102ATermoparLog = new ArrayList<>();
+                                CEL0102ATermoparLog.add(cel0102a_log);
+
+                                Intent intent = new Intent(this, ChartViewActivity.class);
+                                intent.putExtra("modelo", mModelo);
+                                intent.putParcelableArrayListExtra("selectedLog", CEL0102ATermoparLog);
+                                intent.putExtra("logName", cel0102a_log.getName());
+                                startActivity(intent);
+
+                            } else if (cel0102a_log.getEntries().size() == 1) {
+                                createCEL0102ADialog();
+                            } else {
+                                AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
+                                builder.setMessage("Não existem registros no Log!");
+                                builder.setTitle("Log Inválido!");
+                                builder.setPositiveButton("OK", (dialog, which) -> {
+                                });
+                                runOnUiThread(() -> builder.create().show());
+                            }
+                        } else {
+                            Toast.makeText(this, "Falhou ao recuperar informações do arquivo!", Toast.LENGTH_SHORT).show();
+                        }
+                        break;
                     case "CVL0101A":
                         cvl0101a_log = (CVL0101A_TermoparLog) configFile(file, logFilesList.get(position)[0], logFilesList.get(position)[1]);
                         if (cvl0101a_log != null) {
@@ -153,8 +188,8 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
                             Toast.makeText(this, "Falhou ao recuperar informações do arquivo!", Toast.LENGTH_SHORT).show();
                         }
                         break;
-                    default:
                     case "CTL0104A":
+                    default:
                         ctl0104a_log = (CTL0104A_TermoparLog) configFile(file, logFilesList.get(position)[0], logFilesList.get(position)[1]);
                         if (ctl0104a_log != null) {
                             if (ctl0104a_log.getEntries().size() > 1) {
@@ -209,6 +244,25 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
         });
 
         setFinishOnTouchOutside(true);
+    }
+
+    private void createCEL0102ADialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
+        builder.setMessage("Só existe apenas um registro no Log: "
+                + "\n" + "\n" +
+                "Data: " + cel0102a_log.getEntries().get(0).getData() + "\n" +
+                "Horário: " + cel0102a_log.getEntries().get(0).getHora() + "\n" +
+                "V: " + cel0102a_log.getEntries().get(0).getV() + "\n" +
+                "I: " + cel0102a_log.getEntries().get(0).getI() + "\n" +
+                "P: " + cel0102a_log.getEntries().get(0).getP() + "\n" +
+                "E: " + cel0102a_log.getEntries().get(0).getE() + "\n" +
+                "FP: " + cel0102a_log.getEntries().get(0).getFp() + "\n" +
+                "DHT: " + cel0102a_log.getEntries().get(0).getDht() + "\n"
+        );
+        builder.setPositiveButton("OK", (dialog, which) -> {
+        });
+        builder.setTitle("Log Único!");
+        runOnUiThread(() -> builder.create().show());
     }
 
     private void createCVL0101ADialog() {
@@ -295,6 +349,7 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
 
         String[] receivedStrArray = dataFromFile.split("(\\r?\\n|\\r)");
         String lineValue;
+        ArrayList<CEL0102A_TermoparLogEntry> cel0102a_entries = new ArrayList<>();
         ArrayList<CTL0104A_TermoparLogEntry> ctl0104a_entries = new ArrayList<>();
         ArrayList<CVL0101A_TermoparLogEntry> cvl0101a_entries = new ArrayList<>();
         ArrayList<CTL0104B_TermoparLogEntry> ctl0104b_entries = new ArrayList<>();
@@ -306,14 +361,14 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
                 String[] colunas = lineValue.split(" ");
 
                 switch (mModelo) {
-                    case "CVL0101A":
-                        colunas = Arrays.copyOf(colunas, 6);
+                    case "CEL0102A":
+                        colunas = Arrays.copyOf(colunas, 8);
                         for (int j = 0; j < colunas.length; j++) {
                             if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
                                 colunas[j] = "OPEN";
                             }
                         }
-                        cvl0101a_entries.add(new CVL0101A_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5]));
+                        cel0102a_entries.add(new CEL0102A_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5], colunas[6], colunas[7]));
                         break;
                     case "CTL0104B":
                         colunas = Arrays.copyOf(colunas, 9);
@@ -325,19 +380,24 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
                         ctl0104b_entries.add(new CTL0104B_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5], colunas[6], colunas[7], colunas[8]));
                         break;
                     default:
-                    case "CTL0104A":
                         colunas = Arrays.copyOf(colunas, 6);
                         for (int j = 0; j < colunas.length; j++) {
                             if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
                                 colunas[j] = "OPEN";
                             }
                         }
+                    case "CTL0104A":
                         ctl0104a_entries.add(new CTL0104A_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5]));
+                        break;
+                    case "CVL0101A":
+                        cvl0101a_entries.add(new CVL0101A_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5]));
                         break;
                 }
             }
         }
         switch (mModelo) {
+            case "CEL0102A":
+                return new CEL0102A_TermoparLog(nome, peso, cel0102a_entries);
             case "CVL0101A":
                 return new CVL0101A_TermoparLog(nome, peso, cvl0101a_entries);
             case "CTL0104B":
@@ -387,7 +447,7 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
                 finish();
             }
         } else {
-            Toast.makeText(this, "Sem arquivos salvos (armazenamento inexistente)!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Sem arquivos salvos! (diretório inexistente)", Toast.LENGTH_SHORT).show();
             finish();
         }
     }

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="75dp"
-    android:layout_height="40dp"
+    android:layout_width="125dp"
+    android:layout_height="50dp"
     android:background="@drawable/marker2"
     tools:ignore="Overdraw">
 
@@ -11,9 +11,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_marginLeft="5dp"
-        android:layout_marginTop="7dp"
-        android:layout_marginRight="5dp"
+        android:layout_marginLeft="2dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginRight="2dp"
         android:ellipsize="end"
         android:singleLine="true"
         android:text=""

@@ -38,7 +38,7 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <Button
-            android:id="@+id/t1Button"
+            android:id="@+id/m1Button"
             android:layout_width="0dp"
             android:layout_height="55dp"
             android:layout_marginStart="10dp"
@@ -48,14 +48,14 @@
             android:padding="2dp"
             android:paddingLeft="8dp"
             android:paddingRight="8dp"
-            android:text="@string/t1"
+            android:text="@string/m1"
             android:textSize="14sp"
-            app:layout_constraintEnd_toStartOf="@+id/t2Button"
+            app:layout_constraintEnd_toStartOf="@+id/m2Button"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <Button
-            android:id="@+id/t2Button"
+            android:id="@+id/m2Button"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginStart="3dp"
@@ -64,14 +64,14 @@
             android:padding="2dp"
             android:paddingLeft="8dp"
             android:paddingRight="8dp"
-            android:text="@string/t2"
-            app:layout_constraintBottom_toBottomOf="@+id/t1Button"
-            app:layout_constraintEnd_toStartOf="@+id/t3Button"
-            app:layout_constraintStart_toEndOf="@+id/t1Button"
-            app:layout_constraintTop_toTopOf="@+id/t1Button" />
+            android:text="@string/m2"
+            app:layout_constraintBottom_toBottomOf="@+id/m1Button"
+            app:layout_constraintEnd_toStartOf="@+id/m3Button"
+            app:layout_constraintStart_toEndOf="@+id/m1Button"
+            app:layout_constraintTop_toTopOf="@+id/m1Button" />
 
         <Button
-            android:id="@+id/t3Button"
+            android:id="@+id/m3Button"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginStart="3dp"
@@ -80,14 +80,14 @@
             android:padding="2dp"
             android:paddingLeft="8dp"
             android:paddingRight="8dp"
-            android:text="@string/t3"
-            app:layout_constraintBottom_toBottomOf="@+id/t2Button"
-            app:layout_constraintEnd_toStartOf="@+id/t4Button"
-            app:layout_constraintStart_toEndOf="@+id/t2Button"
-            app:layout_constraintTop_toTopOf="@+id/t2Button" />
+            android:text="@string/m3"
+            app:layout_constraintBottom_toBottomOf="@+id/m2Button"
+            app:layout_constraintEnd_toStartOf="@+id/m4Button"
+            app:layout_constraintStart_toEndOf="@+id/m2Button"
+            app:layout_constraintTop_toTopOf="@+id/m2Button" />
 
         <Button
-            android:id="@+id/t4Button"
+            android:id="@+id/m4Button"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginStart="3dp"
@@ -96,11 +96,11 @@
             android:padding="2dp"
             android:paddingLeft="8dp"
             android:paddingRight="8dp"
-            android:text="@string/t4"
-            app:layout_constraintBottom_toBottomOf="@+id/t3Button"
+            android:text="@string/m4"
+            app:layout_constraintBottom_toBottomOf="@+id/m3Button"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/t3Button"
-            app:layout_constraintTop_toTopOf="@+id/t3Button" />
+            app:layout_constraintStart_toEndOf="@+id/m3Button"
+            app:layout_constraintTop_toTopOf="@+id/m3Button" />
 
         <Button
             android:id="@+id/m5Button"
@@ -114,7 +114,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/m6Button"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/t1Button" />
+            app:layout_constraintTop_toBottomOf="@+id/m1Button" />
 
         <Button
             android:id="@+id/m6Button"

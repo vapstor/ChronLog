@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 
 import app.br.chronlog.R;
+import app.br.chronlog.activitys.models.CEL0102A.CEL0102A_TermoparLog;
 import app.br.chronlog.activitys.models.CTL0104A.CTL0104A_TermoparLog;
 import app.br.chronlog.activitys.models.CTL0104B.CTL0104B_TermoparLog;
 import app.br.chronlog.activitys.models.CVL0101A.CVL0101A_TermoparLog;
@@ -23,6 +24,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.MyView
     private ArrayList<CVL0101A_TermoparLog> mDatasetCVL0101A;
     private ArrayList<CTL0104A_TermoparLog> mDatasetCTL0104A;
     private ArrayList<CTL0104B_TermoparLog> mDatasetCTL0104B;
+    private ArrayList<CEL0102A_TermoparLog> mDatasetCEL0102A;
     private ArrayList<String[]> mDatasetAsString;
 
     // Provide a reference to the views for each data item
@@ -51,6 +53,9 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.MyView
             adapterApenasString = true;
         } else {
             switch (modelo) {
+                case "CEL0102A":
+                    mDatasetCEL0102A = (ArrayList<CEL0102A_TermoparLog>) termoparLogList;
+                    break;
                 case "CVL0101A":
                     mDatasetCVL0101A = (ArrayList<CVL0101A_TermoparLog>) termoparLogList;
                     break;
@@ -95,6 +100,10 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.MyView
         //After that display progressbar at the below
         if (!adapterApenasString) {
             switch (modelo) {
+                case "CEL0102A":
+                    holder.name.setText(mDatasetCEL0102A.get(position).getName());
+                    holder.peso.setText("(" + mDatasetCEL0102A.get(position).getPeso().trim() + " bytes)");
+                    break;
                 case "CVL0101A":
                     holder.name.setText(mDatasetCVL0101A.get(position).getName());
                     holder.peso.setText("(" + mDatasetCVL0101A.get(position).getPeso().trim() + " bytes)");
@@ -125,6 +134,8 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.MyView
     public int getItemCount() {
         if (!adapterApenasString) {
             switch (modelo) {
+                case "CEL0102A":
+                    return mDatasetCEL0102A.size();
                 case "CVL0101A":
                     return mDatasetCVL0101A.size();
                 case "CTL0104B":

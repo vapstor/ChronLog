@@ -23,13 +23,6 @@
     <string name="compartilhar">compartilhar</string>
     <string name="salvar">salvar</string>
     <string name="zoom">Zoom</string>
-    <string name="t1">T1</string>
-    <string name="t2">T2</string>
-    <string name="t3">T3</string>
-    <string name="t4">T4</string>
-    <string name="m5">M5</string>
-    <string name="m6">M6</string>
-    <string name="m7">M7</string>
     <string name="grafico">gráfico</string>
     <string name="dispositivos">dispositivos</string>
     <string name="title">title</string>
@@ -62,7 +55,7 @@
     <string name="atencao_">Atenção!</string>
     <string name="ajustes">ajustes</string>
     <string name="log_title">log title</string>
-    <string name="arquivos_do_sd">Arquivos do SD</string>
+    <string name="arquivos_do_sd">Arquivos do SD\n(modelo)</string>
     <string name="arquivos_do_dispositivo">Arquivos do Dispositivo</string>
     <string name="refreshicon">refreshIcon</string>
     <string name="peso">peso</string>
@@ -82,6 +75,27 @@
             Aplicativo desenvolvido para utilização em conjunto com os registradores de dados Chronteck.\n
             \nConsulte produtos compatíveis no site
             \nwww.chronteck.com"</string>
+    <string name="t1">T1</string>
+    <string name="t2">T2</string>
+    <string name="t3">T3</string>
+    <string name="t4">T4</string>
+    <string name="vMin">vMIN</string>
+    <string name="mMed">vMED</string>
+    <string name="mMax">vMAX</string>
+    <string name="thd">THD</string>
+    <string name="v">V</string>
+    <string name="i">I</string>
+    <string name="p">P</string>
+    <string name="e">E</string>
+    <string name="fp">FP</string>
+    <string name="dht">DHT</string>
+    <string name="m1">M1</string>
+    <string name="m2">M2</string>
+    <string name="m3">M3</string>
+    <string name="m4">M4</string>
+    <string name="m5">M5</string>
+    <string name="m6">M6</string>
+    <string name="m7">M7</string>
     <string-array name="modosTermopar">
         <item>K</item>
         <item>J</item>

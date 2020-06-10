@@ -133,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                 startActivity(new Intent(this, ReadTermoparDataActivity.class));
                 break;
             case R.id.analiseDeDadosBtn:
-                final CharSequence[] items = {"CTL0104A", "CTL0104B", "CVL0101A", "CVL0102A"};
+                final CharSequence[] items = {"CTL0104A", "CTL0104B", "CVL0101A", "CEL0102A"};
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle("Selecione o modelo");

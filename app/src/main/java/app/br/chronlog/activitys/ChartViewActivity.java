@@ -34,6 +34,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import app.br.chronlog.R;
+import app.br.chronlog.activitys.models.CEL0102A.CEL0102A_TermoparLog;
+import app.br.chronlog.activitys.models.CEL0102A.CEL0102A_TermoparLogEntry;
 import app.br.chronlog.activitys.models.CTL0104A.CTL0104A_TermoparLog;
 import app.br.chronlog.activitys.models.CTL0104A.CTL0104A_TermoparLogEntry;
 import app.br.chronlog.activitys.models.CTL0104B.CTL0104B_TermoparLog;
@@ -48,7 +50,6 @@ import static android.graphics.Color.GREEN;
 import static android.graphics.Color.MAGENTA;
 import static android.graphics.Color.RED;
 import static android.graphics.Color.YELLOW;
-import static app.br.chronlog.activitys.DevicesActivity.modelo;
 import static app.br.chronlog.utils.Utils.TAG_LOG;
 
 public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSeekBarChangeListener,
@@ -56,7 +57,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
 
     private LineChart chart;
     private ArrayList<Parcelable> selectedLog;
-    private Button btnT1, btnT2, btnT3, btnT4, btnM5, btnM6, btnM7;
+    private Button btnM1, btnM2, btnM3, btnM4, btnM5, btnM6, btnM7;
     private LineData allData;
     private ArrayList<ILineDataSet> allDataSets;
     private float VALOR_DISCREPANTE = 999;
@@ -84,6 +85,11 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             if (selectedLog != null) {
                 ((TextView) findViewById(R.id.logTitleTxtView)).setText(extras.getString("logName"));
                 switch (mModelo) {
+                    case "CEL0102A":
+                        CEL0102A_TermoparLog CEL0102ATermoparLog = (CEL0102A_TermoparLog) selectedLog.get(0);
+                        entriesList = CEL0102ATermoparLog.getEntries();
+                        acessaDadosDoArquivo(entriesList);
+                        break;
                     case "CVL0101A":
                         CVL0101A_TermoparLog CVL0101ATermoparLog = (CVL0101A_TermoparLog) selectedLog.get(0);
                         entriesList = CVL0101ATermoparLog.getEntries();
@@ -106,59 +112,104 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
                 finish();
             }
         }
+        btnM1 = findViewById(R.id.m1Button);
+        btnM2 = findViewById(R.id.m2Button);
+        btnM3 = findViewById(R.id.m3Button);
+        btnM4 = findViewById(R.id.m4Button);
+        btnM5 = findViewById(R.id.m5Button);
+        btnM6 = findViewById(R.id.m6Button);
+        btnM7 = findViewById(R.id.m7Button);
 
+        btnM1.setOnClickListener((v) -> {
+            toogleBtnPressed(v);
+            toggleDataSetVisibility(0);
+        });
+        btnM2.setOnClickListener((v) -> {
+            toogleBtnPressed(v);
+            toggleDataSetVisibility(1);
+        });
+        btnM3.setOnClickListener((v) -> {
+            toogleBtnPressed(v);
+            toggleDataSetVisibility(2);
+        });
+        btnM4.setOnClickListener((v -> {
+            toogleBtnPressed(v);
+            toggleDataSetVisibility(3);
+        }));
+        btnM5.setOnClickListener((v -> {
+            toogleBtnPressed(v);
+            toggleDataSetVisibility(4);
+        }));
+        btnM6.setOnClickListener((v -> {
+            toogleBtnPressed(v);
+            toggleDataSetVisibility(5);
+        }));
+        btnM7.setOnClickListener((v -> {
+            toogleBtnPressed(v);
+            toggleDataSetVisibility(6);
+        }));
         switch (mModelo) {
-            case "CTL0104B":
-                btnM5 = findViewById(R.id.m5Button);
+            case "CEL0102A":
+                btnM1.setVisibility(View.VISIBLE);
+                btnM2.setVisibility(View.VISIBLE);
+                btnM3.setVisibility(View.VISIBLE);
+                btnM4.setVisibility(View.VISIBLE);
                 btnM5.setVisibility(View.VISIBLE);
-
-                btnM6 = findViewById(R.id.m6Button);
                 btnM6.setVisibility(View.VISIBLE);
+                btnM7.setVisibility(View.GONE);
 
-                btnM7 = findViewById(R.id.m7Button);
+                btnM1.setText(R.string.v);
+                btnM2.setText(R.string.i);
+                btnM3.setText(R.string.p);
+                btnM4.setText(R.string.e);
+                btnM5.setText(R.string.fp);
+                btnM6.setText(R.string.dht);
+                break;
+            case "CTL0104B":
+                btnM1.setVisibility(View.VISIBLE);
+                btnM2.setVisibility(View.VISIBLE);
+                btnM3.setVisibility(View.VISIBLE);
+                btnM4.setVisibility(View.VISIBLE);
+                btnM5.setVisibility(View.VISIBLE);
+                btnM6.setVisibility(View.VISIBLE);
                 btnM7.setVisibility(View.VISIBLE);
 
-                btnM5.setOnClickListener((v -> {
-                    toogleBtnPressed(v);
-                    toggleDataSetVisibility(4);
-                }));
-                btnM6.setOnClickListener((v -> {
-                    toogleBtnPressed(v);
-                    toggleDataSetVisibility(5);
-                }));
-                btnM7.setOnClickListener((v -> {
-                    toogleBtnPressed(v);
-                    toggleDataSetVisibility(6);
-                }));
-            case "CTL0104A":
-            default:
-                btnT1 = findViewById(R.id.t1Button);
-                btnT2 = findViewById(R.id.t2Button);
-                btnT3 = findViewById(R.id.t3Button);
-                btnT4 = findViewById(R.id.t4Button);
-                btnT1.setOnClickListener((v) -> {
-                    toogleBtnPressed(v);
-                    toggleDataSetVisibility(0);
-                });
-                btnT2.setOnClickListener((v) -> {
-                    toogleBtnPressed(v);
-                    toggleDataSetVisibility(1);
-                });
-                btnT3.setOnClickListener((v) -> {
-                    toogleBtnPressed(v);
-                    toggleDataSetVisibility(2);
-                });
-                btnT4.setOnClickListener((v -> {
-                    toogleBtnPressed(v);
-                    toggleDataSetVisibility(3);
-                }));
+                btnM1.setText(R.string.t1);
+                btnM2.setText(R.string.t2);
+                btnM3.setText(R.string.t3);
+                btnM4.setText(R.string.t4);
+                btnM5.setText(R.string.m5);
+                btnM6.setText(R.string.m6);
+                btnM7.setText(R.string.m7);
                 break;
-        }
-        if (modelo.equals("CVL0101A")) {
-            btnT1.setText("vMIN");
-            btnT2.setText("vMED");
-            btnT3.setText("vMAX");
-            btnT4.setText("THD");
+            case "CVL0102A":
+                btnM1.setVisibility(View.VISIBLE);
+                btnM2.setVisibility(View.VISIBLE);
+                btnM3.setVisibility(View.VISIBLE);
+                btnM4.setVisibility(View.VISIBLE);
+                btnM5.setVisibility(View.GONE);
+                btnM6.setVisibility(View.GONE);
+                btnM7.setVisibility(View.GONE);
+
+                btnM1.setText(R.string.vMin);
+                btnM2.setText(R.string.mMed);
+                btnM3.setText(R.string.mMax);
+                btnM4.setText(R.string.thd);
+                break;
+            case "CTL0104A":
+                btnM1.setVisibility(View.VISIBLE);
+                btnM2.setVisibility(View.VISIBLE);
+                btnM3.setVisibility(View.VISIBLE);
+                btnM4.setVisibility(View.VISIBLE);
+                btnM5.setVisibility(View.GONE);
+                btnM6.setVisibility(View.GONE);
+                btnM7.setVisibility(View.GONE);
+
+                btnM1.setText(R.string.t1);
+                btnM2.setText(R.string.t2);
+                btnM3.setText(R.string.t3);
+                btnM4.setText(R.string.t4);
+                break;
         }
     }
 
@@ -264,20 +315,29 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
 
         XAxis xAxis;
         String[] horariosX;
+        String[] datasY;
         {
             xAxis = chart.getXAxis();
             horariosX = new String[entriesList.size()];
+            datasY = new String[entriesList.size()];
             // the labels that should be drawn on the XAxis
             for (int i = 0; i < entriesList.size(); i++) {
                 switch (mModelo) {
+                    case "CEL0102A":
+                        horariosX[i] = ((CEL0102A_TermoparLogEntry) entriesList.get(i)).getHora();
+                        datasY[i] = ((CEL0102A_TermoparLogEntry) entriesList.get(i)).getData();
+                        break;
                     case "CVL0101A":
                         horariosX[i] = ((CVL0101A_TermoparLogEntry) entriesList.get(i)).getHora();
+                        datasY[i] = ((CVL0101A_TermoparLogEntry) entriesList.get(i)).getData();
                         break;
                     case "CTL0101B":
                         horariosX[i] = ((CTL0104B_TermoparLogEntry) entriesList.get(i)).getHora();
+                        datasY[i] = ((CTL0104B_TermoparLogEntry) entriesList.get(i)).getData();
                         break;
                     case "CTL0101A":
                         horariosX[i] = ((CTL0104A_TermoparLogEntry) entriesList.get(i)).getHora();
+                        datasY[i] = ((CTL0104A_TermoparLogEntry) entriesList.get(i)).getData();
                     default:
                         break;
                 }
@@ -323,7 +383,12 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
         setData(entriesList);
 
         // create marker to display box when values are selected
-        MyMarkerView mv = new MyMarkerView(this, R.layout.custom_marker_view, horariosX);
+        String[] valuesToMV = new String[horariosX.length];
+        for (int i = 0; i < horariosX.length; i++) {
+            valuesToMV[i] = "" + datasY[i] + "\n" + horariosX[i];
+        }
+
+        MyMarkerView mv = new MyMarkerView(this, R.layout.custom_marker_view, valuesToMV);
 
         // Set the marker to the chart
         mv.setChartView(chart);
@@ -355,6 +420,9 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
     private void setData(List entriesList) {
         allDataSets = new ArrayList<>();
         switch (mModelo) {
+            case "CEL0102A":
+                setCEL0102AData(entriesList);
+                break;
             case "CVL0101A":
                 setCVL0101AData(entriesList);
                 break;
@@ -367,6 +435,175 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
                 break;
         }
     }
+
+    private void setCEL0102AData(List entriesList) {
+        CEL0102A_TermoparLogEntry CEL0102ATermoparLogEntry;
+        for (int z = 0; z < 6; z++) {
+            ArrayList<Entry> values = new ArrayList<>();
+            for (int i = 0; i < entriesList.size(); i++) {
+                CEL0102ATermoparLogEntry = (CEL0102A_TermoparLogEntry) entriesList.get(i);
+                String entryHour = CEL0102ATermoparLogEntry.getHora();
+                String entryData = CEL0102ATermoparLogEntry.getData();
+                try {
+                    if (!entryHour.contains("OVUV") && !entryData.contains("OPEN")) {
+                        switch (z) {
+                            case 0:
+                                float entryVAsFloat;
+                                String entryV = CEL0102ATermoparLogEntry.getV();
+                                if (entryV != null) {
+                                    if (entryV.contains("OVUV") || entryV.contains("OPEN")) {
+                                        entryVAsFloat = VALOR_DISCREPANTE;
+                                    } else {
+                                        entryVAsFloat = Float.parseFloat(entryV);
+                                    }
+                                } else {
+                                    entryVAsFloat = VALOR_DISCREPANTE;
+                                }
+                                values.add(new Entry(i, entryVAsFloat));
+                                break;
+                            case 1:
+                                float entryIAsFloat;
+                                String entryI = CEL0102ATermoparLogEntry.getI();
+                                if (entryI != null) {
+                                    if (entryI.contains("OVUV") || entryI.contains("OPEN")) {
+                                        entryIAsFloat = VALOR_DISCREPANTE;
+                                    } else {
+                                        entryIAsFloat = Float.parseFloat(entryI);
+                                    }
+                                } else {
+                                    entryIAsFloat = VALOR_DISCREPANTE;
+                                }
+                                values.add(new Entry(i, entryIAsFloat));
+                                break;
+                            case 2:
+                                float entryPasFloat;
+                                String entryP = CEL0102ATermoparLogEntry.getP();
+                                if (entryP != null) {
+                                    if (entryP.contains("OVUV") || entryP.contains("OPEN")) {
+                                        entryPasFloat = VALOR_DISCREPANTE;
+                                    } else {
+                                        entryPasFloat = Float.parseFloat(entryP);
+                                    }
+                                } else {
+                                    entryPasFloat = VALOR_DISCREPANTE;
+                                }
+                                values.add(new Entry(i, entryPasFloat));
+                                break;
+                            case 3:
+                                String entryE = CEL0102ATermoparLogEntry.getE();
+                                float entryEasFloat;
+                                if (entryE != null) {
+                                    if (entryE.contains("OVUV") || entryE.contains("OPEN")) {
+                                        entryEasFloat = VALOR_DISCREPANTE;
+                                    } else {
+                                        entryEasFloat = Float.parseFloat(entryE);
+                                    }
+                                } else {
+                                    entryEasFloat = VALOR_DISCREPANTE;
+                                }
+                                values.add(new Entry(i, entryEasFloat));
+                                break;
+                            case 4:
+                                String entryFP = CEL0102ATermoparLogEntry.getFp();
+                                float entryFPasFloat;
+                                if (entryFP != null) {
+                                    if (entryFP.contains("OVUV") || entryFP.contains("OPEN")) {
+                                        entryFPasFloat = VALOR_DISCREPANTE;
+                                    } else {
+                                        entryFPasFloat = Float.parseFloat(entryFP);
+                                    }
+                                } else {
+                                    entryFPasFloat = VALOR_DISCREPANTE;
+                                }
+                                values.add(new Entry(i, entryFPasFloat));
+                                break;
+                            case 5:
+                                String entryDHT = CEL0102ATermoparLogEntry.getE();
+                                float entryDHTasFloat;
+                                if (entryDHT != null) {
+                                    if (entryDHT.contains("OVUV") || entryDHT.contains("OPEN")) {
+                                        entryDHTasFloat = VALOR_DISCREPANTE;
+                                    } else {
+                                        entryDHTasFloat = Float.parseFloat(entryDHT);
+                                    }
+                                } else {
+                                    entryDHTasFloat = VALOR_DISCREPANTE;
+                                }
+                                values.add(new Entry(i, entryDHTasFloat));
+                                break;
+                        }
+                    }
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                }
+            }
+//            , getResources().getDrawable(R.drawable.star)));
+            LineDataSet d;
+            switch (z) {
+                case 0:
+                    d = new LineDataSet(values, "V");
+                    d.setColor(getResources().getColor(R.color.colorPrimary));
+                    break;
+                case 1:
+                    d = new LineDataSet(values, "I");
+                    d.setColor(YELLOW);
+                    break;
+                case 2:
+                    d = new LineDataSet(values, "P");
+                    d.setColor(RED);
+                    break;
+                case 3:
+                    d = new LineDataSet(values, "E");
+                    d.setColor(GREEN);
+                    break;
+                case 4:
+                    d = new LineDataSet(values, "FP");
+                    d.setColor(GRAY);
+                    break;
+                case 5:
+                    d = new LineDataSet(values, "DHT");
+                    d.setColor(CYAN);
+                    break;
+                default:
+                    d = new LineDataSet(values, "ERRO");
+                    d.setColor(CYAN);
+                    Toast.makeText(this, "Ocorreu um erro!", Toast.LENGTH_SHORT).show();
+                    finish();
+                    break;
+            }
+
+            d.enableDashedLine(10, 10, 0);
+            d.setDrawIcons(false);
+            // draw dashed line
+            d.enableDashedLine(15f, 0f, 1f);
+
+            d.setCircleColor(getResources().getColor(R.color.colorPrimary));
+            // line thickness and point size
+            d.setLineWidth(2f);
+            d.setCircleRadius(3f);
+            // draw points as solid circles
+            d.setDrawCircleHole(true);
+            // customize legend entry
+            d.setFormLineWidth(1f);
+            d.setFormLineDashEffect(new DashPathEffect(new float[]{10f, 5f}, 0f));
+            d.setFormSize(40.f);
+            // text size of values
+            d.setValueTextSize(10f);
+            // draw selection line as dashed
+            d.enableDashedHighlightLine(10f, 5f, 0f);
+            // set the filled area
+            d.setDrawFilled(false);
+            d.setFillFormatter((dataSet, dataProvider) -> chart.getAxisLeft().getAxisMinimum());
+            allDataSets.add(d);
+        }
+        allData = new LineData(allDataSets);
+        chart.setData(allData);
+        chart.setAutoScaleMinMaxEnabled(true);
+        chart.invalidate();
+        chart.getData().notifyDataChanged();
+        chart.notifyDataSetChanged();
+    }
+
 
     private void setCVL0101AData(List entriesList) {
         CVL0101A_TermoparLogEntry CVL0101ATermoparLogEntry;
@@ -456,9 +693,15 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
                     d = new LineDataSet(values, "vMax");
                     d.setColor(RED);
                     break;
-                default:
+                case 3:
                     d = new LineDataSet(values, "THD");
                     d.setColor(GREEN);
+                    break;
+                default:
+                    d = new LineDataSet(values, "ERRO");
+                    d.setColor(GREEN);
+                    Toast.makeText(this, "Ocorreu um erro!", Toast.LENGTH_SHORT).show();
+                    finish();
                     break;
             }
 
@@ -467,7 +710,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             // draw dashed line
             d.enableDashedLine(15f, 0f, 1f);
 
-            d.setCircleColor(RED);
+            d.setCircleColor(getResources().getColor(R.color.colorPrimary));
             // line thickness and point size
             d.setLineWidth(2f);
             d.setCircleRadius(3f);
@@ -569,10 +812,9 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
                     d.setColor(GRAY);
                     break;
                 default:
-                    Log.e(TAG_LOG, "Z não cadastrado");
-                    Toast.makeText(this, "Ocorreu um erro ao recuperar a medição!", Toast.LENGTH_SHORT).show();
-                    d = new LineDataSet(values, "M7");
-                    d.setColor(GRAY);
+                    d = new LineDataSet(values, "ERRO");
+                    d.setColor(GREEN);
+                    Toast.makeText(this, "Ocorreu um erro!", Toast.LENGTH_SHORT).show();
                     finish();
                     break;
             }
@@ -582,7 +824,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             // draw dashed line
             d.enableDashedLine(15f, 0f, 1f);
 
-            d.setCircleColor(RED);
+            d.setCircleColor(getResources().getColor(R.color.colorPrimary));
             // line thickness and point size
             d.setLineWidth(2f);
             d.setCircleRadius(3f);
@@ -642,14 +884,24 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
 
             LineDataSet d = new LineDataSet(values, "T" + (z + 1));
 
-            if (z == 0) {
-                d.setColor(getResources().getColor(R.color.colorPrimary));
-            } else if (z == 1) {
-                d.setColor(YELLOW);
-            } else if (z == 2) {
-                d.setColor(RED);
-            } else {
-                d.setColor(GREEN);
+            switch (z) {
+                case 0:
+                    d.setColor(getResources().getColor(R.color.colorPrimary));
+                    break;
+                case 1:
+                    d.setColor(YELLOW);
+                    break;
+                case 2:
+                    d.setColor(RED);
+                    break;
+                case 3:
+                    d.setColor(GREEN);
+                    break;
+                default:
+                    d.setColor(GREEN);
+                    Toast.makeText(this, "Ocorreu um erro!", Toast.LENGTH_SHORT).show();
+                    finish();
+                    break;
             }
 
             d.enableDashedLine(10, 10, 0);
@@ -657,7 +909,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             // draw dashed line
             d.enableDashedLine(15f, 0f, 1f);
 
-            d.setCircleColor(RED);
+            d.setCircleColor(getResources().getColor(R.color.colorPrimary));
             // line thickness and point size
             d.setLineWidth(2f);
             d.setCircleRadius(3f);
