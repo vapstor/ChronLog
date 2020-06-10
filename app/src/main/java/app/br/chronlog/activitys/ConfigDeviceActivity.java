@@ -35,6 +35,7 @@ import app.br.chronlog.utils.bluetooth.SerialListener;
 import app.br.chronlog.utils.bluetooth.SerialService;
 
 import static app.br.chronlog.activitys.DevicesActivity.deviceName;
+import static app.br.chronlog.activitys.DevicesActivity.modelo;
 import static app.br.chronlog.utils.Utils.Connected.False;
 import static app.br.chronlog.utils.Utils.TAG_LOG;
 import static app.br.chronlog.utils.Utils.isDeviceConnected;
@@ -121,12 +122,16 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
         });
 
 
-        Spinner spinner = Objects.requireNonNull(this).findViewById(R.id.spinnerModoAquisicao);
-
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.modosTermopar, R.layout.spinner_list_item);
-        adapter.setDropDownViewResource(R.layout.spinner_list_item);
-        spinner.setAdapter(adapter);
-        spinner.setOnItemSelectedListener(this);
+        Spinner spinner = findViewById(R.id.spinnerModoAquisicao);
+        if (modelo.equals("CVL0101A")) {
+            spinner.setVisibility(View.GONE);
+        } else {
+            spinner.setVisibility(View.VISIBLE);
+            ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.modosTermopar, R.layout.spinner_list_item);
+            adapter.setDropDownViewResource(R.layout.spinner_list_item);
+            spinner.setAdapter(adapter);
+            spinner.setOnItemSelectedListener(this);
+        }
 
         btnConfigurarData.setOnClickListener((v) -> setDataTermopar());
         btnConfigurarHorario.setOnClickListener((v) -> setHorarioTermopar());
@@ -466,12 +471,20 @@ public class ConfigDeviceActivity extends AppCompatActivity implements View.OnCl
             } else {
                 receivedData = "";
                 Log.d(TAG_LOG, "infos tempo aquisicao:" + infoTempoAquisicao);
-                Log.d(TAG_LOG, "infos modo aquisicao:" + modoTermopar);
                 /**
                  *@03TTNNNRRRCRLF TT termocouple type, NNN acquisition time in seconds, RRR reserved for future*
+                 * or
+                 * @03RRNNNRRRCRLF RR reserved (any value is ok), NNN acquisition time in seconds, RRR reserved for
+                 * future (any value is ok)
                  * */
                 infoTempoAquisicao = configTempoAquisicao(infoTempoAquisicao);
-                String protocolSetTimeAndMode = "@03" + "0" + modoTermopar + infoTempoAquisicao + "000" + "0000";
+                String protocolSetTimeAndMode;
+                if(modelo.equals("CVL0101A")) {
+                    protocolSetTimeAndMode = "@03" + "0" + "00" + infoTempoAquisicao + "000" + "0000";
+                } else {
+                    Log.d(TAG_LOG, "infos modo aquisicao:" + modoTermopar);
+                    protocolSetTimeAndMode = "@03" + "0" + modoTermopar + infoTempoAquisicao + "000" + "0000";
+                }
 
                 sendCommandThread = new Thread(() -> send(protocolSetTimeAndMode, this, this));
                 sendCommandThread.start();

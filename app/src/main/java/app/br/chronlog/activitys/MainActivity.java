@@ -149,10 +149,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         }
     }
 
-    private void openSavedFiles() {
-
-    }
-
     public boolean saveImageOnExternalData(String filePath, byte[] fileData) {
 
         boolean isFileSaved = false;

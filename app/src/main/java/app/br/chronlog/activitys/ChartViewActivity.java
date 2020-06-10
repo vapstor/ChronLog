@@ -38,6 +38,8 @@ import app.br.chronlog.activitys.models.CTL0104A.CTL0104A_TermoparLog;
 import app.br.chronlog.activitys.models.CTL0104A.CTL0104A_TermoparLogEntry;
 import app.br.chronlog.activitys.models.CTL0104B.CTL0104B_TermoparLog;
 import app.br.chronlog.activitys.models.CTL0104B.CTL0104B_TermoparLogEntry;
+import app.br.chronlog.activitys.models.CVL0101A.CVL0101A_TermoparLog;
+import app.br.chronlog.activitys.models.CVL0101A.CVL0101A_TermoparLogEntry;
 import app.br.chronlog.utils.MyMarkerView;
 
 import static android.graphics.Color.CYAN;
@@ -58,6 +60,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
     private LineData allData;
     private ArrayList<ILineDataSet> allDataSets;
     private float VALOR_DISCREPANTE = 999;
+    private String mModelo;
     private boolean existeValorDiscrepante;
 
     @Override
@@ -71,10 +74,21 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             finish();
         } else {
             selectedLog = getIntent().getParcelableArrayListExtra("selectedLog");
+            mModelo = extras.getString("modelo");
+            if (mModelo != null && mModelo.equals("")) {
+                Log.e(TAG_LOG, "Erro mModelo");
+                Toast.makeText(this, "Erro ao resgatar modelo!", Toast.LENGTH_SHORT).show();
+                finish();
+            }
             List entriesList;
             if (selectedLog != null) {
                 ((TextView) findViewById(R.id.logTitleTxtView)).setText(extras.getString("logName"));
-                switch (modelo) {
+                switch (mModelo) {
+                    case "CVL0101A":
+                        CVL0101A_TermoparLog CVL0101ATermoparLog = (CVL0101A_TermoparLog) selectedLog.get(0);
+                        entriesList = CVL0101ATermoparLog.getEntries();
+                        acessaDadosDoArquivo(entriesList);
+                        break;
                     case "CTL0104B":
                         CTL0104B_TermoparLog CTL0104BTermoparLog = (CTL0104B_TermoparLog) selectedLog.get(0);
                         entriesList = CTL0104BTermoparLog.getEntries();
@@ -93,7 +107,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             }
         }
 
-        switch (modelo) {
+        switch (mModelo) {
             case "CTL0104B":
                 btnM5 = findViewById(R.id.m5Button);
                 btnM5.setVisibility(View.VISIBLE);
@@ -139,6 +153,12 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
                     toggleDataSetVisibility(3);
                 }));
                 break;
+        }
+        if (modelo.equals("CVL0101A")) {
+            btnT1.setText("vMIN");
+            btnT2.setText("vMED");
+            btnT3.setText("vMAX");
+            btnT4.setText("THD");
         }
     }
 
@@ -203,7 +223,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
         chart.invalidate();
         chart.getData().notifyDataChanged();
         chart.notifyDataSetChanged();
-        chart.animateX(1500);
+        chart.animateX(1250);
     }
 
     private void acessaDadosDoArquivo(List entriesList) {
@@ -248,18 +268,20 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             xAxis = chart.getXAxis();
             horariosX = new String[entriesList.size()];
             // the labels that should be drawn on the XAxis
-            switch (modelo) {
-                case "CTL0104B":
-                    for (int i = 0; i < entriesList.size(); i++) {
+            for (int i = 0; i < entriesList.size(); i++) {
+                switch (mModelo) {
+                    case "CVL0101A":
+                        horariosX[i] = ((CVL0101A_TermoparLogEntry) entriesList.get(i)).getHora();
+                        break;
+                    case "CTL0101B":
                         horariosX[i] = ((CTL0104B_TermoparLogEntry) entriesList.get(i)).getHora();
-                    }
-                    break;
-                case "CTL0104A":
-                default:
-                    for (int i = 0; i < entriesList.size(); i++) {
+                        break;
+                    case "CTL0101A":
                         horariosX[i] = ((CTL0104A_TermoparLogEntry) entriesList.get(i)).getHora();
-                    }
-                    break;
+                    default:
+                        break;
+                }
+
             }
 
             ValueFormatter formatter = new ValueFormatter() {
@@ -311,7 +333,9 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             @Override
             public String getFormattedValue(float value) {
                 String a = super.getFormattedValue(value);
-                return a + "º";
+                //TODO
+//                return a + "º";
+                return a;
             }
         });
 
@@ -330,7 +354,10 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
 
     private void setData(List entriesList) {
         allDataSets = new ArrayList<>();
-        switch (modelo) {
+        switch (mModelo) {
+            case "CVL0101A":
+                setCVL0101AData(entriesList);
+                break;
             case "CTL0104B":
                 setCTL0104BData(entriesList);
                 break;
@@ -339,6 +366,133 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
                 setCTL0104AData(entriesList);
                 break;
         }
+    }
+
+    private void setCVL0101AData(List entriesList) {
+        CVL0101A_TermoparLogEntry CVL0101ATermoparLogEntry;
+        for (int z = 0; z < 4; z++) {
+            ArrayList<Entry> values = new ArrayList<>();
+            for (int i = 0; i < entriesList.size(); i++) {
+                CVL0101ATermoparLogEntry = (CVL0101A_TermoparLogEntry) entriesList.get(i);
+                String entryHour = CVL0101ATermoparLogEntry.getHora();
+                String entryData = CVL0101ATermoparLogEntry.getData();
+                try {
+                    if (!entryHour.contains("OVUV") && !entryData.contains("OPEN")) {
+                        switch (z) {
+                            case 0:
+                                float entryVminAsFloat;
+                                String entryVmin = CVL0101ATermoparLogEntry.getvMin();
+                                if (entryVmin != null) {
+                                    if (entryVmin.contains("OVUV") || entryVmin.contains("OPEN")) {
+                                        entryVminAsFloat = VALOR_DISCREPANTE;
+                                    } else {
+                                        entryVminAsFloat = Float.parseFloat(entryVmin);
+                                    }
+                                } else {
+                                    entryVminAsFloat = VALOR_DISCREPANTE;
+                                }
+                                values.add(new Entry(i, entryVminAsFloat));
+                                break;
+                            case 1:
+                                float entryVmedAsFloat;
+                                String entryVmed = CVL0101ATermoparLogEntry.getvMed();
+                                if (entryVmed != null) {
+                                    if (entryVmed.contains("OVUV") || entryVmed.contains("OPEN")) {
+                                        entryVmedAsFloat = VALOR_DISCREPANTE;
+                                    } else {
+                                        entryVmedAsFloat = Float.parseFloat(entryVmed);
+                                    }
+                                } else {
+                                    entryVmedAsFloat = VALOR_DISCREPANTE;
+                                }
+                                values.add(new Entry(i, entryVmedAsFloat));
+                                break;
+                            case 2:
+                                float entryVmaxAsFloat;
+                                String entryVmax = CVL0101ATermoparLogEntry.getvMax();
+                                if (entryVmax != null) {
+                                    if (entryVmax.contains("OVUV") || entryVmax.contains("OPEN")) {
+                                        entryVmaxAsFloat = VALOR_DISCREPANTE;
+                                    } else {
+                                        entryVmaxAsFloat = Float.parseFloat(entryVmax);
+                                    }
+                                } else {
+                                    entryVmaxAsFloat = VALOR_DISCREPANTE;
+                                }
+                                values.add(new Entry(i, entryVmaxAsFloat));
+                                break;
+                            case 3:
+                                String entryTHD = CVL0101ATermoparLogEntry.getTHD();
+                                float entryTHDAsFloat;
+                                if (entryTHD != null) {
+                                    if (entryTHD.contains("OVUV") || entryTHD.contains("OPEN")) {
+                                        entryTHDAsFloat = VALOR_DISCREPANTE;
+                                    } else {
+                                        entryTHDAsFloat = Float.parseFloat(entryTHD);
+                                    }
+                                } else {
+                                    entryTHDAsFloat = VALOR_DISCREPANTE;
+                                }
+                                values.add(new Entry(i, entryTHDAsFloat));
+                                break;
+                        }
+                    }
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                }
+            }
+//            , getResources().getDrawable(R.drawable.star)));
+            LineDataSet d;
+            switch (z) {
+                case 0:
+                    d = new LineDataSet(values, "vMin");
+                    d.setColor(getResources().getColor(R.color.colorPrimary));
+                    break;
+                case 1:
+                    d = new LineDataSet(values, "vMed");
+                    d.setColor(YELLOW);
+                    break;
+                case 2:
+                    d = new LineDataSet(values, "vMax");
+                    d.setColor(RED);
+                    break;
+                default:
+                    d = new LineDataSet(values, "THD");
+                    d.setColor(GREEN);
+                    break;
+            }
+
+            d.enableDashedLine(10, 10, 0);
+            d.setDrawIcons(false);
+            // draw dashed line
+            d.enableDashedLine(15f, 0f, 1f);
+
+            d.setCircleColor(RED);
+            // line thickness and point size
+            d.setLineWidth(2f);
+            d.setCircleRadius(3f);
+            // draw points as solid circles
+            d.setDrawCircleHole(true);
+            // customize legend entry
+            d.setFormLineWidth(1f);
+            d.setFormLineDashEffect(new DashPathEffect(new float[]{10f, 5f}, 0f));
+            d.setFormSize(40.f);
+            // text size of values
+            d.setValueTextSize(10f);
+            // draw selection line as dashed
+            d.enableDashedHighlightLine(10f, 5f, 0f);
+            // set the filled area
+            d.setDrawFilled(false);
+            d.setFillFormatter((dataSet, dataProvider) -> chart.getAxisLeft().getAxisMinimum());
+            allDataSets.add(d);
+        }
+        allData = new LineData(allDataSets);
+        chart.setData(allData);
+        chart.setAutoScaleMinMaxEnabled(true);
+        chart.invalidate();
+        chart.getData().notifyDataChanged();
+        chart.notifyDataSetChanged();
+
     }
 
     private void setCTL0104BData(List entriesList) {

@@ -31,6 +31,8 @@ import app.br.chronlog.activitys.models.CTL0104A.CTL0104A_TermoparLog;
 import app.br.chronlog.activitys.models.CTL0104A.CTL0104A_TermoparLogEntry;
 import app.br.chronlog.activitys.models.CTL0104B.CTL0104B_TermoparLog;
 import app.br.chronlog.activitys.models.CTL0104B.CTL0104B_TermoparLogEntry;
+import app.br.chronlog.activitys.models.CVL0101A.CVL0101A_TermoparLog;
+import app.br.chronlog.activitys.models.CVL0101A.CVL0101A_TermoparLogEntry;
 import app.br.chronlog.utils.ItemClickSupport;
 import app.br.chronlog.utils.RecyclerAdapter;
 import app.br.chronlog.utils.RecyclerItemTouchHelper;
@@ -41,6 +43,7 @@ import static app.br.chronlog.utils.Utils.getFileContents;
 
 public class ReadSdDataActivity extends AppCompatActivity implements RecyclerItemTouchHelper.RecyclerItemTouchHelperListener {
 
+    private CVL0101A_TermoparLog cvl0101a_log;
     private CTL0104A_TermoparLog ctl0104a_log;
     private CTL0104B_TermoparLog ctl0104b_log;
     private RecyclerView logsRecyclerView;
@@ -93,22 +96,23 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
             if (isFilePresent(logFilesList.get(position)[0])) { // + logFilesList.get(position)[1]
                 File file = read(logFilesList.get(position)[0]); // + logFilesList.get(position)[1]
                 switch (modelo) {
-                    case "CTL0104A":
-                        ctl0104a_log = (CTL0104A_TermoparLog) configFile(file, logFilesList.get(position)[0], logFilesList.get(position)[1]);
-                        if (ctl0104a_log != null) {
-                            if (ctl0104a_log.getEntries().size() > 1) {
+                    case "CVL0101A":
+                        cvl0101a_log = (CVL0101A_TermoparLog) configFile(file, logFilesList.get(position)[0], logFilesList.get(position)[1]);
+                        if (cvl0101a_log != null) {
+                            if (cvl0101a_log.getEntries().size() > 1) {
                                 runOnUiThread(() -> Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show());
 
-                                ArrayList<CTL0104A_TermoparLog> CTL0104ATermoparLog = new ArrayList<>();
-                                CTL0104ATermoparLog.add(ctl0104a_log);
+                                ArrayList<CVL0101A_TermoparLog> CVL0101ATermoparLog = new ArrayList<>();
+                                CVL0101ATermoparLog.add(cvl0101a_log);
 
                                 Intent intent = new Intent(this, ChartViewActivity.class);
-                                intent.putParcelableArrayListExtra("selectedLog", CTL0104ATermoparLog);
-                                intent.putExtra("logName", ctl0104a_log.getName());
+                                intent.putExtra("modelo", mModelo);
+                                intent.putParcelableArrayListExtra("selectedLog", CVL0101ATermoparLog);
+                                intent.putExtra("logName", cvl0101a_log.getName());
                                 startActivity(intent);
 
-                            } else if (ctl0104a_log.getEntries().size() == 1) {
-                                createCTL0104ADialog();
+                            } else if (cvl0101a_log.getEntries().size() == 1) {
+                                createCVL0101ADialog();
                             } else {
                                 AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
                                 builder.setMessage("Não existem registros no Log!");
@@ -131,11 +135,42 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
                                 CTL0104BTermoparLog.add(ctl0104b_log);
 
                                 Intent intent = new Intent(this, ChartViewActivity.class);
+                                intent.putExtra("modelo", mModelo);
                                 intent.putParcelableArrayListExtra("selectedLog", CTL0104BTermoparLog);
                                 intent.putExtra("logName", ctl0104b_log.getName());
                                 startActivity(intent);
                             } else if (ctl0104b_log.getEntries().size() == 1) {
                                 createCTL0104BDialog();
+                            } else {
+                                AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
+                                builder.setMessage("Não existem registros no Log!");
+                                builder.setTitle("Log Inválido!");
+                                builder.setPositiveButton("OK", (dialog, which) -> {
+                                });
+                                runOnUiThread(() -> builder.create().show());
+                            }
+                        } else {
+                            Toast.makeText(this, "Falhou ao recuperar informações do arquivo!", Toast.LENGTH_SHORT).show();
+                        }
+                        break;
+                    default:
+                    case "CTL0104A":
+                        ctl0104a_log = (CTL0104A_TermoparLog) configFile(file, logFilesList.get(position)[0], logFilesList.get(position)[1]);
+                        if (ctl0104a_log != null) {
+                            if (ctl0104a_log.getEntries().size() > 1) {
+                                runOnUiThread(() -> Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show());
+
+                                ArrayList<CTL0104A_TermoparLog> CTL0104ATermoparLog = new ArrayList<>();
+                                CTL0104ATermoparLog.add(ctl0104a_log);
+
+                                Intent intent = new Intent(this, ChartViewActivity.class);
+                                intent.putExtra("modelo", mModelo);
+                                intent.putParcelableArrayListExtra("selectedLog", CTL0104ATermoparLog);
+                                intent.putExtra("logName", ctl0104a_log.getName());
+                                startActivity(intent);
+
+                            } else if (ctl0104a_log.getEntries().size() == 1) {
+                                createCTL0104ADialog();
                             } else {
                                 AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
                                 builder.setMessage("Não existem registros no Log!");
@@ -174,6 +209,23 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
         });
 
         setFinishOnTouchOutside(true);
+    }
+
+    private void createCVL0101ADialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogOpenLogStyle);
+        builder.setMessage("Só existe apenas um registro no Log: "
+                + "\n" + "\n" +
+                "Data: " + cvl0101a_log.getEntries().get(0).getData() + "\n" +
+                "Horário: " + cvl0101a_log.getEntries().get(0).getHora() + "\n" +
+                "vMax: " + cvl0101a_log.getEntries().get(0).getvMax() + "\n" +
+                "vMed: " + cvl0101a_log.getEntries().get(0).getvMed() + "\n" +
+                "vMin: " + cvl0101a_log.getEntries().get(0).getvMin() + "\n" +
+                "THD: " + cvl0101a_log.getEntries().get(0).getTHD()
+        );
+        builder.setPositiveButton("OK", (dialog, which) -> {
+        });
+        builder.setTitle("Log Único!");
+        runOnUiThread(() -> builder.create().show());
     }
 
     private void createCTL0104ADialog() {
@@ -244,6 +296,7 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
         String[] receivedStrArray = dataFromFile.split("(\\r?\\n|\\r)");
         String lineValue;
         ArrayList<CTL0104A_TermoparLogEntry> ctl0104a_entries = new ArrayList<>();
+        ArrayList<CVL0101A_TermoparLogEntry> cvl0101a_entries = new ArrayList<>();
         ArrayList<CTL0104B_TermoparLogEntry> ctl0104b_entries = new ArrayList<>();
 
         for (int i = 0; i < receivedStrArray.length; i++) {
@@ -253,14 +306,14 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
                 String[] colunas = lineValue.split(" ");
 
                 switch (mModelo) {
-                    case "CTL0104A":
+                    case "CVL0101A":
                         colunas = Arrays.copyOf(colunas, 6);
                         for (int j = 0; j < colunas.length; j++) {
                             if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
                                 colunas[j] = "OPEN";
                             }
                         }
-                        ctl0104a_entries.add(new CTL0104A_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5]));
+                        cvl0101a_entries.add(new CVL0101A_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5]));
                         break;
                     case "CTL0104B":
                         colunas = Arrays.copyOf(colunas, 9);
@@ -271,10 +324,22 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
                         }
                         ctl0104b_entries.add(new CTL0104B_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5], colunas[6], colunas[7], colunas[8]));
                         break;
+                    default:
+                    case "CTL0104A":
+                        colunas = Arrays.copyOf(colunas, 6);
+                        for (int j = 0; j < colunas.length; j++) {
+                            if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
+                                colunas[j] = "OPEN";
+                            }
+                        }
+                        ctl0104a_entries.add(new CTL0104A_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5]));
+                        break;
                 }
             }
         }
         switch (mModelo) {
+            case "CVL0101A":
+                return new CVL0101A_TermoparLog(nome, peso, cvl0101a_entries);
             case "CTL0104B":
                 return new CTL0104B_TermoparLog(nome, peso, ctl0104b_entries);
             case "CTL0104A":
