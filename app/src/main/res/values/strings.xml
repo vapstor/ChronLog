@@ -96,6 +96,7 @@
     <string name="m5">M5</string>
     <string name="m6">M6</string>
     <string name="m7">M7</string>
+    <string name="m8">M8</string>
     <string-array name="modosTermopar">
         <item>K</item>
         <item>J</item>

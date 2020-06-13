@@ -56,6 +56,7 @@ import static app.br.chronlog.utils.Utils.TAG_LOG;
 import static app.br.chronlog.utils.Utils.isDeviceConnected;
 import static app.br.chronlog.utils.Utils.myBluetoothController;
 import static app.br.chronlog.utils.Utils.send;
+import static com.github.mikephil.charting.charts.Chart.LOG_TAG;
 import static java.lang.Thread.sleep;
 
 public class ReadTermoparDataActivity extends AppCompatActivity implements ServiceConnection, SerialListener, RecyclerItemTouchHelper.RecyclerItemTouchHelperListener {
@@ -481,137 +482,124 @@ public class ReadTermoparDataActivity extends AppCompatActivity implements Servi
         ArrayList<CTL0104B_TermoparLogEntry> ctl0104b_entries = new ArrayList<>();
         ArrayList<CVL0101A_TermoparLogEntry> cvl0101a_entries = new ArrayList<>();
         ArrayList<CEL0102A_TermoparLogEntry> cel0102a_entries = new ArrayList<>();
-        for (int i = 0; i < receivedStrArray.length; i++) {
-            if (i >= 2) { // 2 = 3ª linha [valores a partir da 2 linha[0 - @ 05, 1 - Data / Hora /...]
-                lineValue = receivedStrArray[i];
-                String[] colunas = lineValue.split(" ");
+        String[] header = receivedStrArray[1].split(" ");
+
+        Log.d(LOG_TAG, "SIZE Header: " + header.length);
+        for (String s : header) {
+            Log.d(LOG_TAG, s);
+        }
+
+        // 2 = 3ª linha [valores a partir da 2 linha[0 - @05, 1 - Data / Hora /...]
+        boolean erroModelo = false;
+        for (int i = 2; i < receivedStrArray.length; i++) {
+            lineValue = receivedStrArray[i];
+
+            String[] colunas = lineValue.split(" ");
+            colunas = Arrays.copyOf(colunas, header.length);
+            //Conferimos todas as colunas para ver se alguma veio com conteudo vazio ou incorreto
+            for (int j = 0; j < colunas.length; j++) {
+                if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
+                    colunas[j] = "OPEN";
+                }
+            }
+            try {
                 switch (modelo) {
                     case "CEL0102A":
-                        colunas = Arrays.copyOf(colunas, 8);
-                        for (int j = 0; j < colunas.length; j++) {
-                            if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
-                                colunas[j] = "OPEN";
-                            }
-                        }
                         cel0102a_entries.add(new CEL0102A_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5], colunas[6], colunas[7]));
                         break;
                     case "CTL0104B":
-                        colunas = Arrays.copyOf(colunas, 9);
-                        for (int j = 0; j < colunas.length; j++) {
-                            if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
-                                colunas[j] = "OPEN";
-                            }
-                        }
                         ctl0104b_entries.add(new CTL0104B_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5], colunas[6], colunas[7], colunas[8]));
                         break;
                     case "CTL0104A":
-                        colunas = Arrays.copyOf(colunas, 6);
-                        for (int j = 0; j < colunas.length; j++) {
-                            if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
-                                colunas[j] = "OPEN";
-                            }
-                        }
                         ctl0104a_entries.add(new CTL0104A_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5]));
                         break;
                     case "CVL0101A":
-                        colunas = Arrays.copyOf(colunas, 6);
-                        for (int j = 0; j < colunas.length; j++) {
-                            if (colunas[j] == null || colunas[j].contains("�") || colunas[j].contains("OVUV")) {
-                                colunas[j] = "OPEN";
-                            }
-                        }
                         cvl0101a_entries.add(new CVL0101A_TermoparLogEntry(colunas[0], colunas[1], colunas[2], colunas[3], colunas[4], colunas[5]));
                         break;
                 }
+            } catch (ArrayIndexOutOfBoundsException e) {
+                e.printStackTrace();
+                erroModelo = true;
+                runOnUiThread(() -> Toast.makeText(this, "Modelo diferente conectado!", Toast.LENGTH_SHORT).show());
+                break;
             }
         }
-        switch (modelo) {
-            case "CEL0102A":
-                if (cel0102a_entries.size() > 1) {
-                    runOnUiThread(() -> Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show());
-
-                    ((CEL0102A_TermoparLog) this.selectedLog).setEntries(cel0102a_entries);
-
-                    ArrayList<CEL0102A_TermoparLog> CEL0102A_TermoparLog = new ArrayList<>();
-                    CEL0102A_TermoparLog.add(((CEL0102A_TermoparLog) this.selectedLog));
-
-                    Intent intent = new Intent(this, ChartViewActivity.class);
-                    intent.putExtra("modelo", modelo);
-                    intent.putParcelableArrayListExtra("selectedLog", CEL0102A_TermoparLog);
-                    intent.putExtra("logName", ((CEL0102A_TermoparLog) this.selectedLog).getName());
-                    startActivity(intent);
-                } else if (cel0102a_entries.size() == 1) {
-                    createCEL0102ADialog();
-                } else {
-                    semRegistrosDialog();
-                }
-                break;
-            case "CVL0101A":
-                if (cvl0101a_entries.size() > 1) {
-                    runOnUiThread(() -> Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show());
-
-                    ((CVL0101A_TermoparLog) this.selectedLog).setEntries(cvl0101a_entries);
-
-                    ArrayList<CVL0101A_TermoparLog> CVL0101A_TermoparLog = new ArrayList<>();
-                    CVL0101A_TermoparLog.add(((CVL0101A_TermoparLog) this.selectedLog));
-
-                    Intent intent = new Intent(this, ChartViewActivity.class);
-                    intent.putExtra("modelo", modelo);
-                    intent.putParcelableArrayListExtra("selectedLog", CVL0101A_TermoparLog);
-                    intent.putExtra("logName", ((CVL0101A_TermoparLog) this.selectedLog).getName());
-                    startActivity(intent);
-                } else if (cvl0101a_entries.size() == 1) {
-                    createCVL0101ADialog();
-                } else {
-                    semRegistrosDialog();
-                }
-                break;
-            case "CTL0104B":
-                if (ctl0104b_entries.size() > 1) {
-                    runOnUiThread(() -> Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show());
-
-                    ((CTL0104B_TermoparLog) this.selectedLog).setEntries(ctl0104b_entries);
-
-                    ArrayList<CTL0104B_TermoparLog> CTL0104BTermoparLog = new ArrayList<>();
-                    CTL0104BTermoparLog.add(((CTL0104B_TermoparLog) this.selectedLog));
-
-                    Intent intent = new Intent(this, ChartViewActivity.class);
-                    intent.putExtra("modelo", modelo);
-                    intent.putParcelableArrayListExtra("selectedLog", CTL0104BTermoparLog);
-                    intent.putExtra("logName", ((CTL0104B_TermoparLog) this.selectedLog).getName());
-                    startActivity(intent);
-
-                } else if (ctl0104b_entries.size() == 1) {
-                    createCTL0104BDialog();
-                } else {
-                    semRegistrosDialog();
-                }
-                break;
-            case "CTL0104A":
-            default:
-                if (ctl0104a_entries.size() > 1) {
-                    runOnUiThread(() -> Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show());
-
-                    ((CTL0104A_TermoparLog) this.selectedLog).setEntries(ctl0104a_entries);
-
-                    ArrayList<CTL0104A_TermoparLog> CTL0104ATermoparLog = new ArrayList<>();
-                    CTL0104ATermoparLog.add(((CTL0104A_TermoparLog) this.selectedLog));
-
-                    Intent intent = new Intent(this, ChartViewActivity.class);
-                    intent.putExtra("modelo", modelo);
-                    intent.putParcelableArrayListExtra("selectedLog", CTL0104ATermoparLog);
-                    intent.putExtra("logName", ((CTL0104A_TermoparLog) this.selectedLog).getName());
-                    startActivity(intent);
-
-                } else if (ctl0104a_entries.size() == 1) {
-                    createCTL0104ADialog();
-                } else {
-                    semRegistrosDialog();
-                }
-                break;
+        if (!erroModelo) {
+            switch (modelo) {
+                case "CEL0102A":
+                    if (cel0102a_entries.size() > 1) {
+                        ((CEL0102A_TermoparLog) this.selectedLog).setEntries(cel0102a_entries);
+                        ArrayList<CEL0102A_TermoparLog> CEL0102A_TermoparLog = new ArrayList<>();
+                        CEL0102A_TermoparLog.add(((CEL0102A_TermoparLog) this.selectedLog));
+                        Intent intent = new Intent(this, ChartViewActivity.class);
+                        intent.putExtra("header", header);
+                        intent.putExtra("modelo", modelo);
+                        intent.putParcelableArrayListExtra("selectedLog", CEL0102A_TermoparLog);
+                        intent.putExtra("logName", ((CEL0102A_TermoparLog) this.selectedLog).getName());
+                        startActivity(intent);
+                        runOnUiThread(() -> Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show());
+                    } else if (cel0102a_entries.size() == 1) {
+                        createCEL0102ADialog();
+                    } else {
+                        semRegistrosDialog();
+                    }
+                    break;
+                case "CVL0101A":
+                    if (cvl0101a_entries.size() > 1) {
+                        ((CVL0101A_TermoparLog) this.selectedLog).setEntries(cvl0101a_entries);
+                        ArrayList<CVL0101A_TermoparLog> CVL0101A_TermoparLog = new ArrayList<>();
+                        CVL0101A_TermoparLog.add(((CVL0101A_TermoparLog) this.selectedLog));
+                        Intent intent = new Intent(this, ChartViewActivity.class);
+                        intent.putExtra("header", header);
+                        intent.putExtra("modelo", modelo);
+                        intent.putParcelableArrayListExtra("selectedLog", CVL0101A_TermoparLog);
+                        intent.putExtra("logName", ((CVL0101A_TermoparLog) this.selectedLog).getName());
+                        startActivity(intent);
+                        runOnUiThread(() -> Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show());
+                    } else if (cvl0101a_entries.size() == 1) {
+                        createCVL0101ADialog();
+                    } else {
+                        semRegistrosDialog();
+                    }
+                    break;
+                case "CTL0104B":
+                    if (ctl0104b_entries.size() > 1) {
+                        ((CTL0104B_TermoparLog) this.selectedLog).setEntries(ctl0104b_entries);
+                        ArrayList<CTL0104B_TermoparLog> CTL0104BTermoparLog = new ArrayList<>();
+                        CTL0104BTermoparLog.add(((CTL0104B_TermoparLog) this.selectedLog));
+                        Intent intent = new Intent(this, ChartViewActivity.class);
+                        intent.putExtra("header", header);
+                        intent.putExtra("modelo", modelo);
+                        intent.putParcelableArrayListExtra("selectedLog", CTL0104BTermoparLog);
+                        intent.putExtra("logName", ((CTL0104B_TermoparLog) this.selectedLog).getName());
+                        startActivity(intent);
+                        runOnUiThread(() -> Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show());
+                    } else if (ctl0104b_entries.size() == 1) {
+                        createCTL0104BDialog();
+                    } else {
+                        semRegistrosDialog();
+                    }
+                    break;
+                case "CTL0104A":
+                    if (ctl0104a_entries.size() > 1) {
+                        ((CTL0104A_TermoparLog) this.selectedLog).setEntries(ctl0104a_entries);
+                        ArrayList<CTL0104A_TermoparLog> CTL0104ATermoparLog = new ArrayList<>();
+                        CTL0104ATermoparLog.add(((CTL0104A_TermoparLog) this.selectedLog));
+                        Intent intent = new Intent(this, ChartViewActivity.class);
+                        intent.putExtra("header", header);
+                        intent.putExtra("modelo", modelo);
+                        intent.putParcelableArrayListExtra("selectedLog", CTL0104ATermoparLog);
+                        intent.putExtra("logName", ((CTL0104A_TermoparLog) this.selectedLog).getName());
+                        startActivity(intent);
+                        runOnUiThread(() -> Toast.makeText(this, "Registros resgatados com sucesso!", Toast.LENGTH_SHORT).show());
+                    } else if (ctl0104a_entries.size() == 1) {
+                        createCTL0104ADialog();
+                    } else {
+                        semRegistrosDialog();
+                    }
+                    break;
+            }
         }
-
-
     }
 
     private void createCEL0102ADialog() {

@@ -45,6 +45,7 @@ import static app.br.chronlog.utils.Utils.setStatus;
 import static app.br.chronlog.utils.Utils.showProgressBar;
 import static app.br.chronlog.utils.bluetooth.Constants.CONECTANDO_;
 import static app.br.chronlog.utils.bluetooth.Constants.CONEXAO_FALHOU;
+import static com.github.mikephil.charting.charts.Chart.LOG_TAG;
 import static java.lang.Thread.sleep;
 
 public class DevicesActivity extends AppCompatActivity implements ServiceConnection, SerialListener {
@@ -347,9 +348,8 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
     public void onSerialConnect() {
         isDeviceConnected = Connected.True;
         runOnUiThread(() -> {
-            hideProgressBar(this);
             setStatus(deviceName, this);
-            Toast.makeText(this, "Conectado com Sucesso!", Toast.LENGTH_SHORT).show();
+            Log.d(LOG_TAG, "Conectado com sucesso!");
         });
         readDeviceModel();
     }
@@ -376,13 +376,13 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
             String receveidStr = new String(data);
             Log.d(TAG_LOG, "recebeu: " + receveidStr);
             receivedData = receivedData.concat(receveidStr);
-            if (receveidStr.contains("@")) {
+            if (receivedData.contains("@0D")) {
+                Log.d(TAG_LOG, "VALOR RECEBIDO : " + receveidStr);
+                Log.d(TAG_LOG, "RECEIVED DATA : " + receivedData);
+                //returns model like: "@0DEEEEEEEE"
+                modelo = receivedData.replace("@0D", "").replace("\r\n", "").trim();
                 lock.notify();
             }
-            Log.d(TAG_LOG, "VALOR RECEBIDO : " + receveidStr);
-            Log.d(TAG_LOG, "RECEIVED DATA : " + receivedData);
-            //returns model like: "@0DEEEEEEEE"
-            modelo = receivedData.replace("@0D", "").replace("\r\n", "").trim();
         }
     }
 
@@ -412,12 +412,13 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
         executeCommandThread = new Thread(() -> {
             synchronized (lock) {
                 try {
-                    lock.wait(300);
+                    lock.wait(400);
                     if (receivedData.equals("")) {
                         readDeviceModel();
                     } else {
                         runOnUiThread(() -> {
-                            Toast.makeText(getApplicationContext(), "Modelo configurado com sucesso!", Toast.LENGTH_SHORT).show();
+                            hideProgressBar(this);
+                            Toast.makeText(getApplicationContext(), "Conectado com sucesso! (" + modelo + ")", Toast.LENGTH_LONG).show();
                             super.onBackPressed();
                         });
                     }
@@ -450,7 +451,9 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
     @Override
     public void onBackPressed() {
         if (isDeviceConnected == Connected.Pending) {
-            Toast.makeText(this, "Aguarde...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Aguarde a conexão...", Toast.LENGTH_SHORT).show();
+        } else if (modelo == null || modelo.equals("")) {
+            Toast.makeText(this, "Aguarde a configuração do modelo...", Toast.LENGTH_SHORT).show();
         } else {
             super.onBackPressed();
         }

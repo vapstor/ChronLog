@@ -57,7 +57,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
 
     private LineChart chart;
     private ArrayList<Parcelable> selectedLog;
-    private Button btnM1, btnM2, btnM3, btnM4, btnM5, btnM6, btnM7;
+    private Button btnM1, btnM2, btnM3, btnM4, btnM5, btnM6, btnM7, btnM8;
     private LineData allData;
     private ArrayList<ILineDataSet> allDataSets;
     private float VALOR_DISCREPANTE = 999;
@@ -67,51 +67,63 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_chart);
-
         Bundle extras = getIntent().getExtras();
         if (extras == null) {
             finish();
         } else {
-            selectedLog = getIntent().getParcelableArrayListExtra("selectedLog");
             mModelo = extras.getString("modelo");
-            if (mModelo != null && mModelo.equals("")) {
+            if (mModelo == null || mModelo.equals("")) {
                 Log.e(TAG_LOG, "Erro mModelo");
                 Toast.makeText(this, "Erro ao resgatar modelo!", Toast.LENGTH_SHORT).show();
                 finish();
-            }
-            List entriesList;
-            if (selectedLog != null) {
-                ((TextView) findViewById(R.id.logTitleTxtView)).setText(extras.getString("logName"));
-                switch (mModelo) {
-                    case "CEL0102A":
-                        CEL0102A_TermoparLog CEL0102ATermoparLog = (CEL0102A_TermoparLog) selectedLog.get(0);
-                        entriesList = CEL0102ATermoparLog.getEntries();
-                        acessaDadosDoArquivo(entriesList);
-                        break;
-                    case "CVL0101A":
-                        CVL0101A_TermoparLog CVL0101ATermoparLog = (CVL0101A_TermoparLog) selectedLog.get(0);
-                        entriesList = CVL0101ATermoparLog.getEntries();
-                        acessaDadosDoArquivo(entriesList);
-                        break;
-                    case "CTL0104B":
-                        CTL0104B_TermoparLog CTL0104BTermoparLog = (CTL0104B_TermoparLog) selectedLog.get(0);
-                        entriesList = CTL0104BTermoparLog.getEntries();
-                        acessaDadosDoArquivo(entriesList);
-                        break;
-                    case "CTL0104A":
-                    default:
-                        CTL0104A_TermoparLog CTL0104ATermoparLog = (CTL0104A_TermoparLog) selectedLog.get(0);
-                        entriesList = CTL0104ATermoparLog.getEntries();
-                        acessaDadosDoArquivo(entriesList);
-                        break;
-                }
             } else {
-                Toast.makeText(this, "Falhou ao resgatar os dados!", Toast.LENGTH_SHORT).show();
-                finish();
+                selectedLog = getIntent().getParcelableArrayListExtra("selectedLog");
+                List entriesList;
+                if (selectedLog == null) {
+                    Toast.makeText(this, "Falhou ao resgatar os dados!", Toast.LENGTH_SHORT).show();
+                    finish();
+                } else {
+                    String[] header = extras.getStringArray("header");
+                    if (header == null) {
+                        Toast.makeText(this, "Header Nulo!", Toast.LENGTH_SHORT).show();
+                        finish();
+                    } else {
+                        initBtns();
+                        setBtnsListeners();
+
+                        configActiveBtns(header);
+                        ((TextView) findViewById(R.id.logTitleTxtView)).setText(extras.getString("logName"));
+                        switch (mModelo) {
+                            case "CEL0102A":
+                                CEL0102A_TermoparLog CEL0102ATermoparLog = (CEL0102A_TermoparLog) selectedLog.get(0);
+                                entriesList = CEL0102ATermoparLog.getEntries();
+                                acessaDadosDoArquivo(entriesList);
+                                break;
+                            case "CVL0101A":
+                                CVL0101A_TermoparLog CVL0101ATermoparLog = (CVL0101A_TermoparLog) selectedLog.get(0);
+                                entriesList = CVL0101ATermoparLog.getEntries();
+                                acessaDadosDoArquivo(entriesList);
+                                break;
+                            case "CTL0104B":
+                                CTL0104B_TermoparLog CTL0104BTermoparLog = (CTL0104B_TermoparLog) selectedLog.get(0);
+                                entriesList = CTL0104BTermoparLog.getEntries();
+                                acessaDadosDoArquivo(entriesList);
+                                break;
+                            case "CTL0104A":
+                            default:
+                                CTL0104A_TermoparLog CTL0104ATermoparLog = (CTL0104A_TermoparLog) selectedLog.get(0);
+                                entriesList = CTL0104ATermoparLog.getEntries();
+                                acessaDadosDoArquivo(entriesList);
+                                break;
+                        }
+                    }
+                }
             }
         }
+    }
+
+    private void initBtns() {
         btnM1 = findViewById(R.id.m1Button);
         btnM2 = findViewById(R.id.m2Button);
         btnM3 = findViewById(R.id.m3Button);
@@ -119,7 +131,49 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
         btnM5 = findViewById(R.id.m5Button);
         btnM6 = findViewById(R.id.m6Button);
         btnM7 = findViewById(R.id.m7Button);
+        btnM8 = findViewById(R.id.m8Button);
+    }
 
+    private void configActiveBtns(String[] header) {
+        for (int i = 2; i < header.length; i++) {
+            switch (i) {
+                case 2:
+                    btnM1.setEnabled(true);
+                    btnM1.setText(header[i]);
+                    break;
+                case 3:
+                    btnM2.setEnabled(true);
+                    btnM2.setText(header[i]);
+                    break;
+                case 4:
+                    btnM3.setEnabled(true);
+                    btnM3.setText(header[i]);
+                    break;
+                case 5:
+                    btnM4.setEnabled(true);
+                    btnM4.setText(header[i]);
+                    break;
+                case 6:
+                    btnM5.setEnabled(true);
+                    btnM5.setText(header[i]);
+                    break;
+                case 7:
+                    btnM6.setEnabled(true);
+                    btnM6.setText(header[i]);
+                    break;
+                case 8:
+                    btnM7.setEnabled(true);
+                    btnM7.setText(header[i]);
+                    break;
+                case 9:
+                    btnM8.setEnabled(true);
+                    btnM8.setText(header[i]);
+                    break;
+            }
+        }
+    }
+
+    private void setBtnsListeners() {
         btnM1.setOnClickListener((v) -> {
             toogleBtnPressed(v);
             toggleDataSetVisibility(0);
@@ -148,69 +202,6 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             toogleBtnPressed(v);
             toggleDataSetVisibility(6);
         }));
-        switch (mModelo) {
-            case "CEL0102A":
-                btnM1.setVisibility(View.VISIBLE);
-                btnM2.setVisibility(View.VISIBLE);
-                btnM3.setVisibility(View.VISIBLE);
-                btnM4.setVisibility(View.VISIBLE);
-                btnM5.setVisibility(View.VISIBLE);
-                btnM6.setVisibility(View.VISIBLE);
-                btnM7.setVisibility(View.GONE);
-
-                btnM1.setText(R.string.v);
-                btnM2.setText(R.string.i);
-                btnM3.setText(R.string.p);
-                btnM4.setText(R.string.e);
-                btnM5.setText(R.string.fp);
-                btnM6.setText(R.string.dht);
-                break;
-            case "CTL0104B":
-                btnM1.setVisibility(View.VISIBLE);
-                btnM2.setVisibility(View.VISIBLE);
-                btnM3.setVisibility(View.VISIBLE);
-                btnM4.setVisibility(View.VISIBLE);
-                btnM5.setVisibility(View.VISIBLE);
-                btnM6.setVisibility(View.VISIBLE);
-                btnM7.setVisibility(View.VISIBLE);
-
-                btnM1.setText(R.string.t1);
-                btnM2.setText(R.string.t2);
-                btnM3.setText(R.string.t3);
-                btnM4.setText(R.string.t4);
-                btnM5.setText(R.string.m5);
-                btnM6.setText(R.string.m6);
-                btnM7.setText(R.string.m7);
-                break;
-            case "CVL0102A":
-                btnM1.setVisibility(View.VISIBLE);
-                btnM2.setVisibility(View.VISIBLE);
-                btnM3.setVisibility(View.VISIBLE);
-                btnM4.setVisibility(View.VISIBLE);
-                btnM5.setVisibility(View.GONE);
-                btnM6.setVisibility(View.GONE);
-                btnM7.setVisibility(View.GONE);
-
-                btnM1.setText(R.string.vMin);
-                btnM2.setText(R.string.mMed);
-                btnM3.setText(R.string.mMax);
-                btnM4.setText(R.string.thd);
-                break;
-            case "CTL0104A":
-                btnM1.setVisibility(View.VISIBLE);
-                btnM2.setVisibility(View.VISIBLE);
-                btnM3.setVisibility(View.VISIBLE);
-                btnM4.setVisibility(View.VISIBLE);
-                btnM5.setVisibility(View.GONE);
-                btnM6.setVisibility(View.GONE);
-                btnM7.setVisibility(View.GONE);
-
-                btnM1.setText(R.string.t1);
-                btnM2.setText(R.string.t2);
-                btnM3.setText(R.string.t3);
-                btnM4.setText(R.string.t4);
-                break;
-        }
     }
 
     private void toogleBtnPressed(View v) {
@@ -331,11 +322,11 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
                         horariosX[i] = ((CVL0101A_TermoparLogEntry) entriesList.get(i)).getHora();
                         datasY[i] = ((CVL0101A_TermoparLogEntry) entriesList.get(i)).getData();
                         break;
-                    case "CTL0101B":
+                    case "CTL0104B":
                         horariosX[i] = ((CTL0104B_TermoparLogEntry) entriesList.get(i)).getHora();
                         datasY[i] = ((CTL0104B_TermoparLogEntry) entriesList.get(i)).getData();
                         break;
-                    case "CTL0101A":
+                    case "CTL0104A":
                         horariosX[i] = ((CTL0104A_TermoparLogEntry) entriesList.get(i)).getHora();
                         datasY[i] = ((CTL0104A_TermoparLogEntry) entriesList.get(i)).getData();
                     default:
