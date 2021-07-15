@@ -63,6 +63,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
     private float VALOR_DISCREPANTE = 999;
     private String mModelo;
     private boolean existeValorDiscrepante;
+    private String[] header;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,7 +85,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
                     Toast.makeText(this, "Falhou ao resgatar os dados!", Toast.LENGTH_SHORT).show();
                     finish();
                 } else {
-                    String[] header = extras.getStringArray("header");
+                    header = extras.getStringArray("header");
                     if (header == null) {
                         Toast.makeText(this, "Header Nulo!", Toast.LENGTH_SHORT).show();
                         finish();
@@ -92,7 +93,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
                         initBtns();
                         setBtnsListeners();
 
-                        configActiveBtns(header);
+                        configActiveBtns();
                         ((TextView) findViewById(R.id.logTitleTxtView)).setText(extras.getString("logName"));
                         switch (mModelo) {
                             case "CEL0102A":
@@ -134,7 +135,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
         btnM8 = findViewById(R.id.m8Button);
     }
 
-    private void configActiveBtns(String[] header) {
+    private void configActiveBtns() {
         for (int i = 2; i < header.length; i++) {
             switch (i) {
                 case 2:
@@ -389,7 +390,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             @Override
             public String getFormattedValue(float value) {
                 String a = super.getFormattedValue(value);
-                //TODO
+                //FIXME (graus: º, etc..)
 //                return a + "º";
                 return a;
             }
@@ -532,27 +533,27 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             LineDataSet d;
             switch (z) {
                 case 0:
-                    d = new LineDataSet(values, "V");
+                    d = new LineDataSet(values, header[z + 2]);
                     d.setColor(getResources().getColor(R.color.colorPrimary));
                     break;
                 case 1:
-                    d = new LineDataSet(values, "I");
+                    d = new LineDataSet(values, header[z + 2]);
                     d.setColor(YELLOW);
                     break;
                 case 2:
-                    d = new LineDataSet(values, "P");
+                    d = new LineDataSet(values, header[z + 2]);
                     d.setColor(RED);
                     break;
                 case 3:
-                    d = new LineDataSet(values, "E");
+                    d = new LineDataSet(values, header[z + 2]);
                     d.setColor(GREEN);
                     break;
                 case 4:
-                    d = new LineDataSet(values, "FP");
+                    d = new LineDataSet(values, header[z + 2]);
                     d.setColor(GRAY);
                     break;
                 case 5:
-                    d = new LineDataSet(values, "DHT");
+                    d = new LineDataSet(values, header[z + 2]);
                     d.setColor(CYAN);
                     break;
                 default:
@@ -594,7 +595,6 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
         chart.getData().notifyDataChanged();
         chart.notifyDataSetChanged();
     }
-
 
     private void setCVL0101AData(List entriesList) {
         CVL0101A_TermoparLogEntry CVL0101ATermoparLogEntry;
@@ -673,19 +673,19 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             LineDataSet d;
             switch (z) {
                 case 0:
-                    d = new LineDataSet(values, "vMin");
+                    d = new LineDataSet(values, header[z + 2]);
                     d.setColor(getResources().getColor(R.color.colorPrimary));
                     break;
                 case 1:
-                    d = new LineDataSet(values, "vMed");
+                    d = new LineDataSet(values, header[z + 2]);
                     d.setColor(YELLOW);
                     break;
                 case 2:
-                    d = new LineDataSet(values, "vMax");
+                    d = new LineDataSet(values, header[z + 2]);
                     d.setColor(RED);
                     break;
                 case 3:
-                    d = new LineDataSet(values, "THD");
+                    d = new LineDataSet(values, header[z + 2]);
                     d.setColor(GREEN);
                     break;
                 default:
@@ -775,31 +775,31 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             LineDataSet d;
             switch (z) {
                 case 0:
-                    d = new LineDataSet(values, "T1");
+                    d = new LineDataSet(values, header[z + 2]);
                     d.setColor(getResources().getColor(R.color.colorPrimary));
                     break;
                 case 1:
-                    d = new LineDataSet(values, "T2");
+                    d = new LineDataSet(values, header[z + 2]);
                     d.setColor(YELLOW);
                     break;
                 case 2:
-                    d = new LineDataSet(values, "T3");
+                    d = new LineDataSet(values, header[z + 2]);
                     d.setColor(RED);
                     break;
                 case 3:
-                    d = new LineDataSet(values, "T4");
+                    d = new LineDataSet(values, header[z + 2]);
                     d.setColor(GREEN);
                     break;
                 case 4:
-                    d = new LineDataSet(values, "M5");
+                    d = new LineDataSet(values, header[z + 2]);
                     d.setColor(MAGENTA);
                     break;
                 case 5:
-                    d = new LineDataSet(values, "M6");
+                    d = new LineDataSet(values, header[z + 2]);
                     d.setColor(CYAN);
                     break;
                 case 6:
-                    d = new LineDataSet(values, "M7");
+                    d = new LineDataSet(values, header[z + 2]);
                     d.setColor(GRAY);
                     break;
                 default:
@@ -873,7 +873,7 @@ public class ChartViewActivity extends AppCompatActivity implements SeekBar.OnSe
             }
 //            , getResources().getDrawable(R.drawable.star)));
 
-            LineDataSet d = new LineDataSet(values, "T" + (z + 1));
+            LineDataSet d = new LineDataSet(values, header[z + 2]);
 
             switch (z) {
                 case 0:

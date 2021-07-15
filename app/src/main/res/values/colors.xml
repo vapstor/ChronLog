@@ -9,5 +9,6 @@
     <color name="cinzaClaro">#F7CFCFCF</color>
     <color name="cinzaEscuro">#E9A5A4A4</color>
     <color name="branco">#FFFFFF</color>
+
     <color name="transparent">@android:color/transparent</color>
 </resources>

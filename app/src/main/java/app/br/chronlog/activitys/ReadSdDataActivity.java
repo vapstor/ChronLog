@@ -349,7 +349,7 @@ public class ReadSdDataActivity extends AppCompatActivity implements RecyclerIte
         ArrayList<CTL0104A_TermoparLogEntry> ctl0104a_entries = new ArrayList<>();
         ArrayList<CVL0101A_TermoparLogEntry> cvl0101a_entries = new ArrayList<>();
         ArrayList<CTL0104B_TermoparLogEntry> ctl0104b_entries = new ArrayList<>();
-        header = receivedStrArray[1].split(" ");
+        header = receivedStrArray[0].split(" ");
 
         Log.d(LOG_TAG, "SIZE Header: " + header.length);
         for (String s : header) {

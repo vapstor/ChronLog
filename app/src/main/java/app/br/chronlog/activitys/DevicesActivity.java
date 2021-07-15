@@ -412,7 +412,7 @@ public class DevicesActivity extends AppCompatActivity implements ServiceConnect
         executeCommandThread = new Thread(() -> {
             synchronized (lock) {
                 try {
-                    lock.wait(400);
+                    lock.wait(500);
                     if (receivedData.equals("")) {
                         readDeviceModel();
                     } else {
